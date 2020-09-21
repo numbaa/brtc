@@ -6,6 +6,9 @@
 namespace brtc
 {
 
+constexpr uint32_t kMaxNalusPerPacket = 10;
+constexpr uint32_t kH264StartCodeLength = 4;
+
 enum class H264PacketizationTypes {
     kH264SingleNalu,
     kH264StapA,
@@ -22,8 +25,6 @@ struct NaluInfo {
     int sps_id;
     int pps_id;
 };
-
-constexpr uint32_t kMaxNalusPerPacket = 10;
 
 //编码后输出的Frame的header
 struct RTPVideoHeaderH264 {
@@ -46,7 +47,8 @@ struct RtpPacket {
     uint32_t ssrc;
     uint32_t payload_offset;
     uint32_t payload_size;
-    std::vector<uint8_t> buffer;
+    std::span<uint8_t> frame_;
+    uint32_t offset_of_frame_;
 };
 
 } // namespace brtc
