@@ -19,7 +19,15 @@ add_executable(${PROJECT_NAME}
   "src/capture/dxgi_capture.h"
   "src/capture/dxgi_capture.cpp"
   "src/render/d3d11_render.h"
-  "src/render/d3d11_render.cpp")
+  "src/render/d3d11_render.cpp"
+  "src/decoder/mfx_decoder.h"
+ "src/decoder/mfx_decoder.cpp" "src/common/d3d_helper.h")
+
+
+target_include_directories(${PROJECT_NAME}
+  PRIVATE
+    "$ENV{INTELMEDIASDKROOT}/include"
+)
 
 # target_include_directories(${PROJECT_NAME}
 #   PUBLIC

@@ -1,59 +1,38 @@
 #include <iostream>
 #include "dxgi_capture.h"
+#include "../common/d3d_helper.h"
+
+template <typename T>
+using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 namespace brtc {
+
 bool DxgiCapture::init()
 {
-    HRESULT r = D3D11CreateDevice(
-        nullptr,
-        D3D_DRIVER_TYPE::D3D_DRIVER_TYPE_UNKNOWN,
-        nullptr,
-        0,
-        nullptr,
-        0,
-        D3D11_SDK_VERSION,
-        &d3d11_device_,
-        nullptr,
-        &d3d11_context_);
-    if (FAILED(r)) {
-        std::cerr << "Create D3D11Device failed\n";
+    std::tie(device_, context_) = CreateD3D();
+    ComPtr<IDXGIDevice> dxgi;
+    HRESULT hr = device_.As(&dxgi);
+    if (FAILED(hr)) {
         return false;
     }
-    IDXGIDevice* dxgi_device;
-    r = d3d11_device_->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&dxgi_device));
-    if (FAILED(r)) {
-        std::cerr << "Query DXGI device failed\n";
+    ComPtr<IDXGIAdapter> adapter;
+    hr = dxgi->GetAdapter(&adapter);
+    if (FAILED(hr)) {
         return false;
     }
-
-    IDXGIAdapter* dxgi_adapter;
-    r = dxgi_device->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(&dxgi_adapter));
-    if (FAILED(r)) {
-        std::cerr << "Get DXGI adapter failed\n";
+    hr = adapter->EnumOutputs(0, &output_);
+    if (FAILED(hr)) {
         return false;
     }
-    dxgi_device->Release();
-
-    r = dxgi_adapter->EnumOutputs(0, &dxgi_output_);
-    if (FAILED(r)) {
-        std::cerr << "Enum outputs failed\n";
+    ComPtr<IDXGIOutput1> output1;
+    hr = output_.As(&output1);
+    if (FAILED(hr)) {
         return false;
     }
-    dxgi_adapter->Release();
-
-    //shenmegui
-    IDXGIOutput1* dxgi_output1;
-    r = dxgi_output_->QueryInterface(__uuidof(IDXGIOutput1), reinterpret_cast<void**>(&dxgi_output1));
-    if (FAILED(r)) {
-        std::cerr << "Query DXGIOutput1 failed\n";
+    hr = output1->DuplicateOutput(device_.Get(), &dup_);
+    if (FAILED(hr)) {
         return false;
     }
-    r = dxgi_output1->DuplicateOutput(d3d11_device_, &dxgi_dup_);
-    if (FAILED(r)) {
-        std::cerr << "Duplicate output failed\n";
-        return false;
-    }
-    dxgi_output1->Release();
     return true;
 }
 void DxgiCapture::start()
@@ -65,24 +44,68 @@ void DxgiCapture::stop()
 void DxgiCapture::add_observer(VideoSourceObserver* observer)
 {
 }
-ID3D11Texture2D* DxgiCapture::get_frame()
+
+ComPtr<ID3D11Texture2D> DxgiCapture::capture_frame()
 {
-    DXGI_OUTDUPL_FRAME_INFO frame_info {};
-    IDXGIResource* desktop_resource { nullptr };
-    HRESULT hr = dxgi_dup_->AcquireNextFrame(500, &frame_info, &desktop_resource);
-    if (FAILED(hr) || hr == DXGI_ERROR_WAIT_TIMEOUT) {
+    ComPtr<IDXGIResource> resource;
+    DXGI_OUTDUPL_FRAME_INFO frame_info;
+    HRESULT hr = dup_->AcquireNextFrame(INFINITE, &frame_info, &resource);
+    if (FAILED(hr)) {
         return nullptr;
     }
-    ID3D11Texture2D* frame { nullptr };
+    ComPtr<ID3D11Texture2D> frame;
     if (frame_info.TotalMetadataBufferSize != 0) {
-        hr = desktop_resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&frame));
+        hr = resource.As(&frame);
         if (FAILED(hr)) {
-            std::cerr << "Query desktop texture2d failed\n";
-            desktop_resource->Release();
             return nullptr;
         }
+        return frame;
     }
-    desktop_resource->Release();
-    return frame;
+    return nullptr;
 }
+
+void DxgiCapture::release_frame()
+{
+    dup_->ReleaseFrame();
+}
+
+std::vector<uint8_t> DxgiCapture::gpu_to_memory(ComPtr<ID3D11Texture2D> frame)
+{
+    D3D11_TEXTURE2D_DESC desc;
+    frame->GetDesc(&desc);
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.MiscFlags = 0;
+    ComPtr<ID3D11Texture2D> tmp_frame;
+    HRESULT hr = device_->CreateTexture2D(&desc, nullptr, tmp_frame.GetAddressOf());
+    if (FAILED(hr)) {
+        return {};
+    }
+    context_->CopyResource(tmp_frame.Get(), frame.Get());
+
+    D3D11_MAPPED_SUBRESOURCE  mapped;
+    unsigned int subresource = 0;
+    hr = context_->Map(tmp_frame.Get(), 0, D3D11_MAP_READ, 0, &mapped);
+    if (FAILED(hr)) {
+        return {};
+    }
+
+    uint32_t width = desc.Width;
+    uint32_t height = desc.Height;
+    const int pitch = mapped.RowPitch;
+    uint8_t* source = (uint8_t*)(mapped.pData);
+    std::vector<uint8_t> dest;
+    dest.resize(width * height * 4);
+    uint8_t* dest_tmp = dest.data();
+    for (int i = 0; i < height; ++i)
+    {
+        memcpy(dest_tmp, source, width * 4);
+        source += pitch;
+        dest_tmp += width * 4;
+    }
+    context_->Unmap(tmp_frame.Get(), 0);
+    return dest;
+}
+
 }
