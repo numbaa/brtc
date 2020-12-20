@@ -1,39 +1,42 @@
 #include <iostream>
 #include "d3d11_render.h"
-#include "../common/d3d_helper.h"
+#include <SDL_syswm.h>
 
 namespace brtc {
 
-template <typename T>
-using ComPtr = Microsoft::WRL::ComPtr<T>;
+using Microsoft::WRL::ComPtr;
 
-bool D3D11Render::init()
+bool D3D11Render::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
 {
-    return init_sdl() && init_d3d11();
+    return init_sdl() && init_d3d11(device);
 }
 
-void D3D11Render::on_frame(std::vector<uint8_t> frame)
+void D3D11Render::on_frame(ID3D11Texture2D* frame)
 {
     ComPtr<ID3D11Texture2D> back_buffer;
     swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(back_buffer.GetAddressOf()));
-    context_->UpdateSubresource(back_buffer.Get(), 0, nullptr, frame.data(), 1920 * 4/*TODO*/, 0);
+    context_->CopyResource(back_buffer.Get(), frame);
+    D3D11_BOX box { 0 };
+    box.bottom = 1080;
+    box.right = 1920;
+    box.back = 1;
+    context_->CopySubresourceRegion(back_buffer.Get(), 0, 0, 0, 0, frame, 0, &box);
+    //context_->CopyResource(back_buffer.Get(), frame);
     swap_chain_->Present(0, 0);
 }
 
 bool D3D11Render::init_sdl()
 {
     SDL_Init(SDL_INIT_VIDEO);
-    auto sdl = SDL_CreateWindow("brtc", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 600, 400, SDL_WINDOW_SHOWN);
+    auto sdl = SDL_CreateWindow("brtc", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1920 / 2, 1080 / 2, SDL_WINDOW_SHOWN);
     sdl_.reset(sdl);
     return sdl_ != nullptr;
 }
 
-bool D3D11Render::init_d3d11()
+bool D3D11Render::init_d3d11(Microsoft::WRL::ComPtr<ID3D11Device> device)
 {
-    std::tie(device_, context_) = CreateD3D();
-    if (!device_ || !context_) {
-        return false;
-    }
+    device_ = device;
+    device_->GetImmediateContext(context_.GetAddressOf());
     ComPtr<IDXGIDevice> dxgi_device;
     HRESULT hr = device_.As(&dxgi_device);
     if (FAILED(hr)) {
@@ -50,7 +53,6 @@ bool D3D11Render::init_d3d11()
         return false;
     }
 
-
     int width = 0;
     int height = 0;
     SDL_GetWindowSize(sdl_.get(), &width, &height);
@@ -63,9 +65,9 @@ bool D3D11Render::init_d3d11()
     sd.OutputWindow = sys_info.info.win.window;
     sd.BufferDesc.Width = 1920;
     sd.BufferDesc.Height = 1080;
-    sd.BufferDesc.RefreshRate.Numerator = 60;
+    sd.BufferDesc.RefreshRate.Numerator = 30;
     sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    sd.BufferDesc.Format = DXGI_FORMAT_NV12;
     sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
     sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
     sd.SampleDesc.Count = 1;

@@ -1,7 +1,7 @@
-﻿#include <iostream>
+#include <glog/logging.h>
 
 int main()
 {
-    std::cout << "It just work." << std::endl;
+    LOG(INFO) << "It just work.";
     return 0;
 }

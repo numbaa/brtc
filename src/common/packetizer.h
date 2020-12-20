@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <cstdint>
 #include <span>
 #include <array>
@@ -13,7 +13,7 @@ public:
     bool is_valid_frame() const;
     bool next_packet(RtpPacket& packet);
 private:
-    bool is_valid_frame_;
+    bool is_valid_frame_ = false;
     uint32_t current_nalu_ = 0;
     uint32_t nalus_len_ = 0;
     std::span<uint8_t> frame_;

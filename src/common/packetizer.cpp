@@ -1,4 +1,5 @@
-﻿#include <cassert>
+
+#include <cassert>
 #include "packetizer.h"
 
 namespace brtc
@@ -56,8 +57,11 @@ Packetizer::Packetizer(std::span<uint8_t> encoded_frame)
         return;
     }
     nalus_len_ = index;
-    for (int i=0; i<nalus_len_; i++) {
-        nalus_[i] = StartCodeInfo{start_code_lens[i], nalus[i]-encoded_frame.data()};
+    for (uint32_t i=0; i<nalus_len_; i++) {
+        StartCodeInfo info;
+        info.offset = nalus[i] - encoded_frame.data();
+        info.start_code_length = start_code_lens[i];
+        nalus_[i] = info;
     }
 }
 

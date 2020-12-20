@@ -1,4 +1,8 @@
 ---
 Language:        Cpp
 BasedOnStyle:  WebKit
+FixNamespaceComments: true
+NamespaceIndentation: None
+AllowShortBlocksOnASingleLine: Always
+AllowShortFunctionsOnASingleLine: Inline
 ...
