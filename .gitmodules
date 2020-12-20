@@ -1,3 +1,12 @@
 [submodule "third_party/asio"]
 	path = third_party/asio
 	url = https://github.com/chriskohlhoff/asio
+[submodule "third_party/glog"]
+	path = third_party/glog
+	url = https://github.com/google/glog
+[submodule "third_party/IntelMediaSDK"]
+	path = third_party/IntelMediaSDK
+	url = https://github.com/Intel-Media-SDK/MediaSDK
+[submodule "third_party/SDL"]
+	path = third_party/SDL
+	url = https://github.com/SDL-mirror/SDL
