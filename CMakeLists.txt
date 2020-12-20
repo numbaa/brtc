@@ -28,18 +28,21 @@ add_executable(${PROJECT_NAME}
   "src/render/d3d11_render.h"
   "src/render/d3d11_render.cpp"
   "src/decoder/mfx_decoder.h"
- "src/decoder/mfx_decoder.cpp"  "src/common/d3d_mgr.h" "src/common/d3d_mgr.cpp" "src/encoder/mfx_encoder.h" "src/encoder/mfx_encoder.cpp" "src/common/mfx_allocator.h" "src/common/mfx_allocator.cpp")
+ "src/decoder/mfx_decoder.cpp"
+ "src/common/d3d_mgr.h"
+ "src/common/d3d_mgr.cpp"
+ "src/encoder/mfx_encoder.h"
+ "src/encoder/mfx_encoder.cpp"
+ "src/common/mfx_allocator.h"
+ "src/common/mfx_allocator.cpp")
 
 add_subdirectory("third_party/SDL")
 add_subdirectory("third_party/glog")
-
-set(INTEL_MEDIA_SDK_API "third_party/IntelMediaSDK/api")
-
-target_include_directories(${PROJECT_NAME}
-  PRIVATE
-    "${INTEL_MEDIA_SDK_API}/include"
-)
-
+if (WIN32)
+add_subdirectory("third_party/mfx_builder")
+else()
+add_subdirectory("third_party/IntelMediaSDK")
+endif()
 
 
 target_link_libraries(${PROJECT_NAME}
@@ -48,6 +51,7 @@ target_link_libraries(${PROJECT_NAME}
         "glog::glog"
         "SDL2-static"
         "SDL2main"
+        "mfx"
 )
 
 # target_include_directories(${PROJECT_NAME}
