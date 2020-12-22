@@ -12,7 +12,6 @@ endif()
 
 add_executable(${PROJECT_NAME}
   "src/main.cpp"
-  "src/controller/controller.h"
   "src/common/packetizer.h"
   "src/common/packetizer.cpp"
   "src/common/rtp.h"
@@ -34,7 +33,7 @@ add_executable(${PROJECT_NAME}
  "src/encoder/mfx_encoder.h"
  "src/encoder/mfx_encoder.cpp"
  "src/common/mfx_allocator.h"
- "src/common/mfx_allocator.cpp")
+ "src/common/mfx_allocator.cpp"    "src/controller/media_sender.h" "src/controller/media_receiver.h" "src/controller/media_sender.cpp" "src/controller/media_receiver.cpp" "src/common/capture.h")
 
 add_subdirectory("third_party/SDL")
 add_subdirectory("third_party/glog")
