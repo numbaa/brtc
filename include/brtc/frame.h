@@ -2,7 +2,7 @@
 
 namespace brtc {
 
-class RenderInterface {
+class Frame {
 };
 
-}
+} // brtc

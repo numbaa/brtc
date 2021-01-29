@@ -10,30 +10,36 @@ else()
 set (PLAT_SPEC_LIBRARIES )
 endif()
 
-add_executable(${PROJECT_NAME}
-  "src/main.cpp"
-  "src/common/packetizer.h"
-  "src/common/packetizer.cpp"
-  "src/common/rtp.h"
-  "src/common/transport.h"
-  "src/common/transport.cpp"
-  "src/common/frame.h"
-  "src/common/video_source.h"
-  "src/common/encoder.h"
-  "src/common/decoder.h"
-  "src/common/render.h"
-  "src/capture/dxgi_capture.h"
-  "src/capture/dxgi_capture.cpp"
-  "src/render/d3d11_render.h"
-  "src/render/d3d11_render.cpp"
-  "src/decoder/mfx_decoder.h"
- "src/decoder/mfx_decoder.cpp"
- "src/common/d3d_mgr.h"
- "src/common/d3d_mgr.cpp"
- "src/encoder/mfx_encoder.h"
- "src/encoder/mfx_encoder.cpp"
- "src/common/mfx_allocator.h"
- "src/common/mfx_allocator.cpp"    "src/controller/media_sender.h" "src/controller/media_receiver.h" "src/controller/media_sender.cpp" "src/controller/media_receiver.cpp" "src/common/capture.h")
+set(PUBLIC_INCLUDE_DIR "include")
+set(SRC_DIR "src")
+
+set(BRTC_PUBLIC_HEADERS
+  "${PUBLIC_INCLUDE_DIR}/brtc.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/fwd.h"
+)
+set(BRTC_SOURCES
+  "${SRC_DIR}/capture/dxgi_capture.h"
+  "${SRC_DIR}/capture/dxgi_capture.cpp"
+
+  "${SRC_DIR}/controller/media_sender.h"
+  "${SRC_DIR}/controller/media_sender.cpp"
+  "${SRC_DIR}/controller/media_receiver.h"
+  "${SRC_DIR}/controller/media_receiver.cpp"
+
+  "${SRC_DIR}/decoder/mfx_decoder.h"
+  "${SRC_DIR}/decoder/mfx_decoder.cpp"
+
+  "${SRC_DIR}/encoder/mfx_encoder.h"
+  "${SRC_DIR}/encoder/mfx_encoder.cpp"
+
+  "${SRC_DIR}/render/d3d11_render.h"
+  "${SRC_DIR}/render/d3d11_render.cpp"
+)
+
+add_library(${PROJECT_NAME}
+  ${BRTC_PUBLIC_HEADERS}
+  ${BRTC_SOURCES}
+)
 
 add_subdirectory("third_party/SDL")
 add_subdirectory("third_party/glog")
@@ -53,7 +59,9 @@ target_link_libraries(${PROJECT_NAME}
         "mfx"
 )
 
-# target_include_directories(${PROJECT_NAME}
-#   PUBLIC
-#     "third_party/asio/asio/include"
-# )
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    "include"
+)
+
+add_subdirectory(examples)

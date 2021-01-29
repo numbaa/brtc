@@ -47,8 +47,8 @@ struct RtpPacket {
     uint32_t ssrc;
     uint32_t payload_offset;
     uint32_t payload_size;
-    std::span<uint8_t> frame_;
-    uint32_t offset_of_frame_;
+    std::span<uint8_t> frame;
+    uint32_t offset_of_frame;
 };
 
 } // namespace brtc

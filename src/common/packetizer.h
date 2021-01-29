@@ -9,7 +9,7 @@ namespace brtc
 
 class Packetizer {
 public:
-    Packetizer(std::span<uint8_t> decoded_frame);
+    explicit Packetizer(std::span<uint8_t> decoded_frame);
     bool is_valid_frame() const;
     bool next_packet(RtpPacket& packet);
 private:
