@@ -34,7 +34,11 @@ set(BRTC_SOURCES
 
   "${SRC_DIR}/render/d3d11_render.h"
   "${SRC_DIR}/render/d3d11_render.cpp"
-)
+
+  "${SRC_DIR}/frame_assembler/frame_assembler.h"
+  "${SRC_DIR}/common/udp_packet.h"
+  "${SRC_DIR}/frame_buffer/frame_buffer.h"
+ )
 
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}
@@ -43,6 +47,7 @@ add_library(${PROJECT_NAME}
 
 add_subdirectory("third_party/SDL")
 add_subdirectory("third_party/glog")
+add_subdirectory("third_party/bco")
 if (WIN32)
 add_subdirectory("third_party/mfx_builder")
 else()
@@ -57,6 +62,7 @@ target_link_libraries(${PROJECT_NAME}
         "SDL2-static"
         "SDL2main"
         "mfx"
+        "bco"
 )
 
 target_include_directories(${PROJECT_NAME}
