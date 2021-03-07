@@ -1,7 +1,10 @@
 #pragma once
 #include <memory>
+#include <deque>
+#include <atomic>
 #include <brtc/fwd.h>
 #include <bco/bco.h>
+#include <bco/coroutine/channel.h>
 #include <bco/net/proactor/select.h>
 #include "../transport/transport.h"
 #include "../frame_assembler/frame_assembler.h"
@@ -11,25 +14,29 @@ namespace brtc {
 
 class MediaReceiver : public std::enable_shared_from_this<MediaReceiver> {
 public:
-    MediaReceiver();
+    MediaReceiver(
+        std::unique_ptr<Transport>&& transport,
+        std::unique_ptr<VideoDecoderInterface>&& decoder,
+        std::unique_ptr<RenderInterface>&& render,
+        std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
+        std::shared_ptr<bco::Context<bco::net::Select>> decode_ctx,
+        std::shared_ptr<bco::Context<bco::net::Select>> render_ctx);
     void start();
-    void set_executor(); // or config in ctor
-    void set_transport(std::unique_ptr<Transport>&& transport);
-    void set_decoder(std::unique_ptr<VideoDecoderInterface>&& decoder);
-    void set_render(std::unique_ptr<RenderInterface>&& render);
+    void stop();
 
 private:
-    bco::Task<> network_loop(std::shared_ptr<MediaReceiver> that);
-    bco::Task<> decode_loop(std::shared_ptr<MediaReceiver> that);
-    bco::Task<> render_loop(std::shared_ptr<MediaReceiver> that);
-    void send_to_decode_loop(Frame frame);
-    void send_to_render_loop(Frame frame);
-    bco::Task<Frame> receive_from_network_loop();
-    bco::Task<Frame> receive_from_decode_loop();
+    bco::Routine network_loop(std::shared_ptr<MediaReceiver> that);
+    bco::Routine decode_loop(std::shared_ptr<MediaReceiver> that);
+    bco::Routine render_loop(std::shared_ptr<MediaReceiver> that);
+    inline void send_to_decode_loop(Frame frame);
+    inline void send_to_render_loop(Frame frame);
+    inline bco::Task<Frame> receive_from_network_loop();
+    inline bco::Task<Frame> receive_from_decode_loop();
     Frame decode_one_frame(Frame frame);
     void render_one_frame(Frame frame);
 
 private:
+    std::atomic<bool> stop_ { true };
     std::unique_ptr<Transport> transport_;
     std::unique_ptr<VideoDecoderInterface> decoder_;
     std::unique_ptr<RenderInterface> render_;
@@ -38,6 +45,8 @@ private:
     std::shared_ptr<bco::Context<bco::net::Select>> render_ctx_;
     FrameAssembler frame_assembler_;
     FrameBuffer frame_buffer_;
+    bco::Channel<Frame> undecoded_frames_;
+    bco::Channel<Frame> decoded_frames_;
 };
 
 } // namespace brtc

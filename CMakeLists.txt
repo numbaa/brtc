@@ -35,9 +35,13 @@ set(BRTC_SOURCES
   "${SRC_DIR}/render/d3d11_render.h"
   "${SRC_DIR}/render/d3d11_render.cpp"
 
+  "${SRC_DIR}/transport/transport.cpp"
+  "${SRC_DIR}/transport/transport.h"
+
   "${SRC_DIR}/frame_assembler/frame_assembler.h"
   "${SRC_DIR}/common/udp_packet.h"
   "${SRC_DIR}/frame_buffer/frame_buffer.h"
+  "${SRC_DIR}/p2p/p2p.h"
  )
 
 add_library(${PROJECT_NAME}

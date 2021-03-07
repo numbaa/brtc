@@ -1,8 +1,9 @@
 #pragma once
+#include <cstdint>
+#include <vector>
 
 namespace brtc {
 
-struct UdpPacket {
-};
+using UdpPacket = std::vector<std::byte>;
 
 }

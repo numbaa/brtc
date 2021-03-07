@@ -3,37 +3,56 @@
 
 namespace brtc {
 
-MediaSender::MediaSender()
+MediaSender::MediaSender(
+            std::unique_ptr<Transport>&& transport,
+            std::unique_ptr<VideoEncoderInterface>&& encoder,
+            std::unique_ptr<VideoCaptureInterface>&& capture,
+            std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
+            std::shared_ptr<bco::Context<bco::net::Select>> encode_ctx,
+            std::shared_ptr<bco::Context<bco::net::Select>> pacer_ctx)
+    : transport_(std::move(transport))
+    , encoder_(std::move(encoder))
+    , capture_(std::move(capture))
+    , network_ctx_(network_ctx)
+    , encode_ctx_(encode_ctx)
+    , pacer_ctx_(pacer_ctx)
 {
 }
 
 void MediaSender::start()
 {
-
+    stop_ = false;
     network_ctx_->spawn(std::bind(&MediaSender::network_loop, this, shared_from_this()));
     encode_ctx_->spawn(std::bind(&MediaSender::capture_encode_loop, this, shared_from_this()));
     pacer_ctx_->spawn(std::bind(&MediaSender::pacing_loop, this, shared_from_this()));
 }
 
-bco::Task<> MediaSender::network_loop(std::shared_ptr<MediaSender> that)
+void MediaSender::stop()
 {
-    while (true) {
-        auto packet = co_await transport_->read_packet();
+    stop_ = true;
+}
+
+bco::Routine MediaSender::network_loop(std::shared_ptr<MediaSender> that)
+{
+    //主要读rtcp
+    while (!stop_) {
+        UdpPacket packet;
+        auto bytes_read = co_await transport_->read_packet(packet);
     }
 }
 
-bco::Task<> MediaSender::capture_encode_loop(std::shared_ptr<MediaSender> that)
+bco::Routine MediaSender::capture_encode_loop(std::shared_ptr<MediaSender> that)
 {
-    while (true) {
-        auto raw_frame = co_await capture_one_frame();
-        auto encoded_frame = co_await encode_one_frame(raw_frame);
+    while (!stop_) {
+        auto raw_frame = capture_one_frame();
+        auto encoded_frame = encode_one_frame(raw_frame);
         send_to_pacing_loop(encoded_frame);
     }
 }
 
-bco::Task<> MediaSender::pacing_loop(std::shared_ptr<MediaSender> that)
+bco::Routine MediaSender::pacing_loop(std::shared_ptr<MediaSender> that)
 {
-    while (true) {
+    while (!stop_) {
         auto frame = co_await receive_from_encode_loop();
         std::vector<uint8_t> fake_frame; //暂时的
         Packetizer packetizer { fake_frame };
@@ -44,6 +63,26 @@ bco::Task<> MediaSender::pacing_loop(std::shared_ptr<MediaSender> that)
             transport_->send_packet(udp_packet);
         }
     }
+}
+
+Frame MediaSender::capture_one_frame()
+{
+    capture_->capture_one_frame();
+}
+
+Frame MediaSender::encode_one_frame(Frame frame)
+{
+    return encoder_->encode_one_frame(frame);
+}
+
+void MediaSender::send_to_pacing_loop(Frame frame)
+{
+    encoded_frames_.send(frame);
+}
+
+inline bco::Task<Frame> MediaSender::receive_from_encode_loop()
+{
+    return encoded_frames_.recv();
 }
 
 
