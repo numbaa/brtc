@@ -21,7 +21,7 @@ public:
     void set_socket(bco::net::UdpSocket<bco::net::Select> socket);
     void set_remote_address(bco::net::Address addr);
     bco::Task<int> read_packet(std::span<std::byte> buffer);
-    void send_packet(UdpPacket packet);
+    void send_packet(std::span<std::byte> packet);
 
 private:
     bco::net::UdpSocket<bco::net::Select> socket_;

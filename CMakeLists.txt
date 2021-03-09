@@ -17,23 +17,29 @@ set(BRTC_PUBLIC_HEADERS
   "${PUBLIC_INCLUDE_DIR}/brtc.h"
   "${PUBLIC_INCLUDE_DIR}/brtc/fwd.h"
 )
+
+set(BRTC_SOURCES_BUILTIN
+  "${SRC_DIR}/builtin/capture/dxgi_capture.h"
+  "${SRC_DIR}/builtin/capture/dxgi_capture.cpp"
+
+  "${SRC_DIR}/builtin/decoder/mfx_decoder.h"
+  "${SRC_DIR}/builtin/decoder/mfx_decoder.cpp"
+
+  "${SRC_DIR}/builtin/encoder/mfx_encoder.h"
+  "${SRC_DIR}/builtin/encoder/mfx_encoder.cpp"
+
+  "${SRC_DIR}/builtin/render/d3d11_render.h"
+  "${SRC_DIR}/builtin/render/d3d11_render.cpp"
+
+  "${SRC_DIR}/builtin/p2p/p2p.h"
+)
 set(BRTC_SOURCES
-  "${SRC_DIR}/capture/dxgi_capture.h"
-  "${SRC_DIR}/capture/dxgi_capture.cpp"
+
 
   "${SRC_DIR}/controller/media_sender.h"
   "${SRC_DIR}/controller/media_sender.cpp"
   "${SRC_DIR}/controller/media_receiver.h"
   "${SRC_DIR}/controller/media_receiver.cpp"
-
-  "${SRC_DIR}/decoder/mfx_decoder.h"
-  "${SRC_DIR}/decoder/mfx_decoder.cpp"
-
-  "${SRC_DIR}/encoder/mfx_encoder.h"
-  "${SRC_DIR}/encoder/mfx_encoder.cpp"
-
-  "${SRC_DIR}/render/d3d11_render.h"
-  "${SRC_DIR}/render/d3d11_render.cpp"
 
   "${SRC_DIR}/transport/transport.cpp"
   "${SRC_DIR}/transport/transport.h"
@@ -41,7 +47,6 @@ set(BRTC_SOURCES
   "${SRC_DIR}/frame_assembler/frame_assembler.h"
   "${SRC_DIR}/common/udp_packet.h"
   "${SRC_DIR}/frame_buffer/frame_buffer.h"
-  "${SRC_DIR}/p2p/p2p.h"
  )
 
 add_library(${PROJECT_NAME}

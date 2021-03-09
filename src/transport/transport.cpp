@@ -21,7 +21,7 @@ void Transport::set_remote_address(bco::net::Address addr)
     remote_addr_ = addr;
 }
 
-void Transport::send_packet(UdpPacket packet)
+void Transport::send_packet(std::span<std::byte> packet)
 {
     socket_.sendto(packet, remote_addr_);
 }

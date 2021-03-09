@@ -54,13 +54,11 @@ bco::Routine MediaSender::pacing_loop(std::shared_ptr<MediaSender> that)
 {
     while (!stop_) {
         auto frame = co_await receive_from_encode_loop();
-        std::vector<uint8_t> fake_frame; //暂时的
-        Packetizer packetizer { fake_frame };
+        Packetizer packetizer { frame };
         RtpPacket packet;
         while (packetizer.next_packet(packet)) {
             //加策略delay一下啥的
-            UdpPacket udp_packet;
-            transport_->send_packet(udp_packet);
+            transport_->send_packet(packet.buffer);
         }
     }
 }

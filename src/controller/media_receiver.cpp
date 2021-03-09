@@ -34,7 +34,7 @@ void MediaReceiver::stop()
 bco::Routine MediaReceiver::network_loop(std::shared_ptr<MediaReceiver> that)
 {
     while (!stop_) {
-        UdpPacket buffer;
+        std::vector<std::byte> buffer(1500);
         auto bytes_read = co_await transport_->read_packet(buffer);
         frame_assembler_.insert(buffer);
         while (auto frame = frame_assembler_.pop_assembled_frame()) {
