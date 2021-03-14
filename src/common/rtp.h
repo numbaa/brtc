@@ -1,14 +1,69 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 #include <span>
+#include <concepts>
+
+#include <bco/buffer.h>
 
 namespace brtc
 {
 
 constexpr uint32_t kMaxNalusPerPacket = 10;
 constexpr uint32_t kH264StartCodeLength = 4;
+constexpr uint32_t kOneByteHeaderExtensionMaxId = 14;
+constexpr uint32_t kOneByteHeaderExtensionMaxValueSize = 16;
+
+enum class RTPExtensionType : int {
+    kRtpExtensionNone,
+    kRtpExtensionTransmissionTimeOffset,
+    kRtpExtensionAudioLevel,
+    kRtpExtensionInbandComfortNoise,
+    kRtpExtensionAbsoluteSendTime,
+    kRtpExtensionAbsoluteCaptureTime,
+    kRtpExtensionVideoRotation,
+    kRtpExtensionTransportSequenceNumber,
+    kRtpExtensionTransportSequenceNumber02,
+    kRtpExtensionPlayoutDelay,
+    kRtpExtensionVideoContentType,
+    kRtpExtensionVideoLayersAllocation,
+    kRtpExtensionVideoTiming,
+    kRtpExtensionRtpStreamId,
+    kRtpExtensionRepairedRtpStreamId,
+    kRtpExtensionMid,
+    kRtpExtensionGenericFrameDescriptor00,
+    kRtpExtensionGenericFrameDescriptor = kRtpExtensionGenericFrameDescriptor00,
+    kRtpExtensionGenericFrameDescriptor02,
+    kRtpExtensionColorSpace,
+    kRtpExtensionNumberOfExtensions // Must be the last entity in the enum.
+};
+
+template <typename T>
+concept RtpExtension = requires(std::span<uint8_t> buff, typename T::value_type& ref_value, const typename T::value_type const_value)
+{
+    {
+        T::kId
+    }
+    ->std::same_as<const RTPExtensionType>;
+    {
+        T::kValueSizeBytes
+    }
+    ->std::same_as<const uint8_t>;
+    {
+        T::kUri
+    }
+    ->std::same_as<const char*>;
+    {
+        T::read_from_buff(buff, ref_value)
+    }
+    ->std::same_as<bool>;
+    {
+        T::write_to_buff(buff, const_value)
+    }
+    ->std::same_as<bool>;
+};
 
 enum class H264PacketizationTypes {
     kH264SingleNalu,
@@ -42,6 +97,7 @@ struct RTPVideoHeaderH264 {
 class RtpPacket {
 public:
     RtpPacket();
+    RtpPacket(bco::Buffer buff);
 
     bool marker() const;
     uint8_t payload_type() const;
@@ -54,9 +110,11 @@ public:
     size_t payload_size() const;
     size_t padding_size() const;
     size_t extensions_size() const;
-    std::span<uint8_t> payload() const;
+    template <typename T> requires RtpExtension<T>
+    bool get_extension(typename T::value_type& ext) const;
+    const bco::Buffer payload() const;
     size_t size() const;
-    const uint8_t* data() const;
+    const bco::Buffer data() const;
 
     void set_marker(bool marker);
     void set_payload_type(uint8_t pt);
@@ -64,10 +122,89 @@ public:
     void set_timestamp(uint32_t timestamp);
     void set_ssrc(uint32_t ssrc);
     void set_csrcs(std::span<uint32_t> csrcs);
+    template <typename T> requires RtpExtension<T> bool set_extension(const typename T::value_type& ext);
+
+private:
+    void parse();
+    bool find_extension(RTPExtensionType type);
+    
+    template <typename T> requires RtpExtension<T>
+    bool need_promotion() const;
+
+    template <typename T> requires RtpExtension<T>
+    bool need_more_buffer_space() const;
+
+    template <typename T> requires RtpExtension<T>
+    bool push_back_extension(const T::value_type& value);
+
+    bool promote_two_bytes_header_and_reserve_n_bytes(uint8_t bytes);
+
+    bool allocate_n_bytes(uint8_t bytes);
+
+private:
+    struct ExtensionInfo {
+        explicit ExtensionInfo(uint8_t id)
+            : ExtensionInfo(id, 0, 0)
+        {
+        }
+        ExtensionInfo(uint8_t id, uint8_t length, uint16_t offset)
+            : id(id)
+            , length(length)
+            , offset(offset)
+        {
+        }
+        uint8_t id;
+        uint8_t length;
+        uint16_t offset;
+    };
 
 private:
     size_t extensions_size_;
-    std::vector<uint8_t> buffer_;
+    std::vector<ExtensionInfo> extension_entries_;
+    mutable bco::Buffer buffer_;
 };
+
+
+
+template <typename T> requires RtpExtension<T>
+inline bool RtpPacket::get_extension(typename T::value_type& value) const
+{
+    std::span<uint8_t> buff = find_extension(T::kId);
+    if (buff.empty()) {
+        return false;
+    }
+    return T::read_from_buff(buff, value);
+}
+
+template <typename T> requires RtpExtension<T>
+inline bool RtpPacket::set_extension(const typename T::value_type& value)
+{
+    std::span<uint8_t> buff = find_extension(T::kId);
+    if (!buff.empty()) {
+        return T::write_to_buff(buff, value);
+    }
+    if (need_promotion<T>()) {
+        promote_two_bytes_header_and_reserve_n_bytes(T::kValueSizeBytes);
+    } else if (need_more_buffer_space<T>()) {
+        allocate_n_bytes(T::kValueSizeBytes);
+    }
+    return push_back_extension<T>(value);
+}
+
+template <typename T> requires RtpExtension<T>
+inline bool RtpPacket::need_promotion() const
+{
+    assert(T::kId != 15 && T::kId != 0);
+
+    return T::kId > kOneByteHeaderExtensionMaxId
+        || T::kValueSizeBytes > kOneByteHeaderExtensionMaxValueSize;
+}
+
+template <typename T>  requires RtpExtension<T>
+inline bool RtpPacket::need_more_buffer_space() const
+{
+    //extension element之间似乎还有padding，比较麻烦算
+    return false;
+}
 
 } // namespace brtc
