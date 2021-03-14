@@ -47,7 +47,8 @@ set(BRTC_SOURCES
   "${SRC_DIR}/frame_assembler/frame_assembler.h"
   "${SRC_DIR}/common/udp_packet.h"
   "${SRC_DIR}/frame_buffer/frame_buffer.h"
- )
+  "${SRC_DIR}/common/rtp.h"
+  "${SRC_DIR}/common/rtp.cpp")
 
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}

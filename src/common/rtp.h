@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <span>
 
 namespace brtc
 {
@@ -38,17 +39,35 @@ struct RTPVideoHeaderH264 {
     bool has_last_fragement;
 };
 
-//class RtpPacketToSend继承class RtpPacket
-struct RtpPacket {
-    bool marker;
-    uint8_t  payload_type;
-    uint8_t padding_size;
-    uint16_t sequence_number;
-    uint32_t ssrc;
-    uint32_t payload_offset;
-    uint32_t payload_size;
-    uint32_t offset_of_frame;
-    std::vector<std::byte> buffer;
+class RtpPacket {
+public:
+    RtpPacket();
+
+    bool marker() const;
+    uint8_t payload_type() const;
+    uint16_t sequence_number() const;
+    uint32_t timestamp() const;
+    uint32_t ssrc() const;
+    std::vector<uint32_t> csrcs() const;
+    size_t csrcs_size() const;
+    size_t headers_size() const;
+    size_t payload_size() const;
+    size_t padding_size() const;
+    size_t extensions_size() const;
+    std::span<uint8_t> payload() const;
+    size_t size() const;
+    const uint8_t* data() const;
+
+    void set_marker(bool marker);
+    void set_payload_type(uint8_t pt);
+    void set_sequence_number(uint16_t seq);
+    void set_timestamp(uint32_t timestamp);
+    void set_ssrc(uint32_t ssrc);
+    void set_csrcs(std::span<uint32_t> csrcs);
+
+private:
+    size_t extensions_size_;
+    std::vector<uint8_t> buffer_;
 };
 
 } // namespace brtc
