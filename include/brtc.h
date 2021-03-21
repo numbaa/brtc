@@ -1,2 +1,3 @@
 #pragma once
-#include <brtc/fwd.h>
+#include <brtc/interface.h>
+#include <brtc/frame.h>

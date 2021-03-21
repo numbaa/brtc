@@ -2,16 +2,17 @@
 #include <memory>
 #include <atomic>
 
-#include <brtc/fwd.h>
+#include <brtc/interface.h>
 #include <bco/coroutine/channel.h>
 #include <bco/net/proactor/select.h>
+#include <bco/context.h>
 #include "../transport/transport.h"
 
 namespace brtc {
 
-class MediaSender : public std::enable_shared_from_this<MediaSender> {
+class MediaSenderImpl : public std::enable_shared_from_this<MediaSenderImpl> {
 public:
-    MediaSender(
+    MediaSenderImpl(
         std::unique_ptr<Transport>&& transport,
         std::unique_ptr<VideoEncoderInterface>&& encoder,
         std::unique_ptr<VideoCaptureInterface>&& capture,
@@ -22,9 +23,9 @@ public:
     void stop();
 
 private:
-    bco::Routine network_loop(std::shared_ptr<MediaSender> that);
-    bco::Routine capture_encode_loop(std::shared_ptr<MediaSender> that);
-    bco::Routine pacing_loop(std::shared_ptr<MediaSender> that);
+    bco::Routine network_loop(std::shared_ptr<MediaSenderImpl> that);
+    bco::Routine capture_encode_loop(std::shared_ptr<MediaSenderImpl> that);
+    bco::Routine pacing_loop(std::shared_ptr<MediaSenderImpl> that);
 
     Frame capture_one_frame();
     Frame encode_one_frame(Frame frame);

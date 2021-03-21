@@ -15,7 +15,8 @@ set(SRC_DIR "src")
 
 set(BRTC_PUBLIC_HEADERS
   "${PUBLIC_INCLUDE_DIR}/brtc.h"
-  "${PUBLIC_INCLUDE_DIR}/brtc/fwd.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/frame.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/interface.h"
 )
 
 set(BRTC_SOURCES_BUILTIN
@@ -36,9 +37,11 @@ set(BRTC_SOURCES_BUILTIN
 set(BRTC_SOURCES
 
 
-  "${SRC_DIR}/controller/media_sender.h"
+  "${SRC_DIR}/controller/media_sender_impl.h"
+  "${SRC_DIR}/controller/media_sender_impl.cpp"
   "${SRC_DIR}/controller/media_sender.cpp"
-  "${SRC_DIR}/controller/media_receiver.h"
+  "${SRC_DIR}/controller/media_receiver_impl.h"
+  "${SRC_DIR}/controller/media_receiver_impl.cpp"
   "${SRC_DIR}/controller/media_receiver.cpp"
 
   "${SRC_DIR}/transport/transport.cpp"
@@ -53,7 +56,7 @@ set(BRTC_SOURCES
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}
   ${BRTC_SOURCES}
-)
+  )
 
 add_subdirectory("third_party/SDL")
 add_subdirectory("third_party/glog")

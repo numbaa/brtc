@@ -21,12 +21,12 @@ void Transport::set_remote_address(bco::net::Address addr)
     remote_addr_ = addr;
 }
 
-void Transport::send_packet(std::span<std::byte> packet)
+void Transport::send_packet(bco::Buffer packet)
 {
     socket_.sendto(packet, remote_addr_);
 }
 
-bco::Task<int> Transport::read_packet(std::span<std::byte> buffer)
+bco::Task<int> Transport::read_packet(bco::Buffer buffer)
 {
     return socket_.recv(buffer);
 }

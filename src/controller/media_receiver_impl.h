@@ -2,19 +2,19 @@
 #include <memory>
 #include <deque>
 #include <atomic>
-#include <brtc/fwd.h>
-#include <bco/bco.h>
+#include <brtc/interface.h>
 #include <bco/coroutine/channel.h>
 #include <bco/net/proactor/select.h>
+#include <bco/context.h>
 #include "../transport/transport.h"
 #include "../frame_assembler/frame_assembler.h"
 #include "../frame_buffer/frame_buffer.h"
 
 namespace brtc {
 
-class MediaReceiver : public std::enable_shared_from_this<MediaReceiver> {
+class MediaReceiverImpl : public std::enable_shared_from_this<MediaReceiverImpl> {
 public:
-    MediaReceiver(
+    MediaReceiverImpl(
         std::unique_ptr<Transport>&& transport,
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
@@ -25,9 +25,9 @@ public:
     void stop();
 
 private:
-    bco::Routine network_loop(std::shared_ptr<MediaReceiver> that);
-    bco::Routine decode_loop(std::shared_ptr<MediaReceiver> that);
-    bco::Routine render_loop(std::shared_ptr<MediaReceiver> that);
+    bco::Routine network_loop(std::shared_ptr<MediaReceiverImpl> that);
+    bco::Routine decode_loop(std::shared_ptr<MediaReceiverImpl> that);
+    bco::Routine render_loop(std::shared_ptr<MediaReceiverImpl> that);
     inline void send_to_decode_loop(Frame frame);
     inline void send_to_render_loop(Frame frame);
     inline bco::Task<Frame> receive_from_network_loop();
