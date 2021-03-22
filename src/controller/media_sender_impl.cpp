@@ -65,7 +65,7 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
 
 Frame MediaSenderImpl::capture_one_frame()
 {
-    capture_->capture_one_frame();
+    return capture_->capture_one_frame();
 }
 
 Frame MediaSenderImpl::encode_one_frame(Frame frame)

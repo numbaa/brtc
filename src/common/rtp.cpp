@@ -94,7 +94,7 @@ size_t RtpPacket::csrcs_size() const
 
 size_t RtpPacket::headers_size() const
 {
-    return kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + extensions_size();
+    return kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t) + extensions_size();
 }
 
 size_t RtpPacket::payload_size() const
@@ -171,6 +171,16 @@ void RtpPacket::set_csrcs(std::span<uint32_t> csrcs)
 
 void RtpPacket::parse()
 {
+}
+
+bco::Buffer RtpPacket::find_extension(RTPExtensionType type)
+{
+    for (const auto& entry : extension_entries_) {
+        if (entry.type == type) {
+            return buffer_.subbuf(entry.offset, entry.offset + entry.length);
+        }
+    }
+    return bco::Buffer();
 }
 
 } // namespace brtc

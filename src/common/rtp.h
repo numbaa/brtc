@@ -41,7 +41,7 @@ enum class RTPExtensionType : int {
 };
 
 template <typename T>
-concept RtpExtension = requires(std::span<uint8_t> buff, typename T::value_type& ref_value, const typename T::value_type const_value)
+concept RtpExtension = requires(bco::Buffer buff, typename T::value_type& ref_value, const typename T::value_type const_value)
 {
     {
         T::kId
@@ -122,11 +122,12 @@ public:
     void set_timestamp(uint32_t timestamp);
     void set_ssrc(uint32_t ssrc);
     void set_csrcs(std::span<uint32_t> csrcs);
-    template <typename T> requires RtpExtension<T> bool set_extension(const typename T::value_type& ext);
+    template <typename T> requires RtpExtension<T>
+    bool set_extension(const typename T::value_type& ext);
 
 private:
     void parse();
-    bool find_extension(RTPExtensionType type);
+    bco::Buffer find_extension(RTPExtensionType type);
     
     template <typename T> requires RtpExtension<T>
     bool need_promotion() const;
@@ -135,27 +136,27 @@ private:
     bool need_more_buffer_space() const;
 
     template <typename T> requires RtpExtension<T>
-    bool push_back_extension(const T::value_type& value);
+    bool push_back_extension(const typename T::value_type& value);
 
-    bool promote_two_bytes_header_and_reserve_n_bytes(uint8_t bytes);
+    bool promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes);
 
     bool allocate_n_bytes(uint8_t bytes);
 
 private:
     struct ExtensionInfo {
-        explicit ExtensionInfo(uint8_t id)
-            : ExtensionInfo(id, 0, 0)
+        explicit ExtensionInfo(RTPExtensionType _type)
+            : ExtensionInfo(_type, 0, 0)
         {
         }
-        ExtensionInfo(uint8_t id, uint8_t length, uint16_t offset)
-            : id(id)
-            , length(length)
-            , offset(offset)
+        ExtensionInfo(RTPExtensionType _type, uint8_t _offset, uint16_t _length)
+            : type(_type)
+            , offset(_offset)
+            , length(_length)
         {
         }
-        uint8_t id;
-        uint8_t length;
+        RTPExtensionType type;
         uint16_t offset;
+        uint8_t length;
     };
 
 private:
@@ -169,7 +170,7 @@ private:
 template <typename T> requires RtpExtension<T>
 inline bool RtpPacket::get_extension(typename T::value_type& value) const
 {
-    std::span<uint8_t> buff = find_extension(T::kId);
+    auto buff = find_extension(T::kId);
     if (buff.empty()) {
         return false;
     }
@@ -179,7 +180,7 @@ inline bool RtpPacket::get_extension(typename T::value_type& value) const
 template <typename T> requires RtpExtension<T>
 inline bool RtpPacket::set_extension(const typename T::value_type& value)
 {
-    std::span<uint8_t> buff = find_extension(T::kId);
+    auto buff = find_extension(T::kId);
     if (!buff.empty()) {
         return T::write_to_buff(buff, value);
     }
@@ -205,6 +206,20 @@ inline bool RtpPacket::need_more_buffer_space() const
 {
     //extension element之间似乎还有padding，比较麻烦算
     return false;
+}
+
+template <typename T>
+inline bool RtpPacket::push_back_extension(const typename T::value_type& value)
+{
+    size_t insert_pos = kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t);
+    if (not extension_entries_.empty()) {
+        insert_pos = extension_entries_.back().offset + extension_entries_.back().length;
+    }
+    constexpr size_t value_size = sizeof(value) + sizeof(uint32_t) / 4 - 1;
+    std::vector<uint8_t> data(value_size, 0);
+    // TODO: write big endian value into data
+    buffer_.insert(insert_pos, data);
+    return true;
 }
 
 } // namespace brtc
