@@ -9,6 +9,7 @@ namespace brtc {
 
 using Microsoft::WRL::ComPtr;
 
+
 bool MfxDecoder::init(ComPtr<ID3D11Device> device)
 {
     device_ = device;
@@ -32,14 +33,14 @@ bool MfxDecoder::init(ComPtr<ID3D11Device> device)
     return true;
 }
 
-int MfxDecoder::init2(std::vector<uint8_t> encoded_frame)
+int MfxDecoder::init2(Frame encoded_frame)
 {
     int offset = 0;
     mfxBitstream bs;
     memset(&bs, 0, sizeof(mfxBitstream));
-    bs.MaxLength = encoded_frame.size();
-    bs.Data = encoded_frame.data();
-    bs.DataLength = encoded_frame.size();
+    bs.MaxLength = encoded_frame.length;
+    bs.Data = (mfxU8*)encoded_frame.data;
+    bs.DataLength = encoded_frame.length;
     mfxVideoParam params;
     memset(&params, 0, sizeof(mfxVideoParam));
     params.mfx.CodecId = MFX_CODEC_AVC;
@@ -75,26 +76,27 @@ int MfxDecoder::init2(std::vector<uint8_t> encoded_frame)
     return offset;
 }
 
-ID3D11Texture2D* MfxDecoder::on_frame(std::vector<uint8_t>& encoded_frame)
+Frame MfxDecoder::decode_one_frame(Frame encoded_frame)
 {
+    Frame decoded_frame;
     int offset = 0;
     if (!already_init_) {
         offset = init2(encoded_frame);
         if (offset == 0)
-            return nullptr;
+            return decoded_frame;
     }
     int32_t index = get_unlocked_frame();
     if (index == std::numeric_limits<int32_t>::max()) {
         std::cout << "No more available frames" << std::endl;
-        return nullptr;
+        return decoded_frame;
     }
     mfxFrameSurface1* surface_out;
     mfxSyncPoint syncp;
     mfxBitstream bs;
     memset(&bs, 0, sizeof(bs));
-    bs.DataLength = encoded_frame.size() - offset;
-    bs.MaxLength = encoded_frame.size();
-    bs.Data = encoded_frame.data();
+    bs.DataLength = encoded_frame.length - offset;
+    bs.MaxLength = encoded_frame.length;
+    bs.Data = (mfxU8*)encoded_frame.data;
     bs.DataOffset = offset;
     mfxFrameSurface1* surface_work = &surfaces_[index];
     mfxMemId mid = surface_work->Data.MemId;
@@ -105,19 +107,24 @@ ID3D11Texture2D* MfxDecoder::on_frame(std::vector<uint8_t>& encoded_frame)
     if (status == MFX_ERR_NONE) {
         status = MFXVideoCORE_SyncOperation(mfx_session_, syncp, 100);
         if (status == MFX_ERR_NONE) {
-            encoded_frame.clear();
-            return reinterpret_cast<ID3D11Texture2D*>(surface_out->Data.MemId);
+            delete encoded_frame.data;
+            decoded_frame.data = surface_out->Data.MemId;
+            decoded_frame.type = Frame::UnderlyingType::kD3D11Texture2D;
+            decoded_frame.height = surface_out->Info.Height;
+            decoded_frame.width = surface_out->Info.Width;
+            return decoded_frame;
         }
-        encoded_frame.clear();
-        return nullptr;
+        delete encoded_frame.data;
+        return decoded_frame;
         //sync and present surface_out, unlock?
     }
     if (status == MFX_ERR_MORE_DATA || status == MFX_ERR_MORE_SURFACE) {
-        encoded_frame.clear();
-        return nullptr;
+        delete encoded_frame.data;
+        return decoded_frame;
     }
     //fatal error
-    return nullptr;
+    delete encoded_frame.data;
+    return decoded_frame;
 }
 
 mfxStatus MfxDecoder::release_frame(ComPtr<ID3D11Texture2D> frame)

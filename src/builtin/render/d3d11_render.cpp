@@ -11,19 +11,20 @@ bool D3D11Render::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
     return init_sdl() && init_d3d11(device);
 }
 
-void D3D11Render::on_frame(ID3D11Texture2D* frame)
+void D3D11Render::render_one_frame(Frame frame)
 {
     ComPtr<ID3D11Texture2D> back_buffer;
     swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(back_buffer.GetAddressOf()));
-    context_->CopyResource(back_buffer.Get(), frame);
+    context_->CopyResource(back_buffer.Get(), (ID3D11Texture2D*)frame.data);
     D3D11_BOX box { 0 };
-    box.bottom = 1080;
-    box.right = 1920;
+    box.bottom = frame.height;
+    box.right = frame.width;
     box.back = 1;
-    context_->CopySubresourceRegion(back_buffer.Get(), 0, 0, 0, 0, frame, 0, &box);
+    context_->CopySubresourceRegion(back_buffer.Get(), 0, 0, 0, 0, (ID3D11Texture2D*)frame.data, 0, &box);
     //context_->CopyResource(back_buffer.Get(), frame);
     swap_chain_->Present(0, 0);
 }
+
 
 bool D3D11Render::init_sdl()
 {

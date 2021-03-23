@@ -7,7 +7,7 @@
 #include <vector>
 #include <map>
 
-#include "../common/mfx_allocator.h"
+#include <brtc/interface.h>
 
 #ifdef _WIN32
 #define LD3D_CDECL __cdecl
@@ -17,12 +17,13 @@
 
 namespace brtc {
 
-class MfxDecoder {
+class MfxDecoder : VideoDecoderInterface {
 public:
     MfxDecoder() = default;
+    Frame decode_one_frame(Frame encoded_frame) override;
     bool init(Microsoft::WRL::ComPtr<ID3D11Device> device);
-    int init2(std::vector<uint8_t> encoded_frame);
-    ID3D11Texture2D* on_frame(std::vector<uint8_t>& encoded_frame);
+    int init2(Frame encoded_frame);
+
     mfxStatus release_frame(Microsoft::WRL::ComPtr<ID3D11Texture2D> frame);
 
 private:

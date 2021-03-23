@@ -4,12 +4,14 @@
 #include <vector>
 #include <SDL.h>
 
+#include <brtc/interface.h>
+
 namespace brtc {
 
-class D3D11Render {
+class D3D11Render : public RenderInterface {
 public:
     bool init(Microsoft::WRL::ComPtr<ID3D11Device> device);
-    void on_frame(ID3D11Texture2D* frame);
+    void render_one_frame(Frame frame) override;
 
 private:
     bool init_sdl();

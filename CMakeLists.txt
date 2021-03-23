@@ -56,7 +56,8 @@ set(BRTC_SOURCES
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}
   ${BRTC_SOURCES}
-  )
+  ${BRTC_SOURCES_BUILTIN}
+)
 
 add_subdirectory("third_party/SDL")
 add_subdirectory("third_party/glog")

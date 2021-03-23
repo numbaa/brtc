@@ -14,6 +14,7 @@ MfxEncoder::~MfxEncoder()
     if (mfx_session_ != nullptr)
         MFXClose(mfx_session_);
 }
+
 bool MfxEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
 {
     device_ = device;
@@ -43,20 +44,21 @@ bool MfxEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
     }
     return true;
 }
-bool MfxEncoder::on_frame(ComPtr<ID3D11Texture2D> frame, std::vector<uint8_t>& out)
+
+Frame MfxEncoder::encode_one_frame(Frame in_frame)
 {
+    Frame out_frame;
     mfxFrameSurface1 vppin, vppout;
     memset(&vppin, 0, sizeof(mfxFrameSurface1));
     memset(&vppout, 0, sizeof(mfxFrameSurface1));
     mfxBitstream bs;
     mfxSyncPoint syncp_encode, syncp_vpp;
-    std::vector<uint8_t> output_buffer;
-    output_buffer.resize(encode_param_.mfx.BufferSizeInKB * 1000);
+    uint8_t* output_buffer = new uint8_t[encode_param_.mfx.BufferSizeInKB * 1000];
     memset(&bs, 0, sizeof(bs));
-    bs.Data = output_buffer.data();
-    bs.MaxLength = output_buffer.size();
+    bs.Data = output_buffer;
+    bs.MaxLength = encode_param_.mfx.BufferSizeInKB * 1000;
 
-    vppin.Data.MemId = frame.Get();
+    vppin.Data.MemId = in_frame.data;
     vppin.Info = vpp_param_.vpp.In;
 
     vppout.Data.MemId = render_surface_.Get();
@@ -64,26 +66,31 @@ bool MfxEncoder::on_frame(ComPtr<ID3D11Texture2D> frame, std::vector<uint8_t>& o
     ;
     mfxStatus status = MFXVideoVPP_RunFrameVPPAsync(mfx_session_, &vppin, &vppout, nullptr, &syncp_vpp);
     if (status != MFX_ERR_NONE) {
-        return false;
+        return out_frame;
     }
     status = MFXVideoCORE_SyncOperation(mfx_session_, syncp_vpp, 1000);
     if (status != MFX_ERR_NONE) {
-        return false;
+        return out_frame;
     }
     status = MFXVideoENCODE_EncodeFrameAsync(mfx_session_, nullptr, &vppout, &bs, &syncp_encode);
     if (status != MFX_ERR_NONE) {
-        return false;
+        return out_frame;
     }
     status = MFX_WRN_IN_EXECUTION;
     while (status > 0) {
         status = MFXVideoCORE_SyncOperation(mfx_session_, syncp_encode, 1000);
         if (status < MFX_ERR_NONE) {
-            return false;
+            return out_frame;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds { 1 });
     }
-    std::copy_n(output_buffer.begin(), bs.DataLength, std::back_inserter(out));
-    return true;
+    // ¼ÇµÃdelete [] out_frame.data
+    out_frame.data = output_buffer;
+    out_frame.type = Frame::UnderlyingType::kMemory;
+    out_frame.length = bs.DataLength;
+    out_frame.width = vppin.Info.Width;
+    out_frame.height = vppin.Info.Height;
+    return out_frame;
 }
 
 bool MfxEncoder::init_encoder()

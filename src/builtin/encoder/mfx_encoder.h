@@ -9,16 +9,18 @@
 
 #include <mfxvideo.h>
 
-#include "../common/mfx_allocator.h"
+#include <brtc/interface.h>
 
 namespace brtc {
 
-class MfxEncoder {
+class MfxEncoder : public VideoEncoderInterface {
 public:
     MfxEncoder() = default;
     ~MfxEncoder();
+
+    Frame encode_one_frame(Frame frame) override;
+
     bool init(Microsoft::WRL::ComPtr<ID3D11Device> device);
-    bool on_frame(Microsoft::WRL::ComPtr<ID3D11Texture2D> frame, std::vector<uint8_t>& out);
 
 private:
     bool init_encoder();

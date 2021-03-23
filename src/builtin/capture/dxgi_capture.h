@@ -4,17 +4,21 @@
 #include <wrl/client.h>
 #include <memory>
 #include <vector>
-#include "../common/video_source.h"
+
+#include <brtc/frame.h>
+#include <brtc/interface.h>
 
 namespace brtc {
 
-class DxgiCapture : public VideoSourceInterface {
+class DxgiCapture : public VideoCaptureInterface {
 public:
     DxgiCapture() = default;
+    Frame capture_one_frame() override;
+    void release_frame() override;
     bool init(Microsoft::WRL::ComPtr<ID3D11Device> device);
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> capture_frame();
-    void release_frame();
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> copy_frame(Microsoft::WRL::ComPtr<ID3D11Texture2D> inframe);
+
+private:
+    Frame copy_frame(Microsoft::WRL::ComPtr<ID3D11Texture2D> inframe);
     std::vector<uint8_t> gpu_to_memory(Microsoft::WRL::ComPtr<ID3D11Texture2D> frame);
 
 private:

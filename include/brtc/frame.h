@@ -11,9 +11,11 @@ struct Frame {
         kD3D11Texture2D,
         kOpenGLTexture2D,
     };
-    void* data;
-    uint32_t width;
-    uint32_t height;
+    UnderlyingType type = UnderlyingType::kUknown;
+    void* data = nullptr;
+    uint32_t length = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
 };
 
 } // brtc

@@ -34,41 +34,42 @@ bool DxgiCapture::init(ComPtr<ID3D11Device> device)
     }
     return true;
 }
-ComPtr<ID3D11Texture2D> DxgiCapture::capture_frame()
+
+Frame DxgiCapture::capture_one_frame()
 {
     ComPtr<IDXGIResource> resource;
     DXGI_OUTDUPL_FRAME_INFO frame_info;
     HRESULT hr = dup_->AcquireNextFrame(INFINITE, &frame_info, &resource);
     if (FAILED(hr)) {
-        return nullptr;
+        return Frame {};
     }
-    ComPtr<ID3D11Texture2D> frame;
+    ComPtr<ID3D11Texture2D> texture2d;
     if (frame_info.TotalMetadataBufferSize != 0) {
-        hr = resource.As(&frame);
+        hr = resource.As(&texture2d);
         if (FAILED(hr)) {
-            return nullptr;
+            return Frame {};
         }
-        //return copy_frame(frame);
-        return frame;
+        return copy_frame(texture2d);
     }
-    return nullptr;
+    return Frame {};
 }
+
 void DxgiCapture::release_frame()
 {
     dup_->ReleaseFrame();
 }
-ComPtr<ID3D11Texture2D> DxgiCapture::copy_frame(ComPtr<ID3D11Texture2D> inframe)
+
+Frame DxgiCapture::copy_frame(ComPtr<ID3D11Texture2D> inframe)
 {
     D3D11_TEXTURE2D_DESC desc { 0 };
-    //inframe->GetDesc(&desc);
-    desc.Width = 1920;
-    desc.Height = 1088; //?
+    inframe->GetDesc(&desc);
     desc.MipLevels = 1;
     desc.ArraySize = 1;
     desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
     desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.BindFlags = D3D11_BIND_RENDER_TARGET;
-    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.CPUAccessFlags = 0;
+    desc.BindFlags = 0;
     desc.MiscFlags = 0;
     desc.BindFlags = 0;
     ComPtr<ID3D11Texture2D> tmp_frame;
@@ -77,7 +78,14 @@ ComPtr<ID3D11Texture2D> DxgiCapture::copy_frame(ComPtr<ID3D11Texture2D> inframe)
         return {};
     }
     context_->CopyResource(tmp_frame.Get(), inframe.Get());
-    return tmp_frame;
+
+    Frame frame;
+    frame.data = tmp_frame.Get();
+    frame.type = Frame::UnderlyingType::kD3D11Texture2D;
+    frame.height = desc.Height;
+    frame.width = desc.Width;
+    tmp_frame->AddRef();
+    return frame;
 }
 std::vector<uint8_t> DxgiCapture::gpu_to_memory(ComPtr<ID3D11Texture2D> frame)
 {
