@@ -8,6 +8,8 @@
 
 #include <bco/buffer.h>
 
+#include <brtc/frame.h>
+
 namespace brtc
 {
 
@@ -124,6 +126,10 @@ public:
     void set_csrcs(std::span<uint32_t> csrcs);
     template <typename T> requires RtpExtension<T>
     bool set_extension(const typename T::value_type& ext);
+    void set_payload(const std::span<uint8_t>& payload);
+    void set_payload(std::vector<uint8_t>&& payload);
+
+    void set_frame(Frame frame);
 
 private:
     void parse();
@@ -163,6 +169,7 @@ private:
     size_t extensions_size_;
     std::vector<ExtensionInfo> extension_entries_;
     mutable bco::Buffer buffer_;
+    mutable Frame frame_;
 };
 
 

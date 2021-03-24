@@ -169,6 +169,23 @@ void RtpPacket::set_csrcs(std::span<uint32_t> csrcs)
     }
 }
 
+void RtpPacket::set_payload(const std::span<uint8_t>& payload)
+{
+    //padding?
+    buffer_.push_back(payload, true);
+}
+
+void RtpPacket::set_payload(std::vector<uint8_t>&& payload)
+{
+    //padding?
+    buffer_.push_back(std::move(payload), true);
+}
+
+void RtpPacket::set_frame(Frame frame)
+{
+    frame_ = frame;
+}
+
 void RtpPacket::parse()
 {
 }
