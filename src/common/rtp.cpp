@@ -200,4 +200,16 @@ bco::Buffer RtpPacket::find_extension(RTPExtensionType type)
     return bco::Buffer();
 }
 
+bool RtpPacket::promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes)
+{
+    extension_mode_ = ExtensionMode::kTwoByte;
+    //??
+    return false;
+}
+
+bool RtpPacket::allocate_n_bytes(uint8_t bytes)
+{
+    buffer_.push_back(std::vector<uint8_t>(bytes));
+}
+
 } // namespace brtc

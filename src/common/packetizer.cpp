@@ -430,7 +430,7 @@ void Packetizer::next_aggregate_packet(RtpPacket& rtp_packet)
         // Add NAL unit length field.
         uint16_t fragment_len = static_cast<uint16_t>(fragment.size());
         //write big endian
-        buffer[index] = fragment_len > 8;
+        buffer[index] = fragment_len >> 8;
         buffer[index + 1] = static_cast<uint16_t>(fragment_len & 0x00ff);
         index += kLengthFieldSize;
         // Add NAL unit.

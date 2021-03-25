@@ -43,7 +43,7 @@ enum class RTPExtensionType : int {
 };
 
 template <typename T>
-concept RtpExtension = requires(bco::Buffer buff, typename T::value_type& ref_value, const typename T::value_type const_value)
+concept RtpExtension = requires(bco::Buffer buff, typename T::value_type& ref_value, const typename T::value_type& const_value)
 {
     {
         T::kId
@@ -164,8 +164,13 @@ private:
         uint16_t offset;
         uint8_t length;
     };
+    enum class ExtensionMode {
+        kOneByte,
+        kTwoByte,
+    };
 
 private:
+    ExtensionMode extension_mode_ = ExtensionMode::kOneByte;
     size_t extensions_size_;
     std::vector<ExtensionInfo> extension_entries_;
     mutable bco::Buffer buffer_;
@@ -192,9 +197,10 @@ inline bool RtpPacket::set_extension(const typename T::value_type& value)
         return T::write_to_buff(buff, value);
     }
     if (need_promotion<T>()) {
-        promote_two_bytes_header_and_reserve_n_bytes(T::kValueSizeBytes);
-    } else if (need_more_buffer_space<T>()) {
-        allocate_n_bytes(T::kValueSizeBytes);
+        promote_two_bytes_header_and_reserve_n_bytes(T::kValueSizeBytes + 2);
+    } else { //if (need_more_buffer_space<T>()) { 空间不是预留式的，所以不需要need_more_buffer_space
+        size_t size = extension_mode_ == ExtensionMode::kOneByte ? T::kValueSizeBytes + 1 : T::kValueSizeBytes + 2;
+        allocate_n_bytes(size);
     }
     return push_back_extension<T>(value);
 }
@@ -203,9 +209,8 @@ template <typename T> requires RtpExtension<T>
 inline bool RtpPacket::need_promotion() const
 {
     assert(T::kId != 15 && T::kId != 0);
-
-    return T::kId > kOneByteHeaderExtensionMaxId
-        || T::kValueSizeBytes > kOneByteHeaderExtensionMaxValueSize;
+    return extension_mode_ == ExtensionMode::kOneByte
+        && (T::kId > kOneByteHeaderExtensionMaxId || T::kValueSizeBytes > kOneByteHeaderExtensionMaxValueSize);
 }
 
 template <typename T>  requires RtpExtension<T>
@@ -218,14 +223,22 @@ inline bool RtpPacket::need_more_buffer_space() const
 template <typename T>
 inline bool RtpPacket::push_back_extension(const typename T::value_type& value)
 {
-    size_t insert_pos = kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t);
+    size_t insert_pos;
     if (not extension_entries_.empty()) {
         insert_pos = extension_entries_.back().offset + extension_entries_.back().length;
+    } else {
+        insert_pos = kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t);
     }
-    constexpr size_t value_size = sizeof(value) + sizeof(uint32_t) / 4 - 1;
-    std::vector<uint8_t> data(value_size, 0);
-    // TODO: write big endian value into data
-    buffer_.insert(insert_pos, data);
+    if (extension_mode_ == ExtensionMode::kOneByte) {
+        buffer_[insert_pos] = (T::kId << 4) | (T::kValueSizeBytes - 1);
+        T::write_to_buff(buffer_.subbuf(insert_pos + 1, T::kValueSizeBytes), value);
+        extension_entries_.push_back(ExtensionInfo {T::kId, insert_pos, T::kValueSizeBytes + 1});
+    } else {
+        buffer_[insert_pos] = T::kId;
+        buffer_[insert_pos + 1] = T::kValueSizeBytes - 1;
+        T::write_to_buff(buffer_.subbuf(insert_pos + 2, T::kValueSizeBytes), value);
+        extension_entries_.push_back(ExtensionInfo { T::kId, insert_pos, T::kValueSizeBytes + 2 });
+    }
     return true;
 }
 
