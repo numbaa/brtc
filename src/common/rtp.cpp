@@ -171,13 +171,21 @@ void RtpPacket::set_csrcs(std::span<uint32_t> csrcs)
 
 void RtpPacket::set_payload(const std::span<uint8_t>& payload)
 {
-    //padding?
+    auto ext = buffer_.data().back();
+    auto mod = ext.size() % 4;
+    if (mod != 0) {
+        buffer_.push_back(std::vector<uint8_t>(4 - mod, 0));
+    }
     buffer_.push_back(payload, true);
 }
 
 void RtpPacket::set_payload(std::vector<uint8_t>&& payload)
 {
-    //padding?
+    auto ext = buffer_.data().back();
+    auto mod = ext.size() % 4;
+    if (mod != 0) {
+        buffer_.push_back(std::vector<uint8_t>(4 - mod, 0));
+    }
     buffer_.push_back(std::move(payload), true);
 }
 
@@ -200,16 +208,51 @@ bco::Buffer RtpPacket::find_extension(RTPExtensionType type)
     return bco::Buffer();
 }
 
-bool RtpPacket::promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes)
+void RtpPacket::promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes)
 {
     extension_mode_ = ExtensionMode::kTwoByte;
-    //??
-    return false;
+    if (extension_entries_.empty()) {
+        //第一次插入ext elem，并且是two bytes
+        //插入16字节的特殊xx
+        //reserve n bytes
+        buffer_.push_back(std::vector<uint8_t>(2 + n_bytes));
+        size_t pos = buffer_.size();
+        uint16_t magic = 0x1'0000;
+        buffer_.write_big_endian_at(pos, magic);
+    } else {
+        //uint16_t magic = 0x1'0000;
+        auto tmp = buffer_.data().back();
+        tmp[0] = 1;
+        tmp[1] = 0;
+        //每个 extension element增加了1字节
+        buffer_.push_back(std::vector<uint8_t>(extension_entries_.size() + n_bytes));
+        auto exts = extension_entries_.size();
+        for (auto it = extension_entries_.rbegin(); it != extension_entries_.rend(); it++) {
+            auto ext_index = &buffer_[it->offset];
+            ::memmove(ext_index + exts, ext_index, it->length);
+            *(ext_index - 1) = it->length;
+            *(ext_index - 2) = static_cast<uint8_t>(it->type);
+            it->offset += exts; 
+            exts -= 1;
+        }
+    }
 }
 
-bool RtpPacket::allocate_n_bytes(uint8_t bytes)
+void RtpPacket::allocate_n_bytes_for_extension(uint8_t bytes)
 {
-    buffer_.push_back(std::vector<uint8_t>(bytes));
+    if (extension_entries_.empty()) {
+        //第一次插入ext elem，并且是 one byte
+        //插入16字节特殊xx
+        //reserve n bytes
+        auto ext = std::vector<uint8_t>(2 + bytes);
+        ext[0] = 0xBE;
+        ext[1] = 0xDE;
+        ext[2] = 0;
+        ext[3] = 0;
+        buffer_.push_back(std::move(ext), true);
+    } else {
+        buffer_.push_back(std::vector<uint8_t>(bytes));
+    }
 }
 
 } // namespace brtc

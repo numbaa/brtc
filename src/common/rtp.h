@@ -144,9 +144,9 @@ private:
     template <typename T> requires RtpExtension<T>
     bool push_back_extension(const typename T::value_type& value);
 
-    bool promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes);
+    void promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes);
 
-    bool allocate_n_bytes(uint8_t bytes);
+    void allocate_n_bytes_for_extension(uint8_t bytes);
 
 private:
     struct ExtensionInfo {
@@ -200,7 +200,7 @@ inline bool RtpPacket::set_extension(const typename T::value_type& value)
         promote_two_bytes_header_and_reserve_n_bytes(T::kValueSizeBytes + 2);
     } else { //if (need_more_buffer_space<T>()) { 空间不是预留式的，所以不需要need_more_buffer_space
         size_t size = extension_mode_ == ExtensionMode::kOneByte ? T::kValueSizeBytes + 1 : T::kValueSizeBytes + 2;
-        allocate_n_bytes(size);
+        allocate_n_bytes_for_extension(size);
     }
     return push_back_extension<T>(value);
 }
