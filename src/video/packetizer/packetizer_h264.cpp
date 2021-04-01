@@ -8,11 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "packetizer_h264.h"
 #include <cassert>
-#include "packetizer.h"
 
-namespace brtc
-{
+namespace brtc {
 
 namespace {
 constexpr size_t kNalHeaderSize = 1;
@@ -22,7 +21,8 @@ constexpr size_t kLengthFieldSize = 2;
 enum NalDefs : uint8_t {
     kFBit = 0x80,
     kNriMask = 0x60,
-    kTypeMask = 0x1F };
+    kTypeMask = 0x1F
+};
 
 // Bit masks for FU (A and B) headers.
 enum FuDefs : uint8_t {
@@ -46,14 +46,12 @@ enum NaluType : uint8_t {
     kFuA = 28
 };
 
-}
-
-
+} // namespace
 
 static std::tuple<uint8_t*, int32_t> find_nalu(std::span<uint8_t> data)
 {
     if (data.size() < kH264StartCodeLength) {
-        return {nullptr, -1};
+        return { nullptr, -1 };
     }
     uint8_t* head = data.data();
     uint8_t* end = data.data() + data.size() - kH264StartCodeLength;
@@ -68,34 +66,38 @@ static std::tuple<uint8_t*, int32_t> find_nalu(std::span<uint8_t> data)
         }
         if (head[2]) {
             if (head[2] == 0x01) {
-                return {head, 3};
+                return { head, 3 };
             }
         }
         if (head[3] != 0x01) {
             head++;
             continue;
         }
-        return {head, 4};
+        return { head, 4 };
     }
-    return {nullptr, -1};
+    return { nullptr, -1 };
 }
 
-Packetizer::Packetizer(Frame encoded_frame, PayloadSizeLimits limits)
+PacketizerH264::PacketizerH264(Frame encoded_frame, VideoCodecType codec_type, PayloadSizeLimits limits)
     : frame_(encoded_frame)
     , limits_(limits)
 {
+    switch (codec_type) {
+    case brtc::VideoCodecType::H264:
+        break;
+    case brtc::VideoCodecType::H265:
+    case brtc::VideoCodecType::VP8:
+    case brtc::VideoCodecType::VP9:
+    default:
+        assert(false);
+    }
     if (!do_fragmentation()) {
         return;
     }
     do_packetization();
 }
 
-bool Packetizer::is_valid_frame() const
-{
-    return is_valid_frame_;
-}
-
-bool Packetizer::next_packet(RtpPacket& rtp_packet)
+bool PacketizerH264::next_packet(RtpPacket& rtp_packet)
 {
     if (packets_.empty()) {
         return false;
@@ -116,7 +118,7 @@ bool Packetizer::next_packet(RtpPacket& rtp_packet)
     return true;
 }
 
-bool Packetizer::do_fragmentation()
+bool PacketizerH264::do_fragmentation()
 {
     int32_t index = 0;
     uint8_t* nalus[kMaxNalusPerPacket + 1];
@@ -152,10 +154,10 @@ bool Packetizer::do_fragmentation()
     return true;
 }
 
-bool Packetizer::do_packetization()
+bool PacketizerH264::do_packetization()
 {
     constexpr int kMaxPayloadLength = 1200;
-    //Çø·Östapa ºÍ fu£¬²»Ö§³Ösingle
+    //ï¿½ï¿½ï¿½ï¿½stapa ï¿½ï¿½ fuï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½single
     for (size_t i = 0; i < nalus_.size();) {
         int fragment_len = nalus_[i].payload_length;
         int single_packet_capacity = kMaxPayloadLength;
@@ -178,7 +180,7 @@ bool Packetizer::do_packetization()
 }
 
 // copy from webrtc
-bool Packetizer::packetize_FuA(size_t index)
+bool PacketizerH264::packetize_FuA(size_t index)
 {
     // Fragment payload into packets (FU-A).
     std::span<uint8_t> fragment { (uint8_t*)frame_.data + nalus_[index].offset + nalus_[index].start_code_length, nalus_[index].payload_length };
@@ -228,7 +230,7 @@ bool Packetizer::packetize_FuA(size_t index)
 }
 
 //copy from webrtc
-size_t Packetizer::packetize_StapA(size_t index)
+size_t PacketizerH264::packetize_StapA(size_t index)
 {
     // Aggregate fragments into one packet (STAP-A).
     size_t payload_size_left = limits_.max_payload_len;
@@ -282,7 +284,7 @@ size_t Packetizer::packetize_StapA(size_t index)
     return index;
 }
 
-std::vector<int> Packetizer::split_about_equally(int payload_len, const PayloadSizeLimits& limits)
+std::vector<int> PacketizerH264::split_about_equally(int payload_len, const PayloadSizeLimits& limits)
 {
     assert(payload_len > 0);
     // First or last packet larger than normal are unsupported.
@@ -367,7 +369,7 @@ std::vector<int> Packetizer::split_about_equally(int payload_len, const PayloadS
     |                               :...OPTIONAL RTP padding        |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 */
-void Packetizer::next_fragment_packet(RtpPacket& rtp_packet)
+void PacketizerH264::next_fragment_packet(RtpPacket& rtp_packet)
 {
     PacketUnit* packet = &packets_.front();
     // NAL unit fragmented over multiple packets (FU-A).
@@ -382,7 +384,7 @@ void Packetizer::next_fragment_packet(RtpPacket& rtp_packet)
     uint8_t type = packet->header & kTypeMask;
     fu_header |= type;
     auto fragment = packet->source_fragment;
-    std::vector<uint8_t> buffer (kFuAHeaderSize + fragment.size());
+    std::vector<uint8_t> buffer(kFuAHeaderSize + fragment.size());
     buffer[0] = fu_indicator;
     buffer[1] = fu_header;
     memcpy(buffer.data() + kFuAHeaderSize, fragment.data(), fragment.size());
@@ -411,7 +413,7 @@ void Packetizer::next_fragment_packet(RtpPacket& rtp_packet)
     |                               :...OPTIONAL RTP padding        |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 */
-void Packetizer::next_aggregate_packet(RtpPacket& rtp_packet)
+void PacketizerH264::next_aggregate_packet(RtpPacket& rtp_packet)
 {
     // Reserve maximum available payload, set actual payload size later.
     size_t payload_len = kNalHeaderSize;

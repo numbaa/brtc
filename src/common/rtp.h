@@ -5,6 +5,7 @@
 #include <vector>
 #include <span>
 #include <concepts>
+#include <variant>
 
 #include <bco/buffer.h>
 
@@ -84,9 +85,47 @@ struct NaluInfo {
     int pps_id;
 };
 
-//编码后输出的Frame的header
-struct RTPVideoHeaderH264 {
-    uint8_t nalu_type;
+enum H264NaluType : uint8_t {
+    Slice = 1,
+    Idr = 5,
+    Sei = 6,
+    Sps = 7,
+    Pps = 8,
+    Aud = 9,
+    EndOfSequence = 10,
+    EndOfStream = 11,
+    Filler = 12,
+    StapA = 24,
+    FuA = 28
+};
+
+enum class VideoCodecType : uint8_t {
+    Unknown,
+    H264,
+    H265,
+    VP8,
+    VP9,
+};
+
+enum class VideoFrameType {
+    EmptyFrame = 0,
+    VideoFrameKey = 3,
+    VideoFrameDelta = 4,
+};
+
+struct RTPVideoHeader {
+    VideoFrameType frame_type = VideoFrameType::EmptyFrame;
+    uint16_t width = 0;
+    uint16_t height = 0;
+    bool is_first_packet_in_frame = false;
+    bool is_last_packet_in_frame = false;
+    bool is_last_frame_in_picture = true;
+    uint8_t simulcastIdx = 0;
+    VideoCodecType codec = VideoCodecType::Unknown;
+};
+
+struct RTPVideoHeaderH264 : public RTPVideoHeader {
+    H264NaluType nalu_type;
     H264PacketizationTypes packetization_type;
     NaluInfo nalus[kMaxNalusPerPacket];
     uint32_t nalus_length;
@@ -94,6 +133,15 @@ struct RTPVideoHeaderH264 {
     uint16_t picture_id;
     int64_t timestamp_local;
     bool has_last_fragement;
+};
+
+struct RTPVideoHeaderH265 : public RTPVideoHeader {
+};
+
+struct RTPVideoHeaderVP8 : public RTPVideoHeader {
+};
+
+struct RTPVideoHeaderVP9 : public RTPVideoHeader {
 };
 
 class RtpPacket {
@@ -117,6 +165,14 @@ public:
     const bco::Buffer payload() const;
     size_t size() const;
     const bco::Buffer data() const;
+    template <typename T>
+    const T& video_header() const {
+        return std::get<T>(video_header_);
+    }
+    template <typename T>
+    T& video_header() {
+        return std::get<T>(video_header_);
+    }
 
     void set_marker(bool marker);
     void set_payload_type(uint8_t pt);
@@ -128,8 +184,10 @@ public:
     bool set_extension(const typename T::value_type& ext);
     void set_payload(const std::span<uint8_t>& payload);
     void set_payload(std::vector<uint8_t>&& payload);
-
-    void set_frame(Frame frame);
+    template <typename T>
+    void set_video_header(const T& header) {
+        video_header_ = header;
+    }
 
 private:
     void parse();
@@ -173,8 +231,9 @@ private:
     ExtensionMode extension_mode_ = ExtensionMode::kOneByte;
     size_t extensions_size_;
     std::vector<ExtensionInfo> extension_entries_;
+    std::variant<RTPVideoHeader, RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9> video_header_;
     mutable bco::Buffer buffer_;
-    mutable Frame frame_;
+    //mutable Frame frame_;
 };
 
 

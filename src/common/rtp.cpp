@@ -189,10 +189,10 @@ void RtpPacket::set_payload(std::vector<uint8_t>&& payload)
     buffer_.push_back(std::move(payload), true);
 }
 
-void RtpPacket::set_frame(Frame frame)
-{
-    frame_ = frame;
-}
+//void RtpPacket::set_frame(Frame frame)
+//{
+//    frame_ = frame;
+//}
 
 void RtpPacket::parse()
 {

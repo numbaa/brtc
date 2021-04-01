@@ -35,8 +35,6 @@ set(BRTC_SOURCES_BUILTIN
   "${SRC_DIR}/builtin/p2p/p2p.h"
 )
 set(BRTC_SOURCES
-
-
   "${SRC_DIR}/controller/media_sender_impl.h"
   "${SRC_DIR}/controller/media_sender_impl.cpp"
   "${SRC_DIR}/controller/media_sender.cpp"
@@ -51,13 +49,15 @@ set(BRTC_SOURCES
   "${SRC_DIR}/frame_buffer/frame_buffer.h"
   "${SRC_DIR}/common/rtp.h"
   "${SRC_DIR}/common/rtp.cpp"
-  "${SRC_DIR}/common/packetizer.h"
-  "${SRC_DIR}/common/packetizer.cpp"
+  "${SRC_DIR}/video/packetizer/packetizer.h"
+  "${SRC_DIR}/video/packetizer/packetizer_h264.h"
+  "${SRC_DIR}/video/packetizer/packetizer_h264.cpp"
 
-  "${SRC_DIR}/frame_assembler/frame_assembler.h"
-  "${SRC_DIR}/frame_assembler/frame_assembler.cpp"
-  "${SRC_DIR}/frame_assembler/sequence_number_util.h"
-  "${SRC_DIR}/frame_assembler/mod_ops.h" "src/common/time_utils.h")
+  "${SRC_DIR}/video/frame_assembler/frame_assembler.h"
+  "${SRC_DIR}/video/frame_assembler/frame_assembler.cpp"
+  "${SRC_DIR}/video/frame_assembler/sequence_number_util.h"
+  "${SRC_DIR}/video/frame_assembler/mod_ops.h"
+  "${SRC_DIR}/common/time_utils.h")
 
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}

@@ -3,11 +3,21 @@
 #include <set>
 #include <brtc/frame.h>
 #include "sequence_number_util.h"
-#include "../common/rtp.h"
+#include "../../common/rtp.h"
 
 namespace brtc {
 
 class FrameAssembler {
+private:
+    class Packet : public RtpPacket {
+    public:
+        Packet(RtpPacket&& rtp_packet)
+            : RtpPacket { std::move(rtp_packet) }
+        {
+        }
+        bool continuous = false;
+    };
+
 public:
     void insert(RtpPacket packet);
     std::vector<RtpPacket> pop_assembled_frame();
@@ -30,7 +40,7 @@ private:
     std::optional<int64_t> last_received_packet_ms_;
     std::optional<uint32_t> last_received_keyframe_rtp_timestamp_;
     std::optional<int64_t> last_received_keyframe_packet_ms_;
-    std::vector<RtpPacket> buffer_;
+    std::vector<Packet> buffer_;
     const size_t max_size_; //构造函数传进来
 };
 

@@ -7,18 +7,18 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-
 #pragma once
-#include <cstdint>
+
 #include <array>
-#include <queue>
 #include <brtc/frame.h>
-#include "rtp.h"
+#include <cstdint>
+#include <queue>
+#include "../../common/rtp.h"
+#include "packetizer.h"
 
-namespace brtc
-{
+namespace brtc {
 
-class Packetizer {
+class PacketizerH264 : public Packetizer {
     struct PayloadSizeLimits {
         int max_payload_len = 1200;
         int first_packet_reduction_len = 0;
@@ -49,9 +49,8 @@ class Packetizer {
     };
 
 public:
-    explicit Packetizer(Frame decoded_frame, PayloadSizeLimits limits);
-    bool is_valid_frame() const;
-    bool next_packet(RtpPacket& packet);
+    explicit PacketizerH264(Frame decoded_frame, VideoCodecType codec_type, PayloadSizeLimits limits);
+    bool next_packet(RtpPacket& packet) override;
 
 private:
     bool do_fragmentation();
@@ -63,8 +62,6 @@ private:
     void next_aggregate_packet(RtpPacket& rtp_packet);
 
 private:
-
-    bool is_valid_frame_ = false;
     uint32_t current_nalu_ = 0;
     uint32_t nalus_len_ = 0;
     Frame frame_;
@@ -81,4 +78,3 @@ private:
 };
 
 } // namespace brtc
-

@@ -9,14 +9,14 @@
  */
 
 #include <glog/logging.h>
-#include "../common/time_utils.h"
+#include "../../common/time_utils.h"
 #include "frame_assembler.h"
 
 namespace brtc {
 
-void FrameAssembler::insert(RtpPacket packet)
+void FrameAssembler::insert(RtpPacket rtp_packet)
 {
-    uint16_t seq_num = packet.sequence_number();
+    uint16_t seq_num = rtp_packet.sequence_number();
     size_t index = seq_num % buffer_.size();
 
     if (!first_packet_received_) {
@@ -34,7 +34,7 @@ void FrameAssembler::insert(RtpPacket packet)
 
     if (buffer_[index].size() != 0) {
         // Duplicate packet, just delete the payload.
-        if (buffer_[index].sequence_number() == packet.sequence_number()) {
+        if (buffer_[index].sequence_number() == rtp_packet.sequence_number()) {
             return;
         }
 
@@ -56,13 +56,15 @@ void FrameAssembler::insert(RtpPacket packet)
     }
 
     int64_t now_ms = MachineNowMilliseconds();
+    auto& video_header = rtp_packet.video_header<RTPVideoHeader>();
     last_received_packet_ms_ = now_ms;
-    if (packet->video_header.frame_type == VideoFrameType::kVideoFrameKey || last_received_keyframe_rtp_timestamp_ == packet.timestamp()) {
+    if (video_header.frame_type == VideoFrameType::VideoFrameKey || last_received_keyframe_rtp_timestamp_ == rtp_packet.timestamp()) {
         last_received_keyframe_packet_ms_ = now_ms;
-        last_received_keyframe_rtp_timestamp_ = packet.timestamp();
+        last_received_keyframe_rtp_timestamp_ = rtp_packet.timestamp();
     }
 
-    packet->continuous = false;
+    Packet packet { std::move(rtp_packet) };
+    packet.continuous = false;
     buffer_[index] = std::move(packet);
 
     update_missing_packets(seq_num);
@@ -113,7 +115,7 @@ bool FrameAssembler::potential_new_frame(uint16_t seq_num) const
         return false;
     if (entry.sequence_number() != seq_num)
         return false;
-    if (entry->is_first_packet_in_frame())
+    if (entry.video_header<RTPVideoHeader>().is_first_packet_in_frame)
         return true;
     if (prev_entry.size() == 0)
         return false;
@@ -121,7 +123,7 @@ bool FrameAssembler::potential_new_frame(uint16_t seq_num) const
         return false;
     if (prev_entry.timestamp() != entry.timestamp())
         return false;
-    if (prev_entry->continuous)
+    if (prev_entry.continuous)
         return true;
 
     return false;
@@ -132,21 +134,21 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
     std::vector<RtpPacket> found_frames;
     for (size_t i = 0; i < buffer_.size() && potential_new_frame(seq_num); ++i) {
         size_t index = seq_num % buffer_.size();
-        buffer_[index]->continuous = true;
+        buffer_[index].continuous = true;
 
         // If all packets of the frame is continuous, find the first packet of the
         // frame and add all packets of the frame to the returned packets.
-        if (buffer_[index]->is_last_packet_in_frame()) {
+        if (buffer_[index].video_header<RTPVideoHeader>().is_last_packet_in_frame) {
             uint16_t start_seq_num = seq_num;
 
             // Find the start index by searching backward until the packet with
             // the |frame_begin| flag is set.
             int start_index = index;
             size_t tested_packets = 0;
-            int64_t frame_timestamp = buffer_[start_index]->timestamp;
+            int64_t frame_timestamp = buffer_[start_index].sequence_number();
 
             // Identify H.264 keyframes by means of SPS, PPS, and IDR.
-            bool is_h264 = buffer_[start_index]->codec() == kVideoCodecH264;
+            bool is_h264 = buffer_[start_index].video_header<RTPVideoHeader>().codec == VideoCodecType::H264;
             bool has_h264_sps = false;
             bool has_h264_pps = false;
             bool has_h264_idr = false;
@@ -156,21 +158,21 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
             while (true) {
                 ++tested_packets;
 
-                if (!is_h264 && buffer_[start_index]->is_first_packet_in_frame())
+                if (!is_h264 && buffer_[start_index].video_header<RTPVideoHeader>().is_first_packet_in_frame)
                     break;
 
                 if (is_h264) {
-                    const auto* h264_header = absl::get_if<RTPVideoHeaderH264>(
-                        &buffer_[start_index]->video_header.video_type_header);
-                    if (!h264_header || h264_header->nalus_length >= kMaxNalusPerPacket)
+                    const auto& h264_header = buffer_[start_index].video_header<RTPVideoHeaderH264>();
+                    //if (!h264_header || h264_header.nalus_length >= kMaxNalusPerPacket)
+                    if (h264_header.nalus_length >= kMaxNalusPerPacket)
                         return found_frames;
 
-                    for (size_t j = 0; j < h264_header->nalus_length; ++j) {
-                        if (h264_header->nalus[j].type == H264::NaluType::kSps) {
+                    for (size_t j = 0; j < h264_header.nalus_length; ++j) {
+                        if (h264_header.nalus[j].type == H264NaluType::Sps) {
                             has_h264_sps = true;
-                        } else if (h264_header->nalus[j].type == H264::NaluType::kPps) {
+                        } else if (h264_header.nalus[j].type == H264NaluType::Pps) {
                             has_h264_pps = true;
-                        } else if (h264_header->nalus[j].type == H264::NaluType::kIdr) {
+                        } else if (h264_header.nalus[j].type == H264NaluType::Idr) {
                             has_h264_idr = true;
                         }
                     }
@@ -180,9 +182,9 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
                         // smallest index and valid resolution; typically its IDR or SPS
                         // packet; there may be packet preceeding this packet, IDR's
                         // resolution will be applied to them.
-                        if (buffer_[start_index]->width() > 0 && buffer_[start_index]->height() > 0) {
-                            idr_width = buffer_[start_index]->width();
-                            idr_height = buffer_[start_index]->height();
+                        if (buffer_[start_index].video_header<RTPVideoHeader>().width > 0 && buffer_[start_index].video_header<RTPVideoHeader>().height > 0) {
+                            idr_width = buffer_[start_index].video_header<RTPVideoHeader>().width;
+                            idr_height = buffer_[start_index].video_header<RTPVideoHeader>().height;
                         }
                     }
                 }
@@ -222,15 +224,15 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
                 // determines if the RtpFrameObject is a key frame or delta frame.
                 const size_t first_packet_index = start_seq_num % buffer_.size();
                 if (is_h264_keyframe) {
-                    buffer_[first_packet_index]->video_header.frame_type = VideoFrameType::kVideoFrameKey;
+                    buffer_[first_packet_index].video_header<RTPVideoHeader>().frame_type = VideoFrameType::VideoFrameKey;
                     if (idr_width > 0 && idr_height > 0) {
                         // IDR frame was finalized and we have the correct resolution for
                         // IDR; update first packet to have same resolution as IDR.
-                        buffer_[first_packet_index]->video_header.width = idr_width;
-                        buffer_[first_packet_index]->video_header.height = idr_height;
+                        buffer_[first_packet_index].video_header<RTPVideoHeader>().width = idr_width;
+                        buffer_[first_packet_index].video_header<RTPVideoHeader>().height = idr_height;
                     }
                 } else {
-                    buffer_[first_packet_index]->video_header.frame_type = VideoFrameType::kVideoFrameDelta;
+                    buffer_[first_packet_index].video_header<RTPVideoHeader>().frame_type = VideoFrameType::VideoFrameDelta;
                 }
 
                 // If this is not a keyframe, make sure there are no gaps in the packet
@@ -248,8 +250,8 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
                 RtpPacket& packet = buffer_[i % buffer_.size()];
                 assert(i == packet.sequence_number());
                 // Ensure frame boundary flags are properly set.
-                packet->video_header.is_first_packet_in_frame = (i == start_seq_num);
-                packet->video_header.is_last_packet_in_frame = (i == seq_num);
+                packet.video_header<RTPVideoHeader>().is_first_packet_in_frame = (i == start_seq_num);
+                packet.video_header<RTPVideoHeader>().is_last_packet_in_frame = (i == seq_num);
                 found_frames.push_back(std::move(packet));
             }
 
@@ -270,7 +272,7 @@ bool FrameAssembler::expand_buffer()
     }
 
     size_t new_size = std::min(max_size_, 2 * buffer_.size());
-    std::vector<RtpPacket> new_buffer(new_size);
+    std::vector<Packet> new_buffer(new_size);
     for (auto& entry : buffer_) {
         if (entry.size() != 0) {
             new_buffer[entry.sequence_number() % new_size] = entry;
