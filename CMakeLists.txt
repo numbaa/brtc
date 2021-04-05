@@ -46,18 +46,20 @@ set(BRTC_SOURCES
   "${SRC_DIR}/transport/transport.h"
 
   "${SRC_DIR}/common/udp_packet.h"
-  "${SRC_DIR}/frame_buffer/frame_buffer.h"
   "${SRC_DIR}/common/rtp.h"
   "${SRC_DIR}/common/rtp.cpp"
+  "${SRC_DIR}/common/time_utils.h"
+
   "${SRC_DIR}/video/packetizer/packetizer.h"
   "${SRC_DIR}/video/packetizer/packetizer_h264.h"
   "${SRC_DIR}/video/packetizer/packetizer_h264.cpp"
-
   "${SRC_DIR}/video/frame_assembler/frame_assembler.h"
   "${SRC_DIR}/video/frame_assembler/frame_assembler.cpp"
   "${SRC_DIR}/video/frame_assembler/sequence_number_util.h"
   "${SRC_DIR}/video/frame_assembler/mod_ops.h"
-  "${SRC_DIR}/common/time_utils.h")
+  "${SRC_DIR}/video/frame_buffer/frame_buffer.h"
+  "${SRC_DIR}/video/frame_buffer/frame_buffer.cpp"
+)
 
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}

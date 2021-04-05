@@ -7,8 +7,8 @@
 #include <bco/net/proactor/select.h>
 #include <bco/context.h>
 #include "../transport/transport.h"
-#include "../frame_assembler/frame_assembler.h"
-#include "../frame_buffer/frame_buffer.h"
+#include "../video/frame_assembler/frame_assembler.h"
+#include "../video/frame_buffer/frame_buffer.h"
 
 namespace brtc {
 
