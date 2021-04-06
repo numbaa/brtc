@@ -2,7 +2,7 @@
 #include <optional>
 #include <set>
 #include <brtc/frame.h>
-#include "sequence_number_util.h"
+#include "../../common/sequence_number_util.h"
 #include "../../common/rtp.h"
 
 namespace brtc {

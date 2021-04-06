@@ -55,11 +55,25 @@ set(BRTC_SOURCES
   "${SRC_DIR}/video/packetizer/packetizer_h264.cpp"
   "${SRC_DIR}/video/frame_assembler/frame_assembler.h"
   "${SRC_DIR}/video/frame_assembler/frame_assembler.cpp"
-  "${SRC_DIR}/video/frame_assembler/sequence_number_util.h"
-  "${SRC_DIR}/video/frame_assembler/mod_ops.h"
+  "${SRC_DIR}/common/sequence_number_util.h"
+  "${SRC_DIR}/common/mod_ops.h"
   "${SRC_DIR}/video/frame_buffer/frame_buffer.h"
   "${SRC_DIR}/video/frame_buffer/frame_buffer.cpp"
-)
+  "${SRC_DIR}/video/frame_buffer/reference_finder.h"
+  "${SRC_DIR}/video/frame_buffer/reference_finder.cpp"
+  "${SRC_DIR}/video/frame_buffer/rtp_generic_ref_finder.h"
+  "${SRC_DIR}/video/frame_buffer/rtp_generic_ref_finder.cpp"
+  "${SRC_DIR}/video/frame_buffer/rtp_seq_num_only_ref_finder.cpp"
+  "${SRC_DIR}/video/frame_buffer/rtp_seq_num_only_ref_finder.h"
+  "${SRC_DIR}/video/frame_buffer/rtp_vp8_ref_finder.cpp"
+  "${SRC_DIR}/video/frame_buffer/rtp_vp8_ref_finder.h"
+  "${SRC_DIR}/video/frame_buffer/rtp_vp9_ref_finder.cpp"
+  "${SRC_DIR}/video/frame_buffer/rtp_vp9_ref_finder.h"
+  "${SRC_DIR}/video/frame_buffer/rtp_frame_id_only_ref_finder.cpp"
+  "${SRC_DIR}/video/frame_buffer/rtp_frame_id_only_ref_finder.h"
+  "${SRC_DIR}/video/frame_buffer/vp9_globals.h"
+  "${SRC_DIR}/video/frame_buffer/common_constants.h"
+  )
 
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}
