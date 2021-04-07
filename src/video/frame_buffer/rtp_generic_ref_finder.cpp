@@ -9,22 +9,22 @@
  */
 
 #include <utility>
-
+#include <glog/logging.h>
 #include "rtp_generic_ref_finder.h"
 
 namespace brtc {
 
 RtpFrameReferenceFinder::ReturnVector RtpGenericFrameRefFinder::ManageFrame(
-    std::unique_ptr<Frame> frame,
+    std::unique_ptr<ReceivedFrame> frame,
     const RTPVideoHeader::GenericDescriptorInfo& descriptor) {
   // Frame IDs are unwrapped in the RtpVideoStreamReceiver, no need to unwrap
   // them here.
-  frame->SetId(descriptor.frame_id);
-  frame->SetSpatialIndex(descriptor.spatial_index);
+  frame->id = descriptor.frame_id;
+  frame->spatial_index = descriptor.spatial_index;
 
   RtpFrameReferenceFinder::ReturnVector res;
-  if (EncodedFrame::kMaxFrameReferences < descriptor.dependencies.size()) {
-    RTC_LOG(LS_WARNING) << "Too many dependencies in generic descriptor.";
+  if (kMaxFrameReferences < descriptor.dependencies.size()) {
+    LOG(WARNING) << "Too many dependencies in generic descriptor.";
     return res;
   }
 

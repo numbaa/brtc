@@ -22,7 +22,7 @@ class RtpGenericFrameRefFinder {
   RtpGenericFrameRefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<Frame> frame,
+      std::unique_ptr<ReceivedFrame> frame,
       const RTPVideoHeader::GenericDescriptorInfo& descriptor);
 };
 

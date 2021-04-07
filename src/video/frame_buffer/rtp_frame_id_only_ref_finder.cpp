@@ -14,13 +14,13 @@
 namespace brtc {
 
 RtpFrameReferenceFinder::ReturnVector RtpFrameIdOnlyRefFinder::ManageFrame(
-    std::unique_ptr<Frame> frame,
+    std::unique_ptr<ReceivedFrame> frame,
     int frame_id) {
-  frame->SetSpatialIndex(0);
-  frame->SetId(unwrapper_.Unwrap(frame_id & (kFrameIdLength - 1)));
+  frame->spatial_index = 0;
+  frame->id = unwrapper_.Unwrap(frame_id & (kFrameIdLength - 1));
   frame->num_references =
-      frame->frame_type() == VideoFrameType::kVideoFrameKey ? 0 : 1;
-  frame->references[0] = frame->Id() - 1;
+      frame->frame_type == VideoFrameType::VideoFrameKey ? 0 : 1;
+  frame->references[0] = frame->id - 1;
 
   RtpFrameReferenceFinder::ReturnVector res;
   res.push_back(std::move(frame));

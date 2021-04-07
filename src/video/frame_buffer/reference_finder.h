@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <brtc/frame.h>
+#include "../../common/rtp.h"
 
 namespace brtc {
 
@@ -11,7 +11,7 @@ class OnCompleteFrameCallback;
 
 class RtpFrameReferenceFinder {
 public:
-    using ReturnVector = std::vector<std::unique_ptr<Frame>>;
+    using ReturnVector = std::vector<std::unique_ptr<ReceivedFrame>>;
 
     explicit RtpFrameReferenceFinder(OnCompleteFrameCallback* frame_callback);
     explicit RtpFrameReferenceFinder(OnCompleteFrameCallback* frame_callback,
@@ -24,7 +24,7 @@ public:
     //  - We have too many stashed frames (determined by |kMaxStashedFrames|)
     //    so we drop this frame, or
     //  - It gets cleared by ClearTo, which also means we drop it.
-    void ManageFrame(std::unique_ptr<Frame> frame);
+    void ManageFrame(std::unique_ptr<ReceivedFrame> frame);
 
     // Notifies that padding has been received, which the reference finder
     // might need to calculate the references of a frame.

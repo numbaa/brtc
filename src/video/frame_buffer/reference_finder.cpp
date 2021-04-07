@@ -14,7 +14,7 @@ public:
     RtpFrameReferenceFinderImpl() = default;
 
     RtpFrameReferenceFinder::ReturnVector ManageFrame(
-        std::unique_ptr<Frame> frame);
+        std::unique_ptr<ReceivedFrame> frame);
     RtpFrameReferenceFinder::ReturnVector PaddingReceived(uint16_t seq_num);
     void ClearTo(uint16_t seq_num);
 
@@ -32,18 +32,18 @@ private:
 };
 
 RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
-    std::unique_ptr<Frame> frame)
+    std::unique_ptr<ReceivedFrame> frame)
 {
-    const RTPVideoHeader& video_header = frame->GetRtpVideoHeader();
+    const RTPVideoHeader& video_header = std::get<RTPVideoHeader>(frame->video_header);
 
     if (video_header.generic.has_value()) {
         return GetRefFinderAs<RtpGenericFrameRefFinder>().ManageFrame(
             std::move(frame), *video_header.generic);
     }
 
-    switch (frame->codec_type()) {
-    case kVideoCodecVP8: {
-        const RTPVideoHeaderVP8& vp8_header = absl::get<RTPVideoHeaderVP8>(video_header.video_type_header);
+    switch (frame->codec_type) {
+    case VideoCodecType::VP8: {
+        const RTPVideoHeaderVP8& vp8_header = std::get<RTPVideoHeaderVP8>(frame->video_header);
 
         if (vp8_header.temporalIdx == kNoTemporalIdx || vp8_header.tl0PicIdx == kNoTl0PicIdx) {
             if (vp8_header.pictureId == kNoPictureId) {
@@ -57,8 +57,8 @@ RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
 
         return GetRefFinderAs<RtpVp8RefFinder>().ManageFrame(std::move(frame));
     }
-    case kVideoCodecVP9: {
-        const RTPVideoHeaderVP9& vp9_header = absl::get<RTPVideoHeaderVP9>(video_header.video_type_header);
+    case VideoCodecType::VP9: {
+        const RTPVideoHeaderVP9& vp9_header = std::get<RTPVideoHeaderVP9>(frame->video_header);
 
         if (vp9_header.temporal_idx == kNoTemporalIdx) {
             if (vp9_header.picture_id == kNoPictureId) {
@@ -72,9 +72,9 @@ RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
 
         return GetRefFinderAs<RtpVp9RefFinder>().ManageFrame(std::move(frame));
     }
-    case kVideoCodecGeneric: {
-        if (auto* generic_header = absl::get_if<RTPVideoHeaderLegacyGeneric>(
-                &video_header.video_type_header)) {
+    case VideoCodecType::Unknown: {
+        if (auto* generic_header = std::get<RTPVideoHeaderLegacyGeneric>(
+                frame->video_header)) {
             return GetRefFinderAs<RtpFrameIdOnlyRefFinder>().ManageFrame(
                 std::move(frame), generic_header->picture_id);
         }
@@ -92,10 +92,8 @@ RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
 RtpFrameReferenceFinder::ReturnVector
 RtpFrameReferenceFinderImpl::PaddingReceived(uint16_t seq_num)
 {
-    if (auto* ref_finder = absl::get_if<RtpSeqNumOnlyRefFinder>(&ref_finder_)) {
-        return ref_finder->PaddingReceived(seq_num);
-    }
-    return {};
+    return std::get<RtpSeqNumOnlyRefFinder>(ref_finder_).PaddingReceived(seq_num);
+
 }
 
 void RtpFrameReferenceFinderImpl::ClearTo(uint16_t seq_num)
@@ -151,10 +149,10 @@ RtpFrameReferenceFinder::RtpFrameReferenceFinder(
 RtpFrameReferenceFinder::~RtpFrameReferenceFinder() = default;
 
 void RtpFrameReferenceFinder::ManageFrame(
-    std::unique_ptr<Frame> frame)
+    std::unique_ptr<ReceivedFrame> frame)
 {
     // If we have cleared past this frame, drop it.
-    if (cleared_to_seq_num_ != -1 && webrtc::AheadOf<uint16_t>(cleared_to_seq_num_, frame->first_seq_num())) {
+    if (cleared_to_seq_num_ != -1 && webrtc::AheadOf<uint16_t>(cleared_to_seq_num_, frame->first_seq_num)) {
         return;
     }
     HandOffFrames(impl_->ManageFrame(std::move(frame)));
@@ -174,7 +172,7 @@ void RtpFrameReferenceFinder::ClearTo(uint16_t seq_num)
 void RtpFrameReferenceFinder::HandOffFrames(ReturnVector frames)
 {
     for (auto& frame : frames) {
-        frame->SetId(frame->Id() + picture_id_offset_);
+        frame->id = frame->id + picture_id_offset_;
         for (size_t i = 0; i < frame->num_references; ++i) {
             frame->references[i] += picture_id_offset_;
         }

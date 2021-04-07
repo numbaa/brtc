@@ -72,8 +72,10 @@ set(BRTC_SOURCES
   "${SRC_DIR}/video/frame_buffer/rtp_frame_id_only_ref_finder.cpp"
   "${SRC_DIR}/video/frame_buffer/rtp_frame_id_only_ref_finder.h"
   "${SRC_DIR}/video/frame_buffer/vp9_globals.h"
+  "${SRC_DIR}/video/frame_buffer/vp8_globals.h"
+  "${SRC_DIR}/video/frame_buffer/h264_globals.h"
   "${SRC_DIR}/video/frame_buffer/common_constants.h"
-  )
+   )
 
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}

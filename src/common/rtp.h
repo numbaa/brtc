@@ -11,6 +11,9 @@
 
 #include <brtc/frame.h>
 
+#include "../video/frame_buffer/vp9_globals.h"
+#include "../video/frame_buffer/vp8_globals.h"
+
 namespace brtc
 {
 
@@ -139,9 +142,107 @@ struct RTPVideoHeaderH265 : public RTPVideoHeader {
 };
 
 struct RTPVideoHeaderVP8 : public RTPVideoHeader {
+    void InitRTPVideoHeaderVP8()
+    {
+        nonReference = false;
+        pictureId = kNoPictureId;
+        tl0PicIdx = kNoTl0PicIdx;
+        temporalIdx = kNoTemporalIdx;
+        layerSync = false;
+        keyIdx = kNoKeyIdx;
+        partitionId = 0;
+        beginningOfPartition = false;
+    }
+
+    bool nonReference; // Frame is discardable.
+    int16_t pictureId; // Picture ID index, 15 bits;
+        // kNoPictureId if PictureID does not exist.
+    int16_t tl0PicIdx; // TL0PIC_IDX, 8 bits;
+        // kNoTl0PicIdx means no value provided.
+    uint8_t temporalIdx; // Temporal layer index, or kNoTemporalIdx.
+    bool layerSync; // This frame is a layer sync frame.
+        // Disabled if temporalIdx == kNoTemporalIdx.
+    int keyIdx; // 5 bits; kNoKeyIdx means not used.
+    int partitionId; // VP8 partition ID
+    bool beginningOfPartition; // True if this packet is the first
+        // in a VP8 partition. Otherwise false
 };
 
 struct RTPVideoHeaderVP9 : public RTPVideoHeader {
+    void InitRTPVideoHeaderVP9()
+    {
+        inter_pic_predicted = false;
+        flexible_mode = false;
+        beginning_of_frame = false;
+        end_of_frame = false;
+        ss_data_available = false;
+        non_ref_for_inter_layer_pred = false;
+        picture_id = kNoPictureId;
+        max_picture_id = webrtc::kMaxTwoBytePictureId;
+        tl0_pic_idx = kNoTl0PicIdx;
+        temporal_idx = kNoTemporalIdx;
+        spatial_idx = webrtc::kNoSpatialIdx;
+        temporal_up_switch = false;
+        inter_layer_predicted = false;
+        gof_idx = webrtc::kNoGofIdx;
+        num_ref_pics = 0;
+        num_spatial_layers = 1;
+        first_active_layer = 0;
+        end_of_picture = true;
+    }
+
+    bool inter_pic_predicted; // This layer frame is dependent on previously
+        // coded frame(s).
+    bool flexible_mode; // This frame is in flexible mode.
+    bool beginning_of_frame; // True if this packet is the first in a VP9 layer
+        // frame.
+    bool end_of_frame; // True if this packet is the last in a VP9 layer frame.
+    bool ss_data_available; // True if SS data is available in this payload
+        // descriptor.
+    bool non_ref_for_inter_layer_pred; // True for frame which is not used as
+        // reference for inter-layer prediction.
+    int16_t picture_id; // PictureID index, 15 bits;
+        // kNoPictureId if PictureID does not exist.
+    int16_t max_picture_id; // Maximum picture ID index; either 0x7F or 0x7FFF;
+    int16_t tl0_pic_idx; // TL0PIC_IDX, 8 bits;
+        // kNoTl0PicIdx means no value provided.
+    uint8_t temporal_idx; // Temporal layer index, or kNoTemporalIdx.
+    uint8_t spatial_idx; // Spatial layer index, or kNoSpatialIdx.
+    bool temporal_up_switch; // True if upswitch to higher frame rate is possible
+        // starting from this frame.
+    bool inter_layer_predicted; // Frame is dependent on directly lower spatial
+        // layer frame.
+
+    uint8_t gof_idx; // Index to predefined temporal frame info in SS data.
+
+    uint8_t num_ref_pics; // Number of reference pictures used by this layer
+        // frame.
+    uint8_t pid_diff[webrtc::kMaxVp9RefPics]; // P_DIFF signaled to derive the PictureID
+        // of the reference pictures.
+    int16_t ref_picture_id[webrtc::kMaxVp9RefPics]; // PictureID of reference pictures.
+
+    // SS data.
+    size_t num_spatial_layers; // Always populated.
+    size_t first_active_layer; // Not sent on wire, used to adjust ss data.
+    bool spatial_layer_resolution_present;
+    uint16_t width[webrtc::kMaxVp9NumberOfSpatialLayers];
+    uint16_t height[webrtc::kMaxVp9NumberOfSpatialLayers];
+    webrtc::GofInfoVP9 gof;
+
+    bool end_of_picture; // This frame is the last frame in picture.
+};
+
+constexpr size_t kMaxFrameReferences = 5;
+struct ReceivedFrame : public Frame {
+    VideoCodecType codec_type;
+    VideoFrameType frame_type;
+    std::variant<RTPVideoHeader, RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9> video_header;
+    int spatial_index;
+    uint16_t first_seq_num;
+    uint16_t last_seq_num;
+    int64_t id;
+    size_t num_references;
+    int64_t references[kMaxFrameReferences];
 };
 
 class RtpPacket {

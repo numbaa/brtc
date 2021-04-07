@@ -28,7 +28,7 @@ class RtpVp9RefFinder {
   RtpVp9RefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<Frame> frame);
+      std::unique_ptr<ReceivedFrame> frame);
   void ClearTo(uint16_t seq_num);
 
  private:
@@ -42,13 +42,13 @@ class RtpVp9RefFinder {
   enum FrameDecision { kStash, kHandOff, kDrop };
 
   struct GofInfo {
-    GofInfo(GofInfoVP9* gof, uint16_t last_picture_id)
+    GofInfo(webrtc::GofInfoVP9* gof, uint16_t last_picture_id)
         : gof(gof), last_picture_id(last_picture_id) {}
-    GofInfoVP9* gof;
+    webrtc::GofInfoVP9* gof;
     uint16_t last_picture_id;
   };
 
-  FrameDecision ManageFrameInternal(Frame* frame);
+  FrameDecision ManageFrameInternal(ReceivedFrame* frame);
   void RetryStashedFrames(RtpFrameReferenceFinder::ReturnVector& res);
 
   bool MissingRequiredFrameVp9(uint16_t picture_id, const GofInfo& info);
@@ -58,7 +58,7 @@ class RtpVp9RefFinder {
                              uint8_t temporal_idx,
                              uint16_t pid_ref);
 
-  void FlattenFrameIdAndRefs(Frame* frame, bool inter_layer_predicted);
+  void FlattenFrameIdAndRefs(ReceivedFrame* frame, bool inter_layer_predicted);
 
   // Save the last picture id in order to detect when there is a gap in frames
   // that have not yet been fully received.
@@ -66,14 +66,14 @@ class RtpVp9RefFinder {
 
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
-  std::deque<std::unique_ptr<Frame>> stashed_frames_;
+  std::deque<std::unique_ptr<ReceivedFrame>> stashed_frames_;
 
   // Where the current scalability structure is in the
   // |scalability_structures_| array.
   uint8_t current_ss_idx_ = 0;
 
   // Holds received scalability structures.
-  std::array<GofInfoVP9, kMaxGofSaved> scalability_structures_;
+  std::array<webrtc::GofInfoVP9, kMaxGofSaved> scalability_structures_;
 
   // Holds the the Gof information for a given unwrapped TL0 picture index.
   std::map<int64_t, GofInfo> gof_info_;

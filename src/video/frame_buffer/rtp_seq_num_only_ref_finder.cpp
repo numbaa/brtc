@@ -16,7 +16,7 @@
 namespace brtc {
 
 RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
-    std::unique_ptr<Frame> frame) {
+    std::unique_ptr<ReceivedFrame> frame) {
   FrameDecision decision = ManageFrameInternal(frame.get());
 
   RtpFrameReferenceFinder::ReturnVector res;
@@ -38,11 +38,11 @@ RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
 }
 
 RtpSeqNumOnlyRefFinder::FrameDecision
-RtpSeqNumOnlyRefFinder::ManageFrameInternal(Frame* frame) {
-  if (frame->frame_type() == VideoFrameType::kVideoFrameKey) {
+RtpSeqNumOnlyRefFinder::ManageFrameInternal(ReceivedFrame* frame) {
+  if (frame->frame_type == VideoFrameType::VideoFrameKey) {
     last_seq_num_gop_.insert(std::make_pair(
-        frame->last_seq_num(),
-        std::make_pair(frame->last_seq_num(), frame->last_seq_num())));
+        frame->last_seq_num,
+        std::make_pair(frame->last_seq_num, frame->last_seq_num)));
   }
 
   // We have received a frame but not yet a keyframe, stash this frame.
@@ -51,7 +51,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(Frame* frame) {
 
   // Clean up info for old keyframes but make sure to keep info
   // for the last keyframe.
-  auto clean_to = last_seq_num_gop_.lower_bound(frame->last_seq_num() - 100);
+  auto clean_to = last_seq_num_gop_.lower_bound(frame->last_seq_num - 100);
   for (auto it = last_seq_num_gop_.begin();
        it != clean_to && last_seq_num_gop_.size() > 1;) {
     it = last_seq_num_gop_.erase(it);
@@ -59,11 +59,11 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(Frame* frame) {
 
   // Find the last sequence number of the last frame for the keyframe
   // that this frame indirectly references.
-  auto seq_num_it = last_seq_num_gop_.upper_bound(frame->last_seq_num());
+  auto seq_num_it = last_seq_num_gop_.upper_bound(frame->last_seq_num);
   if (seq_num_it == last_seq_num_gop_.begin()) {
     LOG(WARNING) << "Generic frame with packet range ["
-                        << frame->first_seq_num() << ", "
-                        << frame->last_seq_num()
+                        << frame->first_seq_num << ", "
+                        << frame->last_seq_num
                         << "] has no GoP, dropping frame.";
     return kDrop;
   }
@@ -73,29 +73,29 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(Frame* frame) {
   // this frame.
   uint16_t last_picture_id_gop = seq_num_it->second.first;
   uint16_t last_picture_id_with_padding_gop = seq_num_it->second.second;
-  if (frame->frame_type() == VideoFrameType::kVideoFrameDelta) {
-    uint16_t prev_seq_num = frame->first_seq_num() - 1;
+  if (frame->frame_type == VideoFrameType::VideoFrameDelta) {
+    uint16_t prev_seq_num = frame->first_seq_num - 1;
 
     if (prev_seq_num != last_picture_id_with_padding_gop)
       return kStash;
   }
 
-  assert(webrtc::AheadOrAt(frame->last_seq_num(), seq_num_it->first));
+  assert(webrtc::AheadOrAt(frame->last_seq_num, seq_num_it->first));
 
   // Since keyframes can cause reordering we can't simply assign the
   // picture id according to some incrementing counter.
-  frame->SetId(frame->last_seq_num());
+  frame->id = frame->last_seq_num;
   frame->num_references =
-      frame->frame_type() == VideoFrameType::kVideoFrameDelta;
+      frame->frame_type == VideoFrameType::VideoFrameDelta;
   frame->references[0] = rtp_seq_num_unwrapper_.Unwrap(last_picture_id_gop);
-  if (webrtc::AheadOf<uint16_t>(frame->Id(), last_picture_id_gop)) {
-    seq_num_it->second.first = frame->Id();
-    seq_num_it->second.second = frame->Id();
+  if (webrtc::AheadOf<uint16_t>(frame->id, last_picture_id_gop)) {
+    seq_num_it->second.first = frame->id;
+    seq_num_it->second.second = frame->id;
   }
 
-  UpdateLastPictureIdWithPadding(frame->Id());
-  frame->SetSpatialIndex(0);
-  frame->SetId(rtp_seq_num_unwrapper_.Unwrap(frame->Id()));
+  UpdateLastPictureIdWithPadding(frame->id);
+  frame->spatial_index = 0;
+  frame->id = rtp_seq_num_unwrapper_.Unwrap(frame->id);
   return kHandOff;
 }
 
@@ -115,7 +115,6 @@ void RtpSeqNumOnlyRefFinder::RetryStashedFrames(
         case kHandOff:
           complete_frame = true;
           res.push_back(std::move(*frame_it));
-          ABSL_FALLTHROUGH_INTENDED;
         case kDrop:
           frame_it = stashed_frames_.erase(frame_it);
       }
@@ -174,7 +173,7 @@ RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::PaddingReceived(
 void RtpSeqNumOnlyRefFinder::ClearTo(uint16_t seq_num) {
   auto it = stashed_frames_.begin();
   while (it != stashed_frames_.end()) {
-    if (webrtc::AheadOf<uint16_t>(seq_num, (*it)->first_seq_num())) {
+    if (webrtc::AheadOf<uint16_t>(seq_num, (*it)->first_seq_num)) {
       it = stashed_frames_.erase(it);
     } else {
       ++it;

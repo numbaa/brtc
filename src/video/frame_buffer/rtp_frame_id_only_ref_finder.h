@@ -23,7 +23,7 @@ class RtpFrameIdOnlyRefFinder {
   RtpFrameIdOnlyRefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<Frame> frame,
+      std::unique_ptr<ReceivedFrame> frame,
       int frame_id);
 
  private:

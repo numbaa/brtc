@@ -15,7 +15,7 @@
 
 #include <stdint.h>
 
-namespace brtc {
+namespace webrtc {
 
 const int16_t kNoPictureId = -1;
 const int16_t kNoTl0PicIdx = -1;

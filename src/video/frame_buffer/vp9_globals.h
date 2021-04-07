@@ -17,7 +17,7 @@
 #include <stdint.h>
 #include "common_constants.h"
 
-namespace brtc {
+namespace webrtc {
 
 const int16_t kMaxOneBytePictureId = 0x7F;    // 7 bits
 const int16_t kMaxTwoBytePictureId = 0x7FFF;  // 15 bits
@@ -216,5 +216,5 @@ struct RTPVideoHeaderVP9 {
   bool end_of_picture;  // This frame is the last frame in picture.
 };
 
-}  // namespace brtc
+}  // namespace webrtc
 
