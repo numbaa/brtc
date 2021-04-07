@@ -17,17 +17,17 @@
 #include <array>
 
 #include <brtc/frame.h>
-#include "reference_finder.h"
-#include "../../common/sequence_number_util.h"
+#include "video/reference_finder/reference_finder.h"
+#include "common/sequence_number_util.h"
 
-namespace brtc {
+namespace webrtc {
 
 class RtpVp8RefFinder {
  public:
   RtpVp8RefFinder() = default;
 
-  RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<ReceivedFrame> frame);
+  brtc::RtpFrameReferenceFinder::ReturnVector ManageFrame(
+      std::unique_ptr<brtc::ReceivedFrame> frame);
   void ClearTo(uint16_t seq_num);
 
  private:
@@ -39,12 +39,12 @@ class RtpVp8RefFinder {
 
   enum FrameDecision { kStash, kHandOff, kDrop };
 
-  FrameDecision ManageFrameInternal(ReceivedFrame* frame);
-  void RetryStashedFrames(RtpFrameReferenceFinder::ReturnVector& res);
-  void UpdateLayerInfoVp8(ReceivedFrame* frame,
+  FrameDecision ManageFrameInternal(brtc::ReceivedFrame* frame);
+  void RetryStashedFrames(brtc::RtpFrameReferenceFinder::ReturnVector& res);
+  void UpdateLayerInfoVp8(brtc::ReceivedFrame* frame,
                           int64_t unwrapped_tl0,
                           uint8_t temporal_idx);
-  void UnwrapPictureIds(ReceivedFrame* frame);
+  void UnwrapPictureIds(brtc::ReceivedFrame* frame);
 
   // Save the last picture id in order to detect when there is a gap in frames
   // that have not yet been fully received.
@@ -57,7 +57,7 @@ class RtpVp8RefFinder {
 
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
-  std::deque<std::unique_ptr<ReceivedFrame>> stashed_frames_;
+  std::deque<std::unique_ptr<brtc::ReceivedFrame>> stashed_frames_;
 
   // Holds the information about the last completed frame for a given temporal
   // layer given an unwrapped Tl0 picture index.
@@ -70,5 +70,5 @@ class RtpVp8RefFinder {
   webrtc::SeqNumUnwrapper<uint8_t> tl0_unwrapper_;
 };
 
-}  // namespace brtc
+}  // namespace webrtc
 

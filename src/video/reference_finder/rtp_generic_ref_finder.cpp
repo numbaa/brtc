@@ -10,20 +10,20 @@
 
 #include <utility>
 #include <glog/logging.h>
-#include "rtp_generic_ref_finder.h"
+#include "video/reference_finder/rtp_generic_ref_finder.h"
 
-namespace brtc {
+namespace webrtc {
 
-RtpFrameReferenceFinder::ReturnVector RtpGenericFrameRefFinder::ManageFrame(
-    std::unique_ptr<ReceivedFrame> frame,
-    const RTPVideoHeader::GenericDescriptorInfo& descriptor) {
+brtc::RtpFrameReferenceFinder::ReturnVector RtpGenericFrameRefFinder::ManageFrame(
+    std::unique_ptr<brtc::ReceivedFrame> frame,
+    const brtc::RTPVideoHeader::GenericDescriptorInfo& descriptor) {
   // Frame IDs are unwrapped in the RtpVideoStreamReceiver, no need to unwrap
   // them here.
   frame->id = descriptor.frame_id;
   frame->spatial_index = descriptor.spatial_index;
 
-  RtpFrameReferenceFinder::ReturnVector res;
-  if (kMaxFrameReferences < descriptor.dependencies.size()) {
+  brtc::RtpFrameReferenceFinder::ReturnVector res;
+  if (brtc::kMaxFrameReferences < descriptor.dependencies.size()) {
     LOG(WARNING) << "Too many dependencies in generic descriptor.";
     return res;
   }
@@ -37,4 +37,4 @@ RtpFrameReferenceFinder::ReturnVector RtpGenericFrameRefFinder::ManageFrame(
   return res;
 }
 
-}  // namespace brtc
+}  // namespace webrtc

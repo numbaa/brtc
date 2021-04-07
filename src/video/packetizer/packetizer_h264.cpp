@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "packetizer_h264.h"
+#include "video/packetizer/packetizer_h264.h"
 #include <cassert>
 
 namespace brtc {

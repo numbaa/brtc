@@ -38,7 +38,12 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
         auto bytes_read = co_await transport_->read_packet(buffer);
         frame_assembler_.insert(buffer);
         while (auto frame = frame_assembler_.pop_assembled_frame()) {
-            frame_buffer_.insert(frame.value());
+            //TODO: Frame -> ReceivedFrame
+            std::unique_ptr<ReceivedFrame> received_frame;
+            reference_finder_.ManageFrame(std::move(received_frame));
+        }
+        while (auto frame = reference_finder_.pop_frame()) {
+            frame_buffer_.insert(frame);
         }
         while (auto frame = frame_buffer_.pop_decodable_frame()) {
             send_to_decode_loop(frame.value());

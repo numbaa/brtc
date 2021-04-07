@@ -9,8 +9,8 @@
  */
 
 #include <glog/logging.h>
-#include "../../common/time_utils.h"
-#include "frame_assembler.h"
+#include "common/time_utils.h"
+#include "video/frame_assembler/frame_assembler.h"
 
 namespace brtc {
 
@@ -73,7 +73,7 @@ void FrameAssembler::insert(RtpPacket rtp_packet)
     //return result;
 }
 
-std::vector<RtpPacket> FrameAssembler::pop_assembled_frame()
+std::optional<Frame> FrameAssembler::pop_assembled_frame()
 {
     return {};
 }

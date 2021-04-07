@@ -6,13 +6,15 @@
 #include <span>
 #include <concepts>
 #include <variant>
+#include <bitset>
+#include <optional>
 
 #include <bco/buffer.h>
 
 #include <brtc/frame.h>
 
-#include "../video/frame_buffer/vp9_globals.h"
-#include "../video/frame_buffer/vp8_globals.h"
+#include "video/reference_finder/vp9_globals.h"
+#include "video/reference_finder/vp8_globals.h"
 
 namespace brtc
 {
@@ -116,7 +118,29 @@ enum class VideoFrameType {
     VideoFrameDelta = 4,
 };
 
+// Relationship of a frame to a Decode target.
+enum class DecodeTargetIndication {
+    kNotPresent = 0, // DecodeTargetInfo symbol '-'
+    kDiscardable = 1, // DecodeTargetInfo symbol 'D'
+    kSwitch = 2, // DecodeTargetInfo symbol 'S'
+    kRequired = 3 // DecodeTargetInfo symbol 'R'
+};
+
 struct RTPVideoHeader {
+    struct GenericDescriptorInfo {
+        GenericDescriptorInfo() = default;
+        GenericDescriptorInfo(const GenericDescriptorInfo& other) = default;
+        ~GenericDescriptorInfo() = default;
+
+        int64_t frame_id = 0;
+        int spatial_index = 0;
+        int temporal_index = 0;
+        std::vector<DecodeTargetIndication> decode_target_indications;
+        std::vector<int64_t> dependencies;
+        std::vector<int> chain_diffs;
+        std::bitset<32> active_decode_targets = ~uint32_t { 0 };
+    };
+    std::optional<GenericDescriptorInfo> generic;
     VideoFrameType frame_type = VideoFrameType::EmptyFrame;
     uint16_t width = 0;
     uint16_t height = 0;
@@ -141,7 +165,8 @@ struct RTPVideoHeaderH264 : public RTPVideoHeader {
 struct RTPVideoHeaderH265 : public RTPVideoHeader {
 };
 
-struct RTPVideoHeaderVP8 : public RTPVideoHeader {
+struct RTPVideoHeaderVP8 : public RTPVideoHeader, public webrtc::RTPVideoHeaderVP8 {
+    /*
     void InitRTPVideoHeaderVP8()
     {
         nonReference = false;
@@ -166,9 +191,11 @@ struct RTPVideoHeaderVP8 : public RTPVideoHeader {
     int partitionId; // VP8 partition ID
     bool beginningOfPartition; // True if this packet is the first
         // in a VP8 partition. Otherwise false
+    */
 };
 
-struct RTPVideoHeaderVP9 : public RTPVideoHeader {
+struct RTPVideoHeaderVP9 : public RTPVideoHeader, public webrtc::RTPVideoHeaderVP9 {
+    /*
     void InitRTPVideoHeaderVP9()
     {
         inter_pic_predicted = false;
@@ -230,6 +257,7 @@ struct RTPVideoHeaderVP9 : public RTPVideoHeader {
     webrtc::GofInfoVP9 gof;
 
     bool end_of_picture; // This frame is the last frame in picture.
+    */
 };
 
 constexpr size_t kMaxFrameReferences = 5;

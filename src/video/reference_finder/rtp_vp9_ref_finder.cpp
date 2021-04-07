@@ -15,15 +15,15 @@
 
 #include <glog/logging.h>
 
-#include "rtp_vp9_ref_finder.h"
+#include "video/reference_finder/rtp_vp9_ref_finder.h"
 
-namespace brtc {
+namespace webrtc {
 
-RtpFrameReferenceFinder::ReturnVector RtpVp9RefFinder::ManageFrame(
-    std::unique_ptr<ReceivedFrame> frame) {
+brtc::RtpFrameReferenceFinder::ReturnVector RtpVp9RefFinder::ManageFrame(
+    std::unique_ptr<brtc::ReceivedFrame> frame) {
   FrameDecision decision = ManageFrameInternal(frame.get());
 
-  RtpFrameReferenceFinder::ReturnVector res;
+  brtc::RtpFrameReferenceFinder::ReturnVector res;
   switch (decision) {
     case kStash:
       if (stashed_frames_.size() > kMaxStashedFrames)
@@ -42,12 +42,12 @@ RtpFrameReferenceFinder::ReturnVector RtpVp9RefFinder::ManageFrame(
 }
 
 RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
-    ReceivedFrame* frame) {
-    const RTPVideoHeaderVP9& video_header = std::get<RTPVideoHeaderVP9>(frame->video_header);
+    brtc::ReceivedFrame* frame) {
+    const brtc::RTPVideoHeaderVP9& video_header = std::get<brtc::RTPVideoHeaderVP9>(frame->video_header);
 
   // Protect against corrupted packets with arbitrary large temporal idx.
   if (video_header.temporal_idx >= kMaxTemporalLayers ||
-      video_header.spatial_idx >= kMaxSpatialLayers)
+      video_header.spatial_idx >= webrtc::kMaxSpatialLayers)
     return kDrop;
 
   frame->spatial_index = video_header.spatial_idx;
@@ -57,7 +57,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     last_picture_id_ = frame->id;
 
   if (video_header.flexible_mode) {
-    if (video_header.num_ref_pics > kMaxFrameReferences) {
+    if (video_header.num_ref_pics > brtc::kMaxFrameReferences) {
       return kDrop;
     }
     frame->num_references = video_header.num_ref_pics;
@@ -115,13 +115,13 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
 
     info = &gof_info_it->second;
 
-    if (frame->frame_type == VideoFrameType::VideoFrameKey) {
+    if (frame->frame_type == brtc::VideoFrameType::VideoFrameKey) {
       frame->num_references = 0;
       FrameReceivedVp9(frame->id, info);
       FlattenFrameIdAndRefs(frame, video_header.inter_layer_predicted);
       return kHandOff;
     }
-  } else if (frame->frame_type == VideoFrameType::VideoFrameKey) {
+  } else if (frame->frame_type == brtc::VideoFrameType::VideoFrameKey) {
     if (frame->spatial_index == 0) {
       LOG(WARNING) << "Received keyframe without scalability structure";
       return kDrop;
@@ -178,7 +178,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
       webrtc::ForwardDiff<uint16_t, kFrameIdLength>(info->gof->pid_start, frame->id);
   size_t gof_idx = diff % info->gof->num_frames_in_gof;
 
-  if (info->gof->num_ref_pics[gof_idx] > kMaxFrameReferences) {
+  if (info->gof->num_ref_pics[gof_idx] > brtc::kMaxFrameReferences) {
     return kDrop;
   }
   // Populate references according to the scalability structure.
@@ -301,7 +301,7 @@ bool RtpVp9RefFinder::UpSwitchInIntervalVp9(uint16_t picture_id,
 }
 
 void RtpVp9RefFinder::RetryStashedFrames(
-    RtpFrameReferenceFinder::ReturnVector& res) {
+    brtc::RtpFrameReferenceFinder::ReturnVector& res) {
   bool complete_frame = false;
   do {
     complete_frame = false;
@@ -323,18 +323,18 @@ void RtpVp9RefFinder::RetryStashedFrames(
   } while (complete_frame);
 }
 
-void RtpVp9RefFinder::FlattenFrameIdAndRefs(ReceivedFrame* frame,
+void RtpVp9RefFinder::FlattenFrameIdAndRefs(brtc::ReceivedFrame* frame,
                                             bool inter_layer_predicted) {
   for (size_t i = 0; i < frame->num_references; ++i) {
     frame->references[i] =
-        unwrapper_.Unwrap(frame->references[i]) * kMaxSpatialLayers +
+        unwrapper_.Unwrap(frame->references[i]) * webrtc::kMaxSpatialLayers +
         frame->spatial_index;
   }
-  frame->id = unwrapper_.Unwrap(frame->id) * kMaxSpatialLayers +
+  frame->id = unwrapper_.Unwrap(frame->id) * webrtc::kMaxSpatialLayers +
                frame->spatial_index;
 
   if (inter_layer_predicted &&
-      frame->num_references + 1 <= kMaxFrameReferences) {
+      frame->num_references + 1 <= brtc::kMaxFrameReferences) {
     frame->references[frame->num_references] = frame->id - 1;
     ++frame->num_references;
   }
@@ -351,4 +351,4 @@ void RtpVp9RefFinder::ClearTo(uint16_t seq_num) {
   }
 }
 
-}  // namespace brtc
+}  // namespace webrtc

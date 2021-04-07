@@ -2,8 +2,8 @@
 #include <optional>
 #include <set>
 #include <brtc/frame.h>
-#include "../../common/sequence_number_util.h"
-#include "../../common/rtp.h"
+#include "common/sequence_number_util.h"
+#include "common/rtp.h"
 
 namespace brtc {
 
@@ -20,7 +20,7 @@ private:
 
 public:
     void insert(RtpPacket packet);
-    std::vector<RtpPacket> pop_assembled_frame();
+    std::optional<Frame> pop_assembled_frame();
 
 private:
     void update_missing_packets(uint16_t seq_num);

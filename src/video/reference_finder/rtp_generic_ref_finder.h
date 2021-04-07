@@ -13,23 +13,18 @@
 #include <memory>
 
 #include <brtc/frame.h>
-#include "reference_finder.h"
-#include "../../common/sequence_number_util.h"
+#include "video/reference_finder/reference_finder.h"
 
-namespace brtc {
+namespace webrtc {
 
-class RtpFrameIdOnlyRefFinder {
+class RtpGenericFrameRefFinder {
  public:
-  RtpFrameIdOnlyRefFinder() = default;
+  RtpGenericFrameRefFinder() = default;
 
-  RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<ReceivedFrame> frame,
-      int frame_id);
-
- private:
-  static constexpr int kFrameIdLength = 1 << 15;
-  webrtc::SeqNumUnwrapper<uint16_t, kFrameIdLength> unwrapper_;
+  brtc::RtpFrameReferenceFinder::ReturnVector ManageFrame(
+      std::unique_ptr<brtc::ReceivedFrame> frame,
+      const brtc::RTPVideoHeader::GenericDescriptorInfo& descriptor);
 };
 
-}  // namespace brtc
+}  // namespace webrtc
 

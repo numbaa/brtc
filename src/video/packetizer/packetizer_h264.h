@@ -13,8 +13,8 @@
 #include <brtc/frame.h>
 #include <cstdint>
 #include <queue>
-#include "../../common/rtp.h"
-#include "packetizer.h"
+#include "common/rtp.h"
+#include "video/packetizer/packetizer.h"
 
 namespace brtc {
 

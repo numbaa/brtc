@@ -11,16 +11,16 @@
 
 #include <glog/logging.h>
 #include <utility>
-#include "rtp_vp8_ref_finder.h"
+#include "video/reference_finder/rtp_vp8_ref_finder.h"
 
 
-namespace brtc {
+namespace webrtc {
 
-RtpFrameReferenceFinder::ReturnVector RtpVp8RefFinder::ManageFrame(
-    std::unique_ptr<ReceivedFrame> frame) {
+brtc::RtpFrameReferenceFinder::ReturnVector RtpVp8RefFinder::ManageFrame(
+    std::unique_ptr<brtc::ReceivedFrame> frame) {
   FrameDecision decision = ManageFrameInternal(frame.get());
 
-  RtpFrameReferenceFinder::ReturnVector res;
+  brtc::RtpFrameReferenceFinder::ReturnVector res;
   switch (decision) {
     case kStash:
       if (stashed_frames_.size() > kMaxStashedFrames)
@@ -39,8 +39,8 @@ RtpFrameReferenceFinder::ReturnVector RtpVp8RefFinder::ManageFrame(
 }
 
 RtpVp8RefFinder::FrameDecision RtpVp8RefFinder::ManageFrameInternal(
-    ReceivedFrame* frame) {
-  const RTPVideoHeaderVP8& video_header = std::get<RTPVideoHeaderVP8>(frame->video_header);
+    brtc::ReceivedFrame* frame) {
+  const brtc::RTPVideoHeaderVP8& video_header = std::get<brtc::RTPVideoHeaderVP8>(frame->video_header);
 
   // Protect against corrupted packets with arbitrary large temporal idx.
   if (video_header.temporalIdx >= kMaxTemporalLayers)
@@ -78,7 +78,7 @@ RtpVp8RefFinder::FrameDecision RtpVp8RefFinder::ManageFrameInternal(
   auto clean_layer_info_to = layer_info_.lower_bound(old_tl0_pic_idx);
   layer_info_.erase(layer_info_.begin(), clean_layer_info_to);
 
-  if (frame->frame_type == VideoFrameType::VideoFrameKey) {
+  if (frame->frame_type == brtc::VideoFrameType::VideoFrameKey) {
     if (video_header.temporalIdx != 0) {
       return kDrop;
     }
@@ -176,7 +176,7 @@ RtpVp8RefFinder::FrameDecision RtpVp8RefFinder::ManageFrameInternal(
   return kHandOff;
 }
 
-void RtpVp8RefFinder::UpdateLayerInfoVp8(ReceivedFrame* frame,
+void RtpVp8RefFinder::UpdateLayerInfoVp8(brtc::ReceivedFrame* frame,
                                          int64_t unwrapped_tl0,
                                          uint8_t temporal_idx) {
   auto layer_info_it = layer_info_.find(unwrapped_tl0);
@@ -201,7 +201,7 @@ void RtpVp8RefFinder::UpdateLayerInfoVp8(ReceivedFrame* frame,
 }
 
 void RtpVp8RefFinder::RetryStashedFrames(
-    RtpFrameReferenceFinder::ReturnVector& res) {
+    brtc::RtpFrameReferenceFinder::ReturnVector& res) {
   bool complete_frame = false;
   do {
     complete_frame = false;
@@ -223,7 +223,7 @@ void RtpVp8RefFinder::RetryStashedFrames(
   } while (complete_frame);
 }
 
-void RtpVp8RefFinder::UnwrapPictureIds(ReceivedFrame* frame) {
+void RtpVp8RefFinder::UnwrapPictureIds(brtc::ReceivedFrame* frame) {
   for (size_t i = 0; i < frame->num_references; ++i)
     frame->references[i] = unwrapper_.Unwrap(frame->references[i]);
   frame->id = unwrapper_.Unwrap(frame->id);
@@ -240,4 +240,4 @@ void RtpVp8RefFinder::ClearTo(uint16_t seq_num) {
   }
 }
 
-}  // namespace brtc
+}  // namespace webrtc

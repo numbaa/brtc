@@ -6,9 +6,10 @@
 #include <bco/coroutine/channel.h>
 #include <bco/net/proactor/select.h>
 #include <bco/context.h>
-#include "../transport/transport.h"
-#include "../video/frame_assembler/frame_assembler.h"
-#include "../video/frame_buffer/frame_buffer.h"
+#include "transport/transport.h"
+#include "video/frame_assembler/frame_assembler.h"
+#include "video/frame_buffer/frame_buffer.h"
+#include "video/reference_finder/reference_finder.h"
 
 namespace brtc {
 
@@ -45,6 +46,7 @@ private:
     std::shared_ptr<bco::Context<bco::net::Select>> render_ctx_;
     FrameAssembler frame_assembler_;
     FrameBuffer frame_buffer_;
+    RtpFrameReferenceFinder reference_finder_;
     bco::Channel<Frame> undecoded_frames_;
     bco::Channel<Frame> decoded_frames_;
 };

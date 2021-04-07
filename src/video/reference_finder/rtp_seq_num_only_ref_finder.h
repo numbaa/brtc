@@ -17,18 +17,18 @@
 #include <utility>
 
 #include <brtc/frame.h>
-#include "reference_finder.h"
-#include "../../common/sequence_number_util.h"
+#include "video/reference_finder/reference_finder.h"
+#include "common/sequence_number_util.h"
 
-namespace brtc {
+namespace webrtc {
 
 class RtpSeqNumOnlyRefFinder {
  public:
   RtpSeqNumOnlyRefFinder() = default;
 
-  RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<ReceivedFrame> frame);
-  RtpFrameReferenceFinder::ReturnVector PaddingReceived(uint16_t seq_num);
+  brtc::RtpFrameReferenceFinder::ReturnVector ManageFrame(
+      std::unique_ptr<brtc::ReceivedFrame> frame);
+  brtc::RtpFrameReferenceFinder::ReturnVector PaddingReceived(uint16_t seq_num);
   void ClearTo(uint16_t seq_num);
 
  private:
@@ -37,8 +37,8 @@ class RtpSeqNumOnlyRefFinder {
 
   enum FrameDecision { kStash, kHandOff, kDrop };
 
-  FrameDecision ManageFrameInternal(ReceivedFrame* frame);
-  void RetryStashedFrames(RtpFrameReferenceFinder::ReturnVector& res);
+  FrameDecision ManageFrameInternal(brtc::ReceivedFrame* frame);
+  void RetryStashedFrames(brtc::RtpFrameReferenceFinder::ReturnVector& res);
   void UpdateLastPictureIdWithPadding(uint16_t seq_num);
 
   // For every group of pictures, hold two sequence numbers. The first being
@@ -56,12 +56,12 @@ class RtpSeqNumOnlyRefFinder {
 
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
-  std::deque<std::unique_ptr<ReceivedFrame>> stashed_frames_;
+  std::deque<std::unique_ptr<brtc::ReceivedFrame>> stashed_frames_;
 
   // Unwrapper used to unwrap generic RTP streams. In a generic stream we derive
   // a picture id from the packet sequence number.
   webrtc::SeqNumUnwrapper<uint16_t> rtp_seq_num_unwrapper_;
 };
 
-}  // namespace brtc
+}  // namespace webrtc
 

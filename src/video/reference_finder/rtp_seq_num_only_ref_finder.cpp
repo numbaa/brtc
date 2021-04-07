@@ -10,16 +10,16 @@
 #include <cassert>
 #include <utility>
 #include <glog/logging.h>
-#include "../../common/sequence_number_util.h"
-#include "rtp_seq_num_only_ref_finder.h"
+#include "common/sequence_number_util.h"
+#include "video/reference_finder/rtp_seq_num_only_ref_finder.h"
 
-namespace brtc {
+namespace webrtc {
 
-RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
-    std::unique_ptr<ReceivedFrame> frame) {
+brtc::RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
+    std::unique_ptr<brtc::ReceivedFrame> frame) {
   FrameDecision decision = ManageFrameInternal(frame.get());
 
-  RtpFrameReferenceFinder::ReturnVector res;
+  brtc::RtpFrameReferenceFinder::ReturnVector res;
   switch (decision) {
     case kStash:
       if (stashed_frames_.size() > kMaxStashedFrames)
@@ -38,8 +38,8 @@ RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
 }
 
 RtpSeqNumOnlyRefFinder::FrameDecision
-RtpSeqNumOnlyRefFinder::ManageFrameInternal(ReceivedFrame* frame) {
-  if (frame->frame_type == VideoFrameType::VideoFrameKey) {
+RtpSeqNumOnlyRefFinder::ManageFrameInternal(brtc::ReceivedFrame* frame) {
+  if (frame->frame_type == brtc::VideoFrameType::VideoFrameKey) {
     last_seq_num_gop_.insert(std::make_pair(
         frame->last_seq_num,
         std::make_pair(frame->last_seq_num, frame->last_seq_num)));
@@ -73,7 +73,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(ReceivedFrame* frame) {
   // this frame.
   uint16_t last_picture_id_gop = seq_num_it->second.first;
   uint16_t last_picture_id_with_padding_gop = seq_num_it->second.second;
-  if (frame->frame_type == VideoFrameType::VideoFrameDelta) {
+  if (frame->frame_type == brtc::VideoFrameType::VideoFrameDelta) {
     uint16_t prev_seq_num = frame->first_seq_num - 1;
 
     if (prev_seq_num != last_picture_id_with_padding_gop)
@@ -85,8 +85,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(ReceivedFrame* frame) {
   // Since keyframes can cause reordering we can't simply assign the
   // picture id according to some incrementing counter.
   frame->id = frame->last_seq_num;
-  frame->num_references =
-      frame->frame_type == VideoFrameType::VideoFrameDelta;
+  frame->num_references = frame->frame_type == brtc::VideoFrameType::VideoFrameDelta;
   frame->references[0] = rtp_seq_num_unwrapper_.Unwrap(last_picture_id_gop);
   if (webrtc::AheadOf<uint16_t>(frame->id, last_picture_id_gop)) {
     seq_num_it->second.first = frame->id;
@@ -100,7 +99,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(ReceivedFrame* frame) {
 }
 
 void RtpSeqNumOnlyRefFinder::RetryStashedFrames(
-    RtpFrameReferenceFinder::ReturnVector& res) {
+    brtc::RtpFrameReferenceFinder::ReturnVector& res) {
   bool complete_frame = false;
   do {
     complete_frame = false;
@@ -158,14 +157,14 @@ void RtpSeqNumOnlyRefFinder::UpdateLastPictureIdWithPadding(uint16_t seq_num) {
   }
 }
 
-RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::PaddingReceived(
+brtc::RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::PaddingReceived(
     uint16_t seq_num) {
   auto clean_padding_to =
       stashed_padding_.lower_bound(seq_num - kMaxPaddingAge);
   stashed_padding_.erase(stashed_padding_.begin(), clean_padding_to);
   stashed_padding_.insert(seq_num);
   UpdateLastPictureIdWithPadding(seq_num);
-  RtpFrameReferenceFinder::ReturnVector res;
+  brtc::RtpFrameReferenceFinder::ReturnVector res;
   RetryStashedFrames(res);
   return res;
 }
@@ -181,4 +180,4 @@ void RtpSeqNumOnlyRefFinder::ClearTo(uint16_t seq_num) {
   }
 }
 
-}  // namespace brtc
+}  // namespace webrtc

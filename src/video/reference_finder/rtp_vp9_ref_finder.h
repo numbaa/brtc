@@ -17,18 +17,18 @@
 #include <array>
 
 #include <brtc/frame.h>
-#include "reference_finder.h"
-#include "vp9_globals.h"
-#include "../../common/sequence_number_util.h"
+#include "video/reference_finder/reference_finder.h"
+#include "video/reference_finder/vp9_globals.h"
+#include "common/sequence_number_util.h"
 
-namespace brtc {
+namespace webrtc {
 
 class RtpVp9RefFinder {
  public:
   RtpVp9RefFinder() = default;
 
-  RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<ReceivedFrame> frame);
+  brtc::RtpFrameReferenceFinder::ReturnVector ManageFrame(
+      std::unique_ptr<brtc::ReceivedFrame> frame);
   void ClearTo(uint16_t seq_num);
 
  private:
@@ -48,8 +48,8 @@ class RtpVp9RefFinder {
     uint16_t last_picture_id;
   };
 
-  FrameDecision ManageFrameInternal(ReceivedFrame* frame);
-  void RetryStashedFrames(RtpFrameReferenceFinder::ReturnVector& res);
+  FrameDecision ManageFrameInternal(brtc::ReceivedFrame* frame);
+  void RetryStashedFrames(brtc::RtpFrameReferenceFinder::ReturnVector& res);
 
   bool MissingRequiredFrameVp9(uint16_t picture_id, const GofInfo& info);
 
@@ -58,7 +58,7 @@ class RtpVp9RefFinder {
                              uint8_t temporal_idx,
                              uint16_t pid_ref);
 
-  void FlattenFrameIdAndRefs(ReceivedFrame* frame, bool inter_layer_predicted);
+  void FlattenFrameIdAndRefs(brtc::ReceivedFrame* frame, bool inter_layer_predicted);
 
   // Save the last picture id in order to detect when there is a gap in frames
   // that have not yet been fully received.
@@ -66,7 +66,7 @@ class RtpVp9RefFinder {
 
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
-  std::deque<std::unique_ptr<ReceivedFrame>> stashed_frames_;
+  std::deque<std::unique_ptr<brtc::ReceivedFrame>> stashed_frames_;
 
   // Where the current scalability structure is in the
   // |scalability_structures_| array.

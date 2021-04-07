@@ -22,5 +22,11 @@ const int16_t kNoTl0PicIdx = -1;
 const uint8_t kNoTemporalIdx = 0xFF;
 const int kNoKeyIdx = -1;
 
-}  // namespace brtc
+const int kMaxEncoderBuffers = 8;
+const int kMaxSimulcastStreams = 3;
+const int kMaxSpatialLayers = 5;
+const int kMaxTemporalStreams = 4;
+const int kMaxPreferredPixelFormats = 5;
+
+}  // namespace webrtc
 

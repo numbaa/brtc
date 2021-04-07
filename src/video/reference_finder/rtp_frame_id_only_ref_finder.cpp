@@ -9,22 +9,22 @@
  */
 
 #include <utility>
-#include "rtp_frame_id_only_ref_finder.h"
+#include "video/reference_finder/rtp_frame_id_only_ref_finder.h"
 
-namespace brtc {
+namespace webrtc {
 
-RtpFrameReferenceFinder::ReturnVector RtpFrameIdOnlyRefFinder::ManageFrame(
-    std::unique_ptr<ReceivedFrame> frame,
+brtc::RtpFrameReferenceFinder::ReturnVector RtpFrameIdOnlyRefFinder::ManageFrame(
+    std::unique_ptr<brtc::ReceivedFrame> frame,
     int frame_id) {
   frame->spatial_index = 0;
   frame->id = unwrapper_.Unwrap(frame_id & (kFrameIdLength - 1));
   frame->num_references =
-      frame->frame_type == VideoFrameType::VideoFrameKey ? 0 : 1;
+      frame->frame_type == brtc::VideoFrameType::VideoFrameKey ? 0 : 1;
   frame->references[0] = frame->id - 1;
 
-  RtpFrameReferenceFinder::ReturnVector res;
+  brtc::RtpFrameReferenceFinder::ReturnVector res;
   res.push_back(std::move(frame));
   return res;
 }
 
-}  // namespace brtc
+}  // namespace webrtc

@@ -59,22 +59,22 @@ set(BRTC_SOURCES
   "${SRC_DIR}/common/mod_ops.h"
   "${SRC_DIR}/video/frame_buffer/frame_buffer.h"
   "${SRC_DIR}/video/frame_buffer/frame_buffer.cpp"
-  "${SRC_DIR}/video/frame_buffer/reference_finder.h"
-  "${SRC_DIR}/video/frame_buffer/reference_finder.cpp"
-  "${SRC_DIR}/video/frame_buffer/rtp_generic_ref_finder.h"
-  "${SRC_DIR}/video/frame_buffer/rtp_generic_ref_finder.cpp"
-  "${SRC_DIR}/video/frame_buffer/rtp_seq_num_only_ref_finder.cpp"
-  "${SRC_DIR}/video/frame_buffer/rtp_seq_num_only_ref_finder.h"
-  "${SRC_DIR}/video/frame_buffer/rtp_vp8_ref_finder.cpp"
-  "${SRC_DIR}/video/frame_buffer/rtp_vp8_ref_finder.h"
-  "${SRC_DIR}/video/frame_buffer/rtp_vp9_ref_finder.cpp"
-  "${SRC_DIR}/video/frame_buffer/rtp_vp9_ref_finder.h"
-  "${SRC_DIR}/video/frame_buffer/rtp_frame_id_only_ref_finder.cpp"
-  "${SRC_DIR}/video/frame_buffer/rtp_frame_id_only_ref_finder.h"
-  "${SRC_DIR}/video/frame_buffer/vp9_globals.h"
-  "${SRC_DIR}/video/frame_buffer/vp8_globals.h"
-  "${SRC_DIR}/video/frame_buffer/h264_globals.h"
-  "${SRC_DIR}/video/frame_buffer/common_constants.h"
+  "${SRC_DIR}/video/reference_finder/reference_finder.h"
+  "${SRC_DIR}/video/reference_finder/reference_finder.cpp"
+  "${SRC_DIR}/video/reference_finder/rtp_generic_ref_finder.h"
+  "${SRC_DIR}/video/reference_finder/rtp_generic_ref_finder.cpp"
+  "${SRC_DIR}/video/reference_finder/rtp_seq_num_only_ref_finder.cpp"
+  "${SRC_DIR}/video/reference_finder/rtp_seq_num_only_ref_finder.h"
+  "${SRC_DIR}/video/reference_finder/rtp_vp8_ref_finder.cpp"
+  "${SRC_DIR}/video/reference_finder/rtp_vp8_ref_finder.h"
+  "${SRC_DIR}/video/reference_finder/rtp_vp9_ref_finder.cpp"
+  "${SRC_DIR}/video/reference_finder/rtp_vp9_ref_finder.h"
+  "${SRC_DIR}/video/reference_finder/rtp_frame_id_only_ref_finder.cpp"
+  "${SRC_DIR}/video/reference_finder/rtp_frame_id_only_ref_finder.h"
+  "${SRC_DIR}/video/reference_finder/vp9_globals.h"
+  "${SRC_DIR}/video/reference_finder/vp8_globals.h"
+  "${SRC_DIR}/video/reference_finder/h264_globals.h"
+  "${SRC_DIR}/video/reference_finder/common_constants.h"
    )
 
 add_library(${PROJECT_NAME}
@@ -106,6 +106,8 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     "include"
+  PRIVATE
+    "${SRC_DIR}"
 )
 
 add_subdirectory(examples)
