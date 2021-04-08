@@ -49,16 +49,21 @@ set(BRTC_SOURCES
   "${SRC_DIR}/common/rtp.h"
   "${SRC_DIR}/common/rtp.cpp"
   "${SRC_DIR}/common/time_utils.h"
+  "${SRC_DIR}/common/sequence_number_util.h"
+  "${SRC_DIR}/common/mod_ops.h"
 
   "${SRC_DIR}/video/packetizer/packetizer.h"
   "${SRC_DIR}/video/packetizer/packetizer_h264.h"
   "${SRC_DIR}/video/packetizer/packetizer_h264.cpp"
+
   "${SRC_DIR}/video/frame_assembler/frame_assembler.h"
   "${SRC_DIR}/video/frame_assembler/frame_assembler.cpp"
-  "${SRC_DIR}/common/sequence_number_util.h"
-  "${SRC_DIR}/common/mod_ops.h"
+
   "${SRC_DIR}/video/frame_buffer/frame_buffer.h"
   "${SRC_DIR}/video/frame_buffer/frame_buffer.cpp"
+  "${SRC_DIR}/video/frame_buffer/decoded_frames_history.h"
+  "${SRC_DIR}/video/frame_buffer/decoded_frames_history.cpp"
+
   "${SRC_DIR}/video/reference_finder/reference_finder.h"
   "${SRC_DIR}/video/reference_finder/reference_finder.cpp"
   "${SRC_DIR}/video/reference_finder/rtp_generic_ref_finder.h"

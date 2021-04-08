@@ -42,6 +42,9 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
             std::unique_ptr<ReceivedFrame> received_frame;
             reference_finder_.ManageFrame(std::move(received_frame));
         }
+        //在我的模式里，其实frame_buffer是不需要的，他的功能已经被reference_finder承载了
+        //后面支持svc再考虑fram buffer
+        //另外，jitter的处理也先不考虑，得到一个可解码帧就扔去解码，jitter另外做，要做在controller里
         while (auto frame = reference_finder_.pop_frame()) {
             frame_buffer_.insert(frame);
         }

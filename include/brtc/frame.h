@@ -16,6 +16,7 @@ struct Frame {
     uint32_t length = 0;
     uint32_t width = 0;
     uint32_t height = 0;
+    uint32_t timestamp = 0; // ??
 };
 
 } // brtc
