@@ -54,9 +54,10 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
 {
     while (!stop_) {
         auto frame = co_await receive_from_encode_loop();
-        Packetizer packetizer { frame };
+        Packetizer::PayloadSizeLimits limits;
+        std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
         RtpPacket packet;
-        while (packetizer.next_packet(packet)) {
+        while (packetizer->next_packet(packet)) {
             //加策略delay一下啥的
             transport_->send_packet(packet.data());
         }

@@ -2,6 +2,11 @@
 
 namespace brtc {
 
+namespace {
+constexpr size_t kMaxPacketBufferSize = 1000;
+constexpr size_t kDecodedHistorySize = 1000;
+}
+
 
 MediaReceiverImpl::MediaReceiverImpl(
                 std::unique_ptr<Transport>&& transport,
@@ -16,6 +21,8 @@ MediaReceiverImpl::MediaReceiverImpl(
     , network_ctx_(network_ctx)
     , decode_ctx_(decode_ctx)
     , render_ctx_(render_ctx)
+    , frame_assembler_(kMaxPacketBufferSize)
+    , frame_buffer_(kDecodedHistorySize)
 {
 }
 
@@ -35,18 +42,16 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
 {
     while (!stop_) {
         bco::Buffer buffer(1500);
-        auto bytes_read = co_await transport_->read_packet(buffer);
+        auto bytes_read = co_await transport_->read_rtp(buffer);
         frame_assembler_.insert(buffer);
         while (auto frame = frame_assembler_.pop_assembled_frame()) {
             //TODO: Frame -> ReceivedFrame
             std::unique_ptr<ReceivedFrame> received_frame;
             reference_finder_.ManageFrame(std::move(received_frame));
         }
-        //在我的模式里，其实frame_buffer是不需要的，他的功能已经被reference_finder承载了
-        //后面支持svc再考虑fram buffer
-        //另外，jitter的处理也先不考虑，得到一个可解码帧就扔去解码，jitter另外做，要做在controller里
-        while (auto frame = reference_finder_.pop_frame()) {
-            frame_buffer_.insert(frame);
+        //jitter的处理也先不考虑，得到一个可解码帧就扔去解码，jitter另外做，要做在controller里
+        while (auto frame = reference_finder_.pop_gop_inter_continous_frame()) {
+            frame_buffer_.insert(*frame);
         }
         while (auto frame = frame_buffer_.pop_decodable_frame()) {
             send_to_decode_loop(frame.value());

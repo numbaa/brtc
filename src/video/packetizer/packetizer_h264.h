@@ -19,13 +19,6 @@
 namespace brtc {
 
 class PacketizerH264 : public Packetizer {
-    struct PayloadSizeLimits {
-        int max_payload_len = 1200;
-        int first_packet_reduction_len = 0;
-        int last_packet_reduction_len = 0;
-        // Reduction len for packet that is first & last at the same time.
-        int single_packet_reduction_len = 0;
-    };
 
     struct PacketUnit {
         PacketUnit(std::span<uint8_t> source_fragment,
@@ -49,7 +42,7 @@ class PacketizerH264 : public Packetizer {
     };
 
 public:
-    explicit PacketizerH264(Frame decoded_frame, VideoCodecType codec_type, PayloadSizeLimits limits);
+    explicit PacketizerH264(Frame decoded_frame, PayloadSizeLimits limits);
     bool next_packet(RtpPacket& packet) override;
 
 private:

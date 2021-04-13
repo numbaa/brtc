@@ -14,6 +14,11 @@
 
 namespace brtc {
 
+FrameAssembler::FrameAssembler(size_t max_size)
+    : max_size_(max_size)
+{
+}
+
 void FrameAssembler::insert(RtpPacket rtp_packet)
 {
     uint16_t seq_num = rtp_packet.sequence_number();

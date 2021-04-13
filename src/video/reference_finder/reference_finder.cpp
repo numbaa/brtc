@@ -133,8 +133,7 @@ RtpFrameReferenceFinder::RtpFrameReferenceFinder(int64_t picture_id_offset)
 
 RtpFrameReferenceFinder::~RtpFrameReferenceFinder() = default;
 
-RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinder::ManageFrame(
-    std::unique_ptr<ReceivedFrame> frame)
+void RtpFrameReferenceFinder::ManageFrame(std::unique_ptr<ReceivedFrame> frame)
 {
     // If we have cleared past this frame, drop it.
     if (cleared_to_seq_num_ != -1 && webrtc::AheadOf<uint16_t>(cleared_to_seq_num_, frame->first_seq_num)) {
@@ -145,9 +144,9 @@ RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinder::ManageFrame(
         frame->id = frame->id + picture_id_offset_;
         for (size_t i = 0; i < frame->num_references; ++i) {
             frame->references[i] += picture_id_offset_;
+            frames_.push(std::move(frame));
         }
     }
-    return std::move(frames);
 }
 
 RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinder::PaddingReceived(uint16_t seq_num)
@@ -159,6 +158,13 @@ void RtpFrameReferenceFinder::ClearTo(uint16_t seq_num)
 {
     cleared_to_seq_num_ = seq_num;
     impl_->ClearTo(seq_num);
+}
+
+std::unique_ptr<ReceivedFrame> RtpFrameReferenceFinder::pop_gop_inter_continous_frame()
+{
+    auto frame = std::move(frames_.front());
+    frames_.pop();
+    return std::move(frame);
 }
 
 } // namespace brtc

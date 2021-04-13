@@ -44,6 +44,10 @@ set(BRTC_SOURCES
 
   "${SRC_DIR}/transport/transport.cpp"
   "${SRC_DIR}/transport/transport.h"
+  "${SRC_DIR}/transport/rtp_transport.h"
+  "${SRC_DIR}/transport/rtp_transport.cpp"
+  "${SRC_DIR}/transport/sctp_transport.h"
+  "${SRC_DIR}/transport/sctp_transport.cpp"
 
   "${SRC_DIR}/common/udp_packet.h"
   "${SRC_DIR}/common/rtp.h"
@@ -53,6 +57,7 @@ set(BRTC_SOURCES
   "${SRC_DIR}/common/mod_ops.h"
 
   "${SRC_DIR}/video/packetizer/packetizer.h"
+  "${SRC_DIR}/video/packetizer/packetizer.cpp"
   "${SRC_DIR}/video/packetizer/packetizer_h264.h"
   "${SRC_DIR}/video/packetizer/packetizer_h264.cpp"
 
@@ -80,7 +85,7 @@ set(BRTC_SOURCES
   "${SRC_DIR}/video/reference_finder/vp8_globals.h"
   "${SRC_DIR}/video/reference_finder/h264_globals.h"
   "${SRC_DIR}/video/reference_finder/common_constants.h"
-   )
+  )
 
 add_library(${PROJECT_NAME}
   ${BRTC_PUBLIC_HEADERS}

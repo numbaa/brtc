@@ -1,11 +1,4 @@
 project(examples)
 
-add_executable(${PROJECT_NAME}
-  main.cpp
-)
-
-target_link_libraries(${PROJECT_NAME}
-  PUBLIC
-    glog::glog
-    brtc
-)
+add_subdirectory(recv_stream)
+add_subdirectory(send_stream)

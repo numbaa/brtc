@@ -430,4 +430,7 @@ inline bool RtpPacket::push_back_extension(const typename T::value_type& value)
     return true;
 }
 
+class RtcpPacket {
+};
+
 } // namespace brtc

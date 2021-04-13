@@ -37,6 +37,7 @@ class FrameBuffer {
     using FrameMap = std::map<int64_t, FrameInfo>;
 
 public:
+    FrameBuffer(size_t decoded_history_size);
     void insert(ReceivedFrame frame);
     std::optional<ReceivedFrame> pop_decodable_frame();
 

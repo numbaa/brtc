@@ -78,19 +78,10 @@ static std::tuple<uint8_t*, int32_t> find_nalu(std::span<uint8_t> data)
     return { nullptr, -1 };
 }
 
-PacketizerH264::PacketizerH264(Frame encoded_frame, VideoCodecType codec_type, PayloadSizeLimits limits)
+PacketizerH264::PacketizerH264(Frame encoded_frame, PayloadSizeLimits limits)
     : frame_(encoded_frame)
     , limits_(limits)
 {
-    switch (codec_type) {
-    case brtc::VideoCodecType::H264:
-        break;
-    case brtc::VideoCodecType::H265:
-    case brtc::VideoCodecType::VP8:
-    case brtc::VideoCodecType::VP9:
-    default:
-        assert(false);
-    }
     if (!do_fragmentation()) {
         return;
     }

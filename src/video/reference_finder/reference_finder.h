@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <queue>
 #include "common/rtp.h"
 
 namespace brtc {
@@ -23,7 +24,7 @@ public:
     //  - We have too many stashed frames (determined by |kMaxStashedFrames|)
     //    so we drop this frame, or
     //  - It gets cleared by ClearTo, which also means we drop it.
-    ReturnVector ManageFrame(std::unique_ptr<ReceivedFrame> frame);
+    void ManageFrame(std::unique_ptr<ReceivedFrame> frame);
 
     // Notifies that padding has been received, which the reference finder
     // might need to calculate the references of a frame.
@@ -31,6 +32,8 @@ public:
 
     // Clear all stashed frames that include packets older than |seq_num|.
     void ClearTo(uint16_t seq_num);
+
+    std::unique_ptr<ReceivedFrame> pop_gop_inter_continous_frame();
 
 private:
 
@@ -40,6 +43,7 @@ private:
     int cleared_to_seq_num_ = -1;
     const int64_t picture_id_offset_;
     std::unique_ptr<RtpFrameReferenceFinderImpl> impl_;
+    std::queue<std::unique_ptr<ReceivedFrame>> frames_;
 };
 
 } // namespace brtc

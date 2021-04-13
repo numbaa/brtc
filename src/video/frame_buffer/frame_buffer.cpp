@@ -18,7 +18,10 @@ constexpr int64_t kLogNonDecodedIntervalMs = 5000;
 } // namespace
 
 namespace brtc {
-
+FrameBuffer::FrameBuffer(size_t decoded_history_size)
+    : decoded_frames_history_(decoded_history_size)
+{
+}
 void FrameBuffer::insert(ReceivedFrame frame)
 {
     //MutexLock lock(&mutex_);

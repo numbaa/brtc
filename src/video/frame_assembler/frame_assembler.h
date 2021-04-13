@@ -19,6 +19,7 @@ private:
     };
 
 public:
+    FrameAssembler(size_t max_size);
     void insert(RtpPacket packet);
     std::optional<Frame> pop_assembled_frame();
 
