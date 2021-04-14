@@ -1,3 +1,4 @@
+#include <bco/coroutine/cofunc.h>
 #include "transport.h"
 
 namespace brtc {
@@ -19,6 +20,12 @@ void Transport::set_socket(bco::net::UdpSocket<bco::net::Select> socket)
 void Transport::set_remote_address(bco::net::Address addr)
 {
     remote_addr_ = addr;
+}
+
+bco::Task<bool> Transport::handshake(std::chrono::milliseconds timeout)
+{
+    //return bco::run_with();
+    return bco::Task<bool>();
 }
 
 bco::Task<RtpPacket> Transport::recv_rtp()

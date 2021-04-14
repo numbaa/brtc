@@ -41,9 +41,8 @@ void MediaReceiverImpl::stop()
 bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> that)
 {
     while (!stop_) {
-        bco::Buffer buffer(1500);
-        auto bytes_read = co_await transport_->read_rtp(buffer);
-        frame_assembler_.insert(buffer);
+        auto packet = co_await transport_->recv_rtp();
+        frame_assembler_.insert(packet);
         while (auto frame = frame_assembler_.pop_assembled_frame()) {
             //TODO: Frame -> ReceivedFrame
             std::unique_ptr<ReceivedFrame> received_frame;

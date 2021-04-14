@@ -2,4 +2,8 @@
 
 namespace brtc {
 
+void SctpTransport::on_recv_data(bco::Buffer buff)
+{
+}
+
 } // namespace brtc

@@ -34,10 +34,8 @@ void MediaSenderImpl::stop()
 
 bco::Routine MediaSenderImpl::network_loop(std::shared_ptr<MediaSenderImpl> that)
 {
-    //主要读rtcp
     while (!stop_) {
-        bco::Buffer buffer(1500);
-        auto bytes_read = co_await transport_->read_packet(buffer);
+        auto packet = co_await transport_->recv_rtcp();
     }
 }
 
@@ -59,7 +57,7 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
         RtpPacket packet;
         while (packetizer->next_packet(packet)) {
             //加策略delay一下啥的
-            transport_->send_packet(packet.data());
+            transport_->send_rtp(packet);
         }
     }
 }

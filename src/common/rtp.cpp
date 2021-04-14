@@ -46,6 +46,34 @@ constexpr size_t kFixedHeaderSize = 12;
 // |               padding         | Padding size  |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+RtpPacket::RtpPacket(bco::Buffer buff)
+{
+    const bool has_padding = (buff[0] & 0x20) != 0;
+    const bool has_extension = (buff[0] & 0x10) != 0;
+    const uint8_t number_of_crcs = buff[0] & 0x0f;
+    //主要是要获得extension_entries_
+    if (has_extension) {
+        uint16_t magic;
+        buffer_.read_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t), magic);
+        if (magic == 0xBEDE) {
+            extension_mode_ = ExtensionMode::kOneByte;
+        } else if (magic == 0x0100) {
+            extension_mode_ = ExtensionMode::kTwoByte;
+        } else {
+            //error handling
+            return;
+        }
+        uint16_t number_of_extension;
+        buffer_.read_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint16_t), number_of_extension);
+        size_t extension_offset = kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t);
+        //解析出extension_entries_
+        for (uint16_t i = 0; i < number_of_extension; i++) {
+            //
+        }
+    }
+
+}
+
 bool RtpPacket::marker() const
 {
     return buffer_[1] & 0b1000'0000;
@@ -110,7 +138,17 @@ size_t RtpPacket::padding_size() const
 
 size_t RtpPacket::extensions_size() const
 {
-    return extensions_size_;
+    size_t size = 0;
+    if (extension_mode_ == ExtensionMode::kOneByte) {
+        for (const auto& entry : extension_entries_) {
+            size += (entry.length + 2) * 8;
+        }
+    } else {
+        for (const auto& entry : extension_entries_) {
+            size += entry.length * 8 + 16;
+        }
+    }
+    return size;
 }
 
 const bco::Buffer RtpPacket::payload() const

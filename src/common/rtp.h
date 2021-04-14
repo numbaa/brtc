@@ -358,7 +358,6 @@ private:
 
 private:
     ExtensionMode extension_mode_ = ExtensionMode::kOneByte;
-    size_t extensions_size_;
     std::vector<ExtensionInfo> extension_entries_;
     std::variant<RTPVideoHeader, RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9> video_header_;
     mutable bco::Buffer buffer_;
