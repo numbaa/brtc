@@ -22,10 +22,14 @@ void Transport::set_remote_address(bco::net::Address addr)
     remote_addr_ = addr;
 }
 
-bco::Task<bool> Transport::handshake(std::chrono::milliseconds timeout)
+bco::Func<bool> Transport::handshake(std::chrono::milliseconds timeout)
 {
-    //return bco::run_with();
-    return bco::Task<bool>();
+    auto result = co_await bco::run_with(bco::Timeout { timeout }, do_handshake());
+    if (result.has_value() && result.value() == true) {
+        co_return true;
+    }
+    //TODO: 记录一下握手失败还是握手超时
+    co_return false;
 }
 
 bco::Task<RtpPacket> Transport::recv_rtp()
@@ -49,6 +53,12 @@ bco::Routine Transport::do_recv()
 void Transport::send_packet(bco::Buffer packet)
 {
     socket_.sendto(packet, remote_addr_);
+}
+
+bco::Task<bool> Transport::do_handshake()
+{
+    //略麻烦
+    return bco::Task<bool>();
 }
 
 void Transport::send_rtp(RtpPacket packet)

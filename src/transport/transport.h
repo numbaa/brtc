@@ -20,7 +20,7 @@ public:
     void set_socket(bco::net::UdpSocket<bco::net::Select> socket);
     void set_remote_address(bco::net::Address addr);
 
-    bco::Task<bool> handshake(std::chrono::milliseconds timeout);
+    bco::Func<bool> handshake(std::chrono::milliseconds timeout);
 
     bco::Task<RtpPacket> recv_rtp();
     bco::Task<RtcpPacket> recv_rtcp();
@@ -35,6 +35,7 @@ public:
 private:
     bco::Routine do_recv();
     void send_packet(bco::Buffer packet);
+    bco::Task<bool> do_handshake();
 
 private:
     bco::net::Address remote_addr_;
