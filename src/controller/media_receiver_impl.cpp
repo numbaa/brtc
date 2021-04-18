@@ -9,13 +9,13 @@ constexpr size_t kDecodedHistorySize = 1000;
 
 
 MediaReceiverImpl::MediaReceiverImpl(
-                std::unique_ptr<Transport>&& transport,
+                const TransportInfo& info,
                 std::unique_ptr<VideoDecoderInterface>&& decoder,
                 std::unique_ptr<RenderInterface>&& render,
                 std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
                 std::shared_ptr<bco::Context<bco::net::Select>> decode_ctx,
                 std::shared_ptr<bco::Context<bco::net::Select>> render_ctx)
-    : transport_(std::move(transport))
+    : transport_(std::make_unique<Transport>(info))
     , decoder_(std::move(decoder))
     , render_(std::move(render))
     , network_ctx_(network_ctx)
@@ -48,7 +48,6 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
             std::unique_ptr<ReceivedFrame> received_frame;
             reference_finder_.ManageFrame(std::move(received_frame));
         }
-        //jitter的处理也先不考虑，得到一个可解码帧就扔去解码，jitter另外做，要做在controller里
         while (auto frame = reference_finder_.pop_gop_inter_continous_frame()) {
             frame_buffer_.insert(*frame);
         }

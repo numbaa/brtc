@@ -13,7 +13,7 @@ namespace brtc {
 class MediaSenderImpl : public std::enable_shared_from_this<MediaSenderImpl> {
 public:
     MediaSenderImpl(
-        std::unique_ptr<Transport>&& transport,
+        const TransportInfo& info,
         std::unique_ptr<VideoEncoderInterface>&& encoder,
         std::unique_ptr<VideoCaptureInterface>&& capture,
         std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,

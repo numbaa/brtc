@@ -5,6 +5,7 @@
 #include <bco/buffer.h>
 #include <bco/net/udp.h>
 #include <bco/net/proactor/select.h>
+#include <brtc/interface.h>
 #include "transport/rtp_transport.h"
 #include "transport/sctp_transport.h"
 #include "transport/quic_transport.h"
@@ -14,13 +15,13 @@ namespace brtc {
 
 class Transport {
 public:
-    Transport();
+    Transport(const TransportInfo& info);
     ~Transport();
 
     void set_socket(bco::net::UdpSocket<bco::net::Select> socket);
     void set_remote_address(bco::net::Address addr);
 
-    bco::Func<bool> handshake(std::chrono::milliseconds timeout);
+    //bco::Func<bool> handshake(std::chrono::milliseconds timeout);
 
     bco::Task<RtpPacket> recv_rtp();
     bco::Task<RtcpPacket> recv_rtcp();
@@ -35,7 +36,7 @@ public:
 private:
     bco::Routine do_recv();
     void send_packet(bco::Buffer packet);
-    bco::Task<bool> do_handshake();
+    //bco::Task<bool> do_handshake();
 
 private:
     bco::net::Address remote_addr_;

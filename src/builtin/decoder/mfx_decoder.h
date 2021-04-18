@@ -9,6 +9,8 @@
 
 #include <brtc/interface.h>
 
+#include "common/mfx_allocator.h"
+
 #ifdef _WIN32
 #define LD3D_CDECL __cdecl
 #else

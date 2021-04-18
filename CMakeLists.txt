@@ -4,7 +4,6 @@ project(brtc)
 set(CMAKE_CXX_STANDARD 20)
 
 if(WIN32)
-add_definitions(-DNOMINMAX)
 set(PLAT_SPEC_LIBRARIES "d3d11.lib" "dxgi.lib" "ws2_32.lib")
 else()
 set (PLAT_SPEC_LIBRARIES )
@@ -92,6 +91,10 @@ add_library(${PROJECT_NAME}
   ${BRTC_SOURCES}
   ${BRTC_SOURCES_BUILTIN}
 )
+
+if(WIN32)
+target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
 
 add_subdirectory("third_party/SDL")
 add_subdirectory("third_party/glog")

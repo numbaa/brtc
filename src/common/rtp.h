@@ -275,7 +275,7 @@ struct ReceivedFrame : public Frame {
 
 class RtpPacket {
 public:
-    RtpPacket();
+    RtpPacket() = default;
     RtpPacket(bco::Buffer buff);
 
     bool marker() const;
@@ -341,7 +341,7 @@ private:
             : ExtensionInfo(_type, 0, 0)
         {
         }
-        ExtensionInfo(RTPExtensionType _type, uint8_t _offset, uint16_t _length)
+        ExtensionInfo(RTPExtensionType _type, uint8_t _offset, uint8_t _length)
             : type(_type)
             , offset(_offset)
             , length(_length)
@@ -407,9 +407,10 @@ inline bool RtpPacket::need_more_buffer_space() const
     return false;
 }
 
-template <typename T>
-inline bool RtpPacket::push_back_extension(const typename T::value_type& value)
+template <typename T> requires RtpExtension<T>
+bool RtpPacket::push_back_extension(const typename T::value_type& value)
 {
+    constexpr size_t kFixedHeaderSize = 12;
     size_t insert_pos;
     if (not extension_entries_.empty()) {
         insert_pos = extension_entries_.back().offset + extension_entries_.back().length;

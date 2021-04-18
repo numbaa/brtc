@@ -16,7 +16,7 @@ namespace brtc {
 class MediaReceiverImpl : public std::enable_shared_from_this<MediaReceiverImpl> {
 public:
     MediaReceiverImpl(
-        std::unique_ptr<Transport>&& transport,
+        const TransportInfo& info,
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
         std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,

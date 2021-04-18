@@ -11,6 +11,8 @@
 
 #include <brtc/interface.h>
 
+#include "common/mfx_allocator.h"
+
 namespace brtc {
 
 class MfxEncoder : public VideoEncoderInterface {

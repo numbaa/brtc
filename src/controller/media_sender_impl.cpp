@@ -4,13 +4,13 @@
 namespace brtc {
 
 MediaSenderImpl::MediaSenderImpl(
-            std::unique_ptr<Transport>&& transport,
+            const TransportInfo& info,
             std::unique_ptr<VideoEncoderInterface>&& encoder,
             std::unique_ptr<VideoCaptureInterface>&& capture,
             std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
             std::shared_ptr<bco::Context<bco::net::Select>> encode_ctx,
             std::shared_ptr<bco::Context<bco::net::Select>> pacer_ctx)
-    : transport_(std::move(transport))
+    : transport_(std::make_unique<Transport>(info))
     , encoder_(std::move(encoder))
     , capture_(std::move(capture))
     , network_ctx_(network_ctx)
@@ -46,6 +46,7 @@ bco::Routine MediaSenderImpl::capture_encode_loop(std::shared_ptr<MediaSenderImp
         auto encoded_frame = encode_one_frame(raw_frame);
         send_to_pacing_loop(encoded_frame);
     }
+    co_return;
 }
 
 bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)

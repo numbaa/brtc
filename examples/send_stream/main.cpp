@@ -18,7 +18,8 @@ private:
 
 SendStream::SendStream()
     : context_(std::make_shared<Context>(std::make_unique<bco::SimpleExecutor>()))
-    , sender_(nullptr/*encoder*/, nullptr/*capture*/, context_, context_, context_)
+    , sender_(
+          brtc::TransportInfo {}, nullptr /*encoder*/, nullptr /*capture*/, context_, context_, context_)
 {
 }
 

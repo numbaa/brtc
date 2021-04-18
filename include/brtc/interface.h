@@ -4,13 +4,19 @@
 #include <vector>
 #include <memory>
 
-#include <bco/net/proactor/select.h>
+//#include <bco/net/proactor/select.h>
+#include <bco/net/udp.h>
 #include <bco/context.h>
 
 #include <brtc/frame.h>
 
 namespace brtc
 {
+
+struct TransportInfo {
+    bco::net::UdpSocket<bco::net::Select> socket;
+    bco::net::Address remote_addr;
+};
 
 class VideoCaptureInterface {
 public:
@@ -39,6 +45,7 @@ class MediaReceiverImpl;
 class MediaReceiver {
 public:
     MediaReceiver(
+        const TransportInfo& info,
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
         std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
@@ -56,6 +63,7 @@ class MediaSenderImpl;
 class MediaSender  {
 public:
     MediaSender(
+        const TransportInfo& info,
         std::unique_ptr<VideoEncoderInterface>&& encoder,
         std::unique_ptr<VideoCaptureInterface>&& capture,
         std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,

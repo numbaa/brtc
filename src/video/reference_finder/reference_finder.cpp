@@ -112,7 +112,7 @@ void RtpFrameReferenceFinderImpl::ClearTo(uint16_t seq_num)
 template <typename T>
 T& RtpFrameReferenceFinderImpl::GetRefFinderAs()
 {
-    if (auto* ref_finder = absl::get_if<T>(&ref_finder_)) {
+    if (T* ref_finder = std::get_if<T>(&ref_finder_)) {
         return *ref_finder;
     }
     return ref_finder_.emplace<T>();

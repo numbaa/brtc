@@ -3,7 +3,12 @@
 
 namespace brtc {
 
-Transport::Transport()
+Transport::Transport(const TransportInfo& info)
+    : remote_addr_(info.remote_addr)
+    , socket_(info.socket)
+    , rtp_(new RtpTransport {std::bind(&Transport::send_packet, this, std::placeholders::_1)})
+    , sctp_(new SctpTransport)
+    , quic_(new QuicTransport)
 {
 }
 
@@ -22,15 +27,15 @@ void Transport::set_remote_address(bco::net::Address addr)
     remote_addr_ = addr;
 }
 
-bco::Func<bool> Transport::handshake(std::chrono::milliseconds timeout)
-{
-    auto result = co_await bco::run_with(bco::Timeout { timeout }, do_handshake());
-    if (result.has_value() && result.value() == true) {
-        co_return true;
-    }
-    //TODO: 记录一下握手失败还是握手超时
-    co_return false;
-}
+//bco::Func<bool> Transport::handshake(std::chrono::milliseconds timeout)
+//{
+//    auto result = co_await bco::run_with(bco::Timeout { timeout }, do_handshake());
+//    if (result.has_value() && result.value() == true) {
+//        co_return true;
+//    }
+//    //TODO: 记录一下握手失败还是握手超时
+//    co_return false;
+//}
 
 bco::Task<RtpPacket> Transport::recv_rtp()
 {
@@ -46,8 +51,9 @@ bco::Routine Transport::do_recv()
 {
     bco::Buffer buff{1500};
     auto [bytes, addr] = co_await socket_.recvfrom(buff);
-    std::apply([&buff](auto&... sink) { sink->on_recv_data(buff); },
-               std::make_tuple(std::ref(rtp_), std::ref(sctp_), std::ref(quic_)));
+    //std::apply([&buff](auto& sink) { sink->on_recv_data(buff); },
+    //           std::make_tuple(std::ref(rtp_), std::ref(sctp_), std::ref(quic_)));
+    rtp_->on_recv_data(buff);
 }
 
 void Transport::send_packet(bco::Buffer packet)
@@ -55,11 +61,11 @@ void Transport::send_packet(bco::Buffer packet)
     socket_.sendto(packet, remote_addr_);
 }
 
-bco::Task<bool> Transport::do_handshake()
-{
-    //略麻烦
-    return bco::Task<bool>();
-}
+//bco::Task<bool> Transport::do_handshake()
+//{
+//    //略麻烦
+//    return bco::Task<bool>();
+//}
 
 void Transport::send_rtp(RtpPacket packet)
 {
