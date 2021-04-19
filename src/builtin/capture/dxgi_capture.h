@@ -10,6 +10,8 @@
 
 namespace brtc {
 
+namespace builtin {
+
 class DxgiCapture : public VideoCaptureInterface {
 public:
     DxgiCapture() = default;
@@ -28,5 +30,8 @@ private:
     Microsoft::WRL::ComPtr<IDXGIOutput> output_; //??
 };
 
-}
+} // namespace builtin
+
+} // namespace brtc
+
 

@@ -5,6 +5,8 @@ using Microsoft::WRL::ComPtr;
 
 namespace brtc {
 
+namespace builtin {
+
 bool DxgiCapture::init(ComPtr<ID3D11Device> device)
 {
     device_ = device;
@@ -128,5 +130,6 @@ std::vector<uint8_t> DxgiCapture::gpu_to_memory(ComPtr<ID3D11Texture2D> frame)
     return dest;
 }
 
+} // namespace builtin
 
-}
+} // namespace brtc

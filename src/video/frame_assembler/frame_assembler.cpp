@@ -112,7 +112,7 @@ void FrameAssembler::update_missing_packets(uint16_t seq_num)
 bool FrameAssembler::potential_new_frame(uint16_t seq_num) const
 {
     size_t index = seq_num % buffer_.size();
-    int prev_index = index > 0 ? index - 1 : buffer_.size() - 1;
+    size_t prev_index = index > 0 ? index - 1 : buffer_.size() - 1;
     const auto& entry = buffer_[index];
     const auto& prev_entry = buffer_[prev_index];
 
@@ -148,7 +148,7 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
 
             // Find the start index by searching backward until the packet with
             // the |frame_begin| flag is set.
-            int start_index = index;
+            size_t start_index = index;
             size_t tested_packets = 0;
             int64_t frame_timestamp = buffer_[start_index].sequence_number();
 

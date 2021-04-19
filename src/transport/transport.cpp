@@ -51,9 +51,8 @@ bco::Routine Transport::do_recv()
 {
     bco::Buffer buff{1500};
     auto [bytes, addr] = co_await socket_.recvfrom(buff);
-    //std::apply([&buff](auto& sink) { sink->on_recv_data(buff); },
-    //           std::make_tuple(std::ref(rtp_), std::ref(sctp_), std::ref(quic_)));
-    rtp_->on_recv_data(buff);
+    std::apply([&buff](auto& ...sink) { (..., sink->on_recv_data(buff)); },
+               std::make_tuple(std::ref(rtp_), std::ref(sctp_), std::ref(quic_)));
 }
 
 void Transport::send_packet(bco::Buffer packet)

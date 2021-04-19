@@ -19,7 +19,9 @@
 
 namespace brtc {
 
-class MfxDecoder : VideoDecoderInterface {
+namespace builtin {
+
+class MfxDecoder : public VideoDecoderInterface {
 public:
     MfxDecoder() = default;
     Frame decode_one_frame(Frame encoded_frame) override;
@@ -40,4 +42,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Device> device_;
 };
 
-}
+} // namespace builtin
+
+} // namespace brtc

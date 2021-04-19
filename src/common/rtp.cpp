@@ -200,7 +200,7 @@ void RtpPacket::set_csrcs(std::span<uint32_t> csrcs)
 {
     if (csrcs_size() != 0)
         return;
-    uint8_t cc = csrcs.size();
+    uint8_t cc = static_cast<uint8_t>(csrcs.size());
     buffer_[0] = buffer_[0] | cc;
     for (size_t i = 0; i < csrcs.size(); i++) {
         buffer_.write_big_endian_at(kFixedHeaderSize + i * sizeof(uint32_t), csrcs[i]);
@@ -255,7 +255,7 @@ void RtpPacket::promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes)
         //reserve n bytes
         buffer_.push_back(std::vector<uint8_t>(2 + n_bytes));
         size_t pos = buffer_.size();
-        uint16_t magic = 0x1'0000;
+        uint16_t magic = static_cast<uint16_t>(0x100);
         buffer_.write_big_endian_at(pos, magic);
     } else {
         //uint16_t magic = 0x1'0000;
@@ -270,7 +270,7 @@ void RtpPacket::promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes)
             ::memmove(ext_index + exts, ext_index, it->length);
             *(ext_index - 1) = it->length;
             *(ext_index - 2) = static_cast<uint8_t>(it->type);
-            it->offset += exts; 
+            it->offset += static_cast<uint16_t>(exts);
             exts -= 1;
         }
     }

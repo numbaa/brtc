@@ -8,6 +8,8 @@
 
 namespace brtc {
 
+namespace builtin {
+
 class D3D11Render : public RenderInterface {
 public:
     bool init(Microsoft::WRL::ComPtr<ID3D11Device> device);
@@ -30,4 +32,6 @@ private:
     Microsoft::WRL::ComPtr<IDXGISwapChain> swap_chain_;
 };
 
-}
+} // namespace builtin
+
+} // namespace brtc

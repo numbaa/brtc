@@ -15,6 +15,8 @@
 
 namespace brtc {
 
+namespace builtin {
+
 class MfxEncoder : public VideoEncoderInterface {
 public:
     MfxEncoder() = default;
@@ -44,4 +46,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Texture2D> render_surface_;
 };
 
-}
+} // namespace builtin
+
+} // namespace brtc

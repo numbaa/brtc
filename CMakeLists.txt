@@ -16,6 +16,7 @@ set(BRTC_PUBLIC_HEADERS
   "${PUBLIC_INCLUDE_DIR}/brtc.h"
   "${PUBLIC_INCLUDE_DIR}/brtc/frame.h"
   "${PUBLIC_INCLUDE_DIR}/brtc/interface.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/builtin.h"
 )
 
 set(BRTC_SOURCES_BUILTIN
@@ -32,6 +33,8 @@ set(BRTC_SOURCES_BUILTIN
   "${SRC_DIR}/builtin/render/d3d11_render.cpp"
 
   "${SRC_DIR}/builtin/p2p/p2p.h"
+
+  "${SRC_DIR}/builtin/builtin.cpp"
 )
 set(BRTC_SOURCES
   "${SRC_DIR}/controller/media_sender_impl.h"
@@ -47,6 +50,8 @@ set(BRTC_SOURCES
   "${SRC_DIR}/transport/rtp_transport.cpp"
   "${SRC_DIR}/transport/sctp_transport.h"
   "${SRC_DIR}/transport/sctp_transport.cpp"
+  "${SRC_DIR}/transport/quic_transport.h"
+  "${SRC_DIR}/transport/quic_transport.cpp"
 
   "${SRC_DIR}/common/udp_packet.h"
   "${SRC_DIR}/common/rtp.h"

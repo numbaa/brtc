@@ -4,6 +4,8 @@
 
 namespace brtc {
 
+namespace builtin {
+
 using Microsoft::WRL::ComPtr;
 
 bool D3D11Render::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
@@ -86,4 +88,6 @@ bool D3D11Render::init_d3d11(Microsoft::WRL::ComPtr<ID3D11Device> device)
     return true;
 }
 
-}
+} // namespace builtin
+
+} // namespace brtc

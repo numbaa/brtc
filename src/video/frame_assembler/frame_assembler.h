@@ -11,7 +11,7 @@ class FrameAssembler {
 private:
     class Packet : public RtpPacket {
     public:
-        Packet();
+        Packet() = default;
         Packet(RtpPacket&& rtp_packet)
             : RtpPacket { std::move(rtp_packet) }
         {

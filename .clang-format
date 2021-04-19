@@ -5,4 +5,5 @@ FixNamespaceComments: true
 NamespaceIndentation: None
 AllowShortBlocksOnASingleLine: Always
 AllowShortFunctionsOnASingleLine: Inline
+SortIncludes: false
 ...

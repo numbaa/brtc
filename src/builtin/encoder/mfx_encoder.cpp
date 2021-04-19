@@ -7,6 +7,8 @@
 
 namespace brtc {
 
+namespace builtin {
+
 using Microsoft::WRL::ComPtr;
 
 MfxEncoder::~MfxEncoder()
@@ -223,5 +225,7 @@ mfxVideoParam MfxEncoder::gen_vpp_param()
 #undef MSDK_ALIGN16
     return params;
 }
+
+} // namespace builtin
 
 } // namespace brtc

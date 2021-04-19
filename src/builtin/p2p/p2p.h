@@ -10,4 +10,6 @@ public:
     };
 };
 
-}
+} // namespace builtin
+
+} // namespace brtc

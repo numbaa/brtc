@@ -7,6 +7,8 @@
 
 namespace brtc {
 
+namespace builtin {
+
 using Microsoft::WRL::ComPtr;
 
 
@@ -145,5 +147,7 @@ int32_t MfxDecoder::get_unlocked_frame()
         return it - surfaces_.begin();
     }
 }
+
+} // namespace builtin
 
 } // namespace brtc

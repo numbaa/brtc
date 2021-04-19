@@ -25,6 +25,7 @@ bool is_rtp(const bco::Buffer& buff)
     if (buffer.size() < kMinRtpPacketLen) {
         return false;
     }
+    return false;
 }
 
 bool is_rtcp(const bco::Buffer& buff)

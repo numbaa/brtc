@@ -1,31 +1,32 @@
+#include <wrl/client.h>
+#include <d3d11.h>
+
 #include <memory>
 
 #include <bco.h>
+
 #include <brtc.h>
+#include <brtc/builtin.h>
 
 class SendStream {
     using Context = bco::Context<bco::net::Select>;
 public:
-    SendStream();
-    void set_listen_addr(bco::net::Address addr);
+    SendStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device);
     void start();
 
 private:
     std::shared_ptr<Context> context_;
     brtc::MediaSender sender_;
-    bco::net::Address listen_addr_;
 };
 
-SendStream::SendStream()
+SendStream::SendStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device)
     : context_(std::make_shared<Context>(std::make_unique<bco::SimpleExecutor>()))
     , sender_(
-          brtc::TransportInfo {}, nullptr /*encoder*/, nullptr /*capture*/, context_, context_, context_)
+        transport_info,
+        brtc::builtin::create_encoder_mfx(device),
+        brtc::builtin::create_capture_dxgi(device),
+        context_, context_, context_)
 {
-}
-
-void SendStream::set_listen_addr(bco::net::Address addr)
-{
-    listen_addr_ = addr;
 }
 
 void SendStream::start()
@@ -36,8 +37,9 @@ void SendStream::start()
 
 int main()
 {
-    SendStream stream;
-    stream.set_listen_addr(bco::net::Address { bco::to_ipv4("127.0.0.1"), 33445 });
+    brtc::TransportInfo transport_info;
+    Microsoft::WRL::ComPtr<ID3D11Device> device;
+    SendStream stream { transport_info, device };
     stream.start();
 
     return 0;
