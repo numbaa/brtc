@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
 project(brtc)
 
+
+option(BRTC_BUILD_WITH_EXAMPLES "Build with examples" OFF)
+option(BRTC_BUILD_BUILTIN "Build with builtin components" OFF)
+
 set(CMAKE_CXX_STANDARD 20)
 
-if(WIN32)
-set(PLAT_SPEC_LIBRARIES "d3d11.lib" "dxgi.lib" "ws2_32.lib")
-else()
-set (PLAT_SPEC_LIBRARIES )
-endif()
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(PUBLIC_INCLUDE_DIR "include")
 set(SRC_DIR "src")
@@ -19,113 +19,22 @@ set(BRTC_PUBLIC_HEADERS
   "${PUBLIC_INCLUDE_DIR}/brtc/builtin.h"
 )
 
-set(BRTC_SOURCES_BUILTIN
-  "${SRC_DIR}/builtin/capture/dxgi_capture.h"
-  "${SRC_DIR}/builtin/capture/dxgi_capture.cpp"
+include("cmake/funcs.cmake")
+include("cmake/core.cmake")
+add_subdirectory_with_folder("third_party/glog" "third_party/glog")
 
-  "${SRC_DIR}/builtin/decoder/mfx_decoder.h"
-  "${SRC_DIR}/builtin/decoder/mfx_decoder.cpp"
+add_subdirectory_with_folder("third_party/bco" "third_party/bco")
 
-  "${SRC_DIR}/builtin/encoder/mfx_encoder.h"
-  "${SRC_DIR}/builtin/encoder/mfx_encoder.cpp"
-
-  "${SRC_DIR}/builtin/render/d3d11_render.h"
-  "${SRC_DIR}/builtin/render/d3d11_render.cpp"
-
-  "${SRC_DIR}/builtin/p2p/p2p.h"
-
-  "${SRC_DIR}/builtin/builtin.cpp"
-)
-set(BRTC_SOURCES
-  "${SRC_DIR}/controller/media_sender_impl.h"
-  "${SRC_DIR}/controller/media_sender_impl.cpp"
-  "${SRC_DIR}/controller/media_sender.cpp"
-  "${SRC_DIR}/controller/media_receiver_impl.h"
-  "${SRC_DIR}/controller/media_receiver_impl.cpp"
-  "${SRC_DIR}/controller/media_receiver.cpp"
-
-  "${SRC_DIR}/transport/transport.cpp"
-  "${SRC_DIR}/transport/transport.h"
-  "${SRC_DIR}/transport/rtp_transport.h"
-  "${SRC_DIR}/transport/rtp_transport.cpp"
-  "${SRC_DIR}/transport/sctp_transport.h"
-  "${SRC_DIR}/transport/sctp_transport.cpp"
-  "${SRC_DIR}/transport/quic_transport.h"
-  "${SRC_DIR}/transport/quic_transport.cpp"
-
-  "${SRC_DIR}/common/udp_packet.h"
-  "${SRC_DIR}/common/rtp.h"
-  "${SRC_DIR}/common/rtp.cpp"
-  "${SRC_DIR}/common/time_utils.h"
-  "${SRC_DIR}/common/sequence_number_util.h"
-  "${SRC_DIR}/common/mod_ops.h"
-
-  "${SRC_DIR}/video/packetizer/packetizer.h"
-  "${SRC_DIR}/video/packetizer/packetizer.cpp"
-  "${SRC_DIR}/video/packetizer/packetizer_h264.h"
-  "${SRC_DIR}/video/packetizer/packetizer_h264.cpp"
-
-  "${SRC_DIR}/video/frame_assembler/frame_assembler.h"
-  "${SRC_DIR}/video/frame_assembler/frame_assembler.cpp"
-
-  "${SRC_DIR}/video/frame_buffer/frame_buffer.h"
-  "${SRC_DIR}/video/frame_buffer/frame_buffer.cpp"
-  "${SRC_DIR}/video/frame_buffer/decoded_frames_history.h"
-  "${SRC_DIR}/video/frame_buffer/decoded_frames_history.cpp"
-
-  "${SRC_DIR}/video/reference_finder/reference_finder.h"
-  "${SRC_DIR}/video/reference_finder/reference_finder.cpp"
-  "${SRC_DIR}/video/reference_finder/rtp_generic_ref_finder.h"
-  "${SRC_DIR}/video/reference_finder/rtp_generic_ref_finder.cpp"
-  "${SRC_DIR}/video/reference_finder/rtp_seq_num_only_ref_finder.cpp"
-  "${SRC_DIR}/video/reference_finder/rtp_seq_num_only_ref_finder.h"
-  "${SRC_DIR}/video/reference_finder/rtp_vp8_ref_finder.cpp"
-  "${SRC_DIR}/video/reference_finder/rtp_vp8_ref_finder.h"
-  "${SRC_DIR}/video/reference_finder/rtp_vp9_ref_finder.cpp"
-  "${SRC_DIR}/video/reference_finder/rtp_vp9_ref_finder.h"
-  "${SRC_DIR}/video/reference_finder/rtp_frame_id_only_ref_finder.cpp"
-  "${SRC_DIR}/video/reference_finder/rtp_frame_id_only_ref_finder.h"
-  "${SRC_DIR}/video/reference_finder/vp9_globals.h"
-  "${SRC_DIR}/video/reference_finder/vp8_globals.h"
-  "${SRC_DIR}/video/reference_finder/h264_globals.h"
-  "${SRC_DIR}/video/reference_finder/common_constants.h"
-  )
-
-add_library(${PROJECT_NAME}
-  ${BRTC_PUBLIC_HEADERS}
-  ${BRTC_SOURCES}
-  ${BRTC_SOURCES_BUILTIN}
-)
-
-if(WIN32)
-target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN)
+if (BRTC_BUILD_BUILTIN)
+  include("cmake/builtin.cmake")
+  add_subdirectory_with_folder("third_party/SDL" "third_party/SDL")
+  if (WIN32)
+    add_subdirectory_with_folder("third_party/mfx_builder" "third_party/mfx_builder")
+  else()
+    add_subdirectory_with_folder("third_party/IntelMediaSDK" "third_party/IntelMediaSDK")
+  endif()
 endif()
 
-add_subdirectory("third_party/SDL")
-add_subdirectory("third_party/glog")
-add_subdirectory("third_party/bco")
-if (WIN32)
-add_subdirectory("third_party/mfx_builder")
-else()
-add_subdirectory("third_party/IntelMediaSDK")
+if (BRTC_BUILD_WITH_EXAMPLES)
+  add_subdirectory(examples)
 endif()
-
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        ${PLAT_SPEC_LIBRARIES}
-        "glog::glog"
-        "SDL2-static"
-        "SDL2main"
-        "mfx"
-        "bco"
-)
-
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
-    "include"
-  PRIVATE
-    "${SRC_DIR}"
-)
-
-add_subdirectory(examples)
