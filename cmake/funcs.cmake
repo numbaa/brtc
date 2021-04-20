@@ -9,7 +9,7 @@ function(get_all_targets _result _dir)
     set(${_result} ${${_result}} ${_sub_targets} PARENT_SCOPE)
 endfunction()
 
-function(add_subdirectory_with_folder _folder_name _folder)
+function(add_subdirectory_with_folder _folder _folder_name)
     add_subdirectory(${_folder} ${ARGN})
     get_all_targets(_targets "${_folder}")
     foreach(_target IN LISTS _targets)
@@ -30,7 +30,7 @@ function(add_brtc_object object_name ide_folder)
     )
     target_include_directories(${object_name}
         PRIVATE
-            "include"
-            "src"
+            ${PUBLIC_INCLUDE_DIR}
+            ${SRC_DIR}
     )
 endfunction(add_brtc_object)

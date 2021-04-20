@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.8)
 project(brtc)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+include("cmake/funcs.cmake")
 
 option(BRTC_BUILD_WITH_EXAMPLES "Build with examples" OFF)
 option(BRTC_BUILD_BUILTIN "Build with builtin components" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-set(PUBLIC_INCLUDE_DIR "include")
-set(SRC_DIR "src")
-
+set(PUBLIC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set(BRTC_OUTPUT_DIR ${CMAKE_BINARY_DIR})
 set(BRTC_PUBLIC_HEADERS
   "${PUBLIC_INCLUDE_DIR}/brtc.h"
   "${PUBLIC_INCLUDE_DIR}/brtc/frame.h"
@@ -19,20 +19,11 @@ set(BRTC_PUBLIC_HEADERS
   "${PUBLIC_INCLUDE_DIR}/brtc/builtin.h"
 )
 
-include("cmake/funcs.cmake")
-include("cmake/core.cmake")
-add_subdirectory_with_folder("third_party/glog" "third_party/glog")
-
-add_subdirectory_with_folder("third_party/bco" "third_party/bco")
+add_subdirectory(${SRC_DIR})
+add_subdirectory(${THIRD_PARTY_DIR})
 
 if (BRTC_BUILD_BUILTIN)
-  include("cmake/builtin.cmake")
-  add_subdirectory_with_folder("third_party/SDL" "third_party/SDL")
-  if (WIN32)
-    add_subdirectory_with_folder("third_party/mfx_builder" "third_party/mfx_builder")
-  else()
-    add_subdirectory_with_folder("third_party/IntelMediaSDK" "third_party/IntelMediaSDK")
-  endif()
+  add_subdirectory(${SRC_DIR}/builtin)
 endif()
 
 if (BRTC_BUILD_WITH_EXAMPLES)

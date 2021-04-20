@@ -2,6 +2,8 @@
 
 namespace brtc {
 
+namespace builtin {
+
 class P2P {
 public:
     enum class ResultType {
