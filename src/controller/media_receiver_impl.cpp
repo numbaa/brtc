@@ -12,9 +12,9 @@ MediaReceiverImpl::MediaReceiverImpl(
                 const TransportInfo& info,
                 std::unique_ptr<VideoDecoderInterface>&& decoder,
                 std::unique_ptr<RenderInterface>&& render,
-                std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
-                std::shared_ptr<bco::Context<bco::net::Select>> decode_ctx,
-                std::shared_ptr<bco::Context<bco::net::Select>> render_ctx)
+                std::shared_ptr<bco::Context> network_ctx,
+                std::shared_ptr<bco::Context> decode_ctx,
+                std::shared_ptr<bco::Context> render_ctx)
     : transport_(std::make_unique<Transport>(info))
     , decoder_(std::move(decoder))
     , render_(std::move(render))

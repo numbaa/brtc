@@ -79,7 +79,7 @@ void RtpTransport::send_packet(const RtpPacket& packet)
     send_func_(packet.data());
 }
 
-void RtpTransport::send_packet(const RtcpPacket& packet)
+void RtpTransport::send_packet(const RtcpPacket&)
 {
     //send_func_(packet.data());
 }

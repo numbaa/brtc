@@ -9,6 +9,8 @@
 
 namespace brtc {
 
+namespace builtin {
+
 //TODO: auto manage mids
 struct FrameBuffer {
     mfxMemId* mids = nullptr;
@@ -38,10 +40,49 @@ private:
     static mfxStatus MFX_CDECL _free(mfxHDL pthis, mfxFrameAllocResponse* response);
 };
 
-#ifdef  _WIN32
-class D3D11FrameAllocator : public MfxFrameAllocator {
+class MfxEncoderFrameAllocator : public MfxFrameAllocator {
 public:
-    D3D11FrameAllocator(Microsoft::WRL::ComPtr<ID3D11Device> device);
+    MfxEncoderFrameAllocator(Microsoft::WRL::ComPtr<ID3D11Device> device);
+    ~MfxEncoderFrameAllocator() override = default;
+
+    mfxStatus alloc(mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) override;
+    mfxStatus lock(mfxMemId mid, mfxFrameData* ptr) override;
+    mfxStatus unlock(mfxMemId mid, mfxFrameData* ptr) override;
+    mfxStatus get_hdl(mfxMemId mid, mfxHDL* handle) override;
+    mfxStatus free(mfxFrameAllocResponse* response) override;
+
+private:
+    Microsoft::WRL::ComPtr<ID3D11Device> device_;
+    std::map<mfxMemId*, FrameBuffer> frame_buffers_;
+};
+
+class MfxDecoderFrameAllocator : public MfxFrameAllocator {
+public:
+    MfxDecoderFrameAllocator(Microsoft::WRL::ComPtr<ID3D11Device> device);
+    ~MfxDecoderFrameAllocator() override = default;
+
+    mfxStatus alloc(mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) override;
+    mfxStatus lock(mfxMemId mid, mfxFrameData* ptr) override;
+    mfxStatus unlock(mfxMemId mid, mfxFrameData* ptr) override;
+    mfxStatus get_hdl(mfxMemId mid, mfxHDL* handle) override;
+    mfxStatus free(mfxFrameAllocResponse* response) override;
+
+    mfxStatus release_frame(Microsoft::WRL::ComPtr<ID3D11Texture2D> frame);
+
+private:
+    mfxStatus alloc_external_frame(mfxFrameAllocRequest* request, mfxFrameAllocResponse* response);
+    mfxStatus alloc_internal_frame(mfxFrameAllocRequest* request, mfxFrameAllocResponse* response);
+
+private:
+    Microsoft::WRL::ComPtr<ID3D11Device> device_;
+    FrameBuffer external_frames_;
+    std::map<mfxMemId*, FrameBuffer> internal_frames_;
+};
+
+#if 0
+class MfxD3D11Allocator : public MfxFrameAllocator {
+public:
+    MfxD3D11Allocator(Microsoft::WRL::ComPtr<ID3D11Device> device);
     mfxStatus alloc(mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) override;
     mfxStatus lock(mfxMemId mid, mfxFrameData* ptr) override;
     mfxStatus unlock(mfxMemId mid, mfxFrameData* ptr) override;
@@ -57,7 +98,8 @@ private:
     std::map<mfxMemId*, FrameBuffer> internal_frames_;
     Microsoft::WRL::ComPtr<ID3D11Device> device_;
 };
-#endif //  _WIN32
+#endif
 
+} // namespace builtin
 
-}
+} // namespace brtc

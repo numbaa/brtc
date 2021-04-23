@@ -9,7 +9,7 @@
 
 #include <brtc/interface.h>
 
-#include "common/mfx_allocator.h"
+#include "../mfx_common/mfx_allocator.h"
 
 #ifdef _WIN32
 #define LD3D_CDECL __cdecl
@@ -35,7 +35,7 @@ private:
 
 private:
     bool already_init_ = false;
-    std::shared_ptr<MfxFrameAllocator> allocator_;
+    std::shared_ptr<MfxDecoderFrameAllocator> allocator_;
     std::vector<mfxFrameSurface1> surfaces_;
     mfxVideoParam decode_param_;
     mfxSession mfx_session_;

@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15)
 project(brtc)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 include("cmake/funcs.cmake")
 
-option(BRTC_BUILD_WITH_EXAMPLES "Build with examples" OFF)
-option(BRTC_BUILD_BUILTIN "Build with builtin components" OFF)
+option(BRTC_BUILD_WITH_EXAMPLES "Build with examples" ON)
+option(BRTC_BUILD_BUILTIN "Build with builtin components" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(PUBLIC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)

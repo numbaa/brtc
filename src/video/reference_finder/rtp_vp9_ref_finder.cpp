@@ -167,7 +167,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     return kStash;
 
   if (video_header.temporal_up_switch)
-    up_switch_.emplace(frame->id, video_header.temporal_idx);
+    up_switch_.emplace(static_cast<uint16_t>(frame->id), video_header.temporal_idx);
 
   // Clean out old info about up switch frames.
   uint16_t old_picture_id = webrtc::Subtract<kFrameIdLength>(frame->id, 50);

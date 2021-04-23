@@ -15,6 +15,7 @@ using Microsoft::WRL::ComPtr;
 bool MfxDecoder::init(ComPtr<ID3D11Device> device)
 {
     device_ = device;
+    allocator_ = std::make_shared<MfxDecoderFrameAllocator>(device);
     mfxVersion ver = { { 0, 1 } };
     //TODO use previous impl
     mfxIMPL impl = MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11;
@@ -26,8 +27,6 @@ bool MfxDecoder::init(ComPtr<ID3D11Device> device)
     if (status != MFX_ERR_NONE) {
         return false;
     }
-    //TODO: initialize allcator
-    //init_allocator();
     status = MFXVideoCORE_SetFrameAllocator(mfx_session_, allocator_.get());
     if (status != MFX_ERR_NONE) {
         return false;
@@ -60,7 +59,7 @@ int MfxDecoder::init2(Frame encoded_frame)
     }
     //这步可以省略让init自动去做
     mfxFrameAllocResponse response;
-    status = allocator_->Alloc(this, &request, &response);
+    status = allocator_->alloc(&request, &response);
     if (status != MFX_ERR_NONE) {
         return 0;
     }

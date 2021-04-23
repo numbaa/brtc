@@ -132,7 +132,7 @@ bool PacketizerH264::do_fragmentation()
     nalus_len_ = index;
     for (uint32_t i = 0; i < nalus_len_; i++) {
         Nalu nalu;
-        nalu.offset = nalus[i] - frame_.data;
+        nalu.offset = static_cast<uint32_t>(nalus[i] - static_cast<uint8_t*>(frame_.data));
         nalu.start_code_length = start_code_lens[i];
         if (i == nalus_len_ - 1) {
             nalu.payload_length = frame_.length - nalu.offset - nalu.start_code_length;
@@ -201,7 +201,7 @@ bool PacketizerH264::packetize_FuA(size_t index)
     size_t payload_left = fragment.size() - kNalHeaderSize;
     int offset = kNalHeaderSize;
 
-    std::vector<int> payload_sizes = split_about_equally(payload_left, limits);
+    std::vector<int> payload_sizes = split_about_equally(static_cast<int>(payload_left), limits);
     if (payload_sizes.empty())
         return false;
 

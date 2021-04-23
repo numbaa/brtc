@@ -89,8 +89,8 @@ RtpFrameReferenceFinderImpl::PaddingReceived(uint16_t seq_num)
 void RtpFrameReferenceFinderImpl::ClearTo(uint16_t seq_num)
 {
     struct ClearToVisitor {
-        void operator()(webrtc::RtpGenericFrameRefFinder& ref_finder) { }
-        void operator()(webrtc::RtpFrameIdOnlyRefFinder& ref_finder) { }
+        void operator()(webrtc::RtpGenericFrameRefFinder&) { }
+        void operator()(webrtc::RtpFrameIdOnlyRefFinder&) { }
         void operator()(webrtc::RtpSeqNumOnlyRefFinder& ref_finder)
         {
             ref_finder.ClearTo(seq_num);
@@ -136,15 +136,15 @@ RtpFrameReferenceFinder::~RtpFrameReferenceFinder() = default;
 void RtpFrameReferenceFinder::ManageFrame(std::unique_ptr<ReceivedFrame> frame)
 {
     // If we have cleared past this frame, drop it.
-    if (cleared_to_seq_num_ != -1 && webrtc::AheadOf<uint16_t>(cleared_to_seq_num_, frame->first_seq_num)) {
+    if (cleared_to_seq_num_ != -1 && webrtc::AheadOf<uint16_t>(static_cast<uint16_t>(cleared_to_seq_num_), frame->first_seq_num)) {
         return;
     }
     auto frames = impl_->ManageFrame(std::move(frame));
-    for (auto& frame : frames) {
-        frame->id = frame->id + picture_id_offset_;
-        for (size_t i = 0; i < frame->num_references; ++i) {
-            frame->references[i] += picture_id_offset_;
-            frames_.push(std::move(frame));
+    for (auto& f : frames) {
+        f->id = f->id + picture_id_offset_;
+        for (size_t i = 0; i < f->num_references; ++i) {
+            f->references[i] += picture_id_offset_;
+            frames_.push(std::move(f));
         }
     }
 }

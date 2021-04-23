@@ -8,9 +8,9 @@ MediaSender::MediaSender(
         const TransportInfo& info,
         std::unique_ptr<VideoEncoderInterface>&& encoder,
         std::unique_ptr<VideoCaptureInterface>&& capture,
-        std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> encode_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> pacer_ctx)
+        std::shared_ptr<bco::Context> network_ctx,
+        std::shared_ptr<bco::Context> encode_ctx,
+        std::shared_ptr<bco::Context> pacer_ctx)
     : impl_ { std::make_shared<MediaSenderImpl>(
         info,
         std::move(encoder),

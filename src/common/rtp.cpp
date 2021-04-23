@@ -66,6 +66,7 @@ RtpPacket::RtpPacket(bco::Buffer buff)
         uint16_t number_of_extension;
         buffer_.read_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint16_t), number_of_extension);
         size_t extension_offset = kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t);
+        (void)extension_offset;
         //½âÎö³öextension_entries_
         for (uint16_t i = 0; i < number_of_extension; i++) {
             //

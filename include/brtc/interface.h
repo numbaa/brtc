@@ -20,23 +20,27 @@ struct TransportInfo {
 
 class VideoCaptureInterface {
 public:
+    virtual ~VideoCaptureInterface() { }
     virtual Frame capture_one_frame() = 0;
     virtual void release_frame() = 0;
 };
 
 class VideoDecoderInterface {
 public:
+    virtual ~VideoDecoderInterface() { }
     virtual Frame decode_one_frame(Frame frame) = 0;
 };
 
 class VideoEncoderInterface {
 public:
+    virtual ~VideoEncoderInterface() { }
     virtual Frame encode_one_frame(Frame frame) = 0;
 };
 
 
 class RenderInterface {
 public:
+    virtual ~RenderInterface() { }
     virtual void render_one_frame(Frame frame) = 0;
 };
 
@@ -48,9 +52,9 @@ public:
         const TransportInfo& info,
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
-        std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> decode_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> render_ctx);
+        std::shared_ptr<bco::Context> network_ctx,
+        std::shared_ptr<bco::Context> decode_ctx,
+        std::shared_ptr<bco::Context> render_ctx);
     void start();
     void stop();
 
@@ -66,9 +70,9 @@ public:
         const TransportInfo& info,
         std::unique_ptr<VideoEncoderInterface>&& encoder,
         std::unique_ptr<VideoCaptureInterface>&& capture,
-        std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> encode_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> pacer_ctx);
+        std::shared_ptr<bco::Context> network_ctx,
+        std::shared_ptr<bco::Context> encode_ctx,
+        std::shared_ptr<bco::Context> pacer_ctx);
     void start();
     void stop();
 

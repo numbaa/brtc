@@ -11,7 +11,7 @@
 
 #include <brtc/interface.h>
 
-#include "common/mfx_allocator.h"
+#include "../mfx_common/mfx_allocator.h"
 
 namespace brtc {
 
@@ -35,7 +35,7 @@ private:
     mfxVideoParam gen_vpp_param();
 
 private:
-    std::shared_ptr<MfxFrameAllocator> allocator_;
+    std::shared_ptr<MfxEncoderFrameAllocator> allocator_;
     mfxVideoParam encode_param_;
     mfxVideoParam vpp_param_;
     mfxSession mfx_session_ = nullptr;

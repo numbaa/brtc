@@ -19,9 +19,9 @@ public:
         const TransportInfo& info,
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
-        std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> decode_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> render_ctx);
+        std::shared_ptr<bco::Context> network_ctx,
+        std::shared_ptr<bco::Context> decode_ctx,
+        std::shared_ptr<bco::Context> render_ctx);
     void start();
     void stop();
 
@@ -41,9 +41,9 @@ private:
     std::unique_ptr<Transport> transport_;
     std::unique_ptr<VideoDecoderInterface> decoder_;
     std::unique_ptr<RenderInterface> render_;
-    std::shared_ptr<bco::Context<bco::net::Select>> network_ctx_;
-    std::shared_ptr<bco::Context<bco::net::Select>> decode_ctx_;
-    std::shared_ptr<bco::Context<bco::net::Select>> render_ctx_;
+    std::shared_ptr<bco::Context> network_ctx_;
+    std::shared_ptr<bco::Context> decode_ctx_;
+    std::shared_ptr<bco::Context> render_ctx_;
     FrameAssembler frame_assembler_;
     FrameBuffer frame_buffer_;
     RtpFrameReferenceFinder reference_finder_;

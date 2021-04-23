@@ -16,9 +16,9 @@ public:
         const TransportInfo& info,
         std::unique_ptr<VideoEncoderInterface>&& encoder,
         std::unique_ptr<VideoCaptureInterface>&& capture,
-        std::shared_ptr<bco::Context<bco::net::Select>> network_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> encode_ctx,
-        std::shared_ptr<bco::Context<bco::net::Select>> pacer_ctx);
+        std::shared_ptr<bco::Context> network_ctx,
+        std::shared_ptr<bco::Context> encode_ctx,
+        std::shared_ptr<bco::Context> pacer_ctx);
     void start();
     void stop();
 
@@ -38,9 +38,9 @@ private:
     std::unique_ptr<Transport> transport_;
     std::unique_ptr<VideoEncoderInterface> encoder_;
     std::unique_ptr<VideoCaptureInterface> capture_;
-    std::shared_ptr<bco::Context<bco::net::Select>> network_ctx_;
-    std::shared_ptr<bco::Context<bco::net::Select>> encode_ctx_;
-    std::shared_ptr<bco::Context<bco::net::Select>> pacer_ctx_;
+    std::shared_ptr<bco::Context> network_ctx_;
+    std::shared_ptr<bco::Context> encode_ctx_;
+    std::shared_ptr<bco::Context> pacer_ctx_;
     bco::Channel<Frame> encoded_frames_;
 };
 

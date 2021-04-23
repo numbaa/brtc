@@ -9,19 +9,17 @@
 #include <brtc/builtin.h>
 
 class RecvStream {
-    using Context = bco::Context<bco::net::Select>;
-
 public:
     RecvStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device);
     void start();
 
 private:
-    std::shared_ptr<Context> context_;
+    std::shared_ptr<bco::Context> context_;
     brtc::MediaReceiver receiver_;
 };
 
 RecvStream::RecvStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device)
-    : context_(std::make_shared<Context>(std::make_unique<bco::SimpleExecutor>()))
+    : context_(std::make_shared<bco::Context>(std::make_unique<bco::SimpleExecutor>()))
     , receiver_(
           transport_info,
           brtc::builtin::create_decoder_mfx(device),

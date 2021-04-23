@@ -34,6 +34,17 @@ target_link_libraries(mfx_encoder
         glog::glog
 )
 
+add_brtc_object(mfx_common "src/builtin"
+    "mfx_common/mfx_allocator.h"
+    "mfx_common/mfx_allocator.cpp"
+)
+target_link_libraries(mfx_common
+    PUBLIC
+        d3d11.lib
+        mfx
+        glog::glog
+)
+
 add_brtc_object(d3d11_render "src/builtin"
     "render/d3d11_render.h"
     "render/d3d11_render.cpp"
@@ -55,6 +66,7 @@ add_library(${PROJECT_NAME} STATIC
     ${BRTC_PUBLIC_HEADERS}
     "builtin.cpp"
     $<TARGET_OBJECTS:dxgi_capture>
+    $<TARGET_OBJECTS:mfx_common>
     $<TARGET_OBJECTS:mfx_decoder>
     $<TARGET_OBJECTS:mfx_encoder>
     $<TARGET_OBJECTS:d3d11_render>
@@ -73,10 +85,10 @@ target_link_libraries(${PROJECT_NAME}
         SDL2-static
 )
 
-set_target_properties(brtc_builtin PROPERTIES FOLDER "src/builtin")
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "src/builtin")
 
 if(WIN32)
-    target_compile_definitions(brtc_builtin PUBLIC
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
         WIN32_LEAN_AND_MEAN
         NOMINMAX
     )

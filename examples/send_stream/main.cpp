@@ -4,23 +4,25 @@
 #include <memory>
 
 #include <bco.h>
+#include <glog/logging.h>
 
 #include <brtc.h>
 #include <brtc/builtin.h>
 
+#include "../common/d3d_helper.h"
+
 class SendStream {
-    using Context = bco::Context<bco::net::Select>;
 public:
     SendStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device);
     void start();
 
 private:
-    std::shared_ptr<Context> context_;
+    std::shared_ptr<bco::Context> context_;
     brtc::MediaSender sender_;
 };
 
 SendStream::SendStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device)
-    : context_(std::make_shared<Context>(std::make_unique<bco::SimpleExecutor>()))
+    : context_(std::make_shared<bco::Context>(std::make_unique<bco::SimpleExecutor>()))
     , sender_(
         transport_info,
         brtc::builtin::create_encoder_mfx(device),
@@ -35,10 +37,31 @@ void SendStream::start()
     sender_.start();
 }
 
+void init_winsock()
+{
+    WSADATA wsdata;
+    (void)WSAStartup(MAKEWORD(2, 2), &wsdata);
+}
+
+using UdpSocket = bco::net::UdpSocket<bco::net::Select>;
+
 int main()
 {
-    brtc::TransportInfo transport_info;
-    Microsoft::WRL::ComPtr<ID3D11Device> device;
+    init_winsock();
+    auto device = get_d3d11_device(GpuVendor::Intel);
+    if (device == nullptr) {
+        LOG(ERROR) << "get d3d11 device failed";
+        return -1;
+    }
+    auto socket_proactor = std::make_unique<bco::net::Select>();
+    socket_proactor->start(std::make_unique<bco::SimpleExecutor>());
+    auto [sock, err] = UdpSocket::create(socket_proactor.get(), AF_INET);
+    if (err != 0) {
+        LOG(ERROR) << "create udp socket failed";
+        return -1;
+    }
+    bco::net::Address addr { bco::net::IPv4 { "127.0.0.1" }, 43966 };
+    brtc::TransportInfo transport_info { .socket = sock, .remote_addr = addr };
     SendStream stream { transport_info, device };
     stream.start();
 

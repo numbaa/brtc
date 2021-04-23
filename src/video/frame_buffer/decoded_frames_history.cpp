@@ -82,8 +82,8 @@ std::optional<uint32_t> DecodedFramesHistory::GetLastDecodedFrameTimestamp() {
 }
 
 int DecodedFramesHistory::FrameIdToIndex(int64_t frame_id) const {
-  int m = frame_id % buffer_.size();
-  return m >= 0 ? m : m + buffer_.size();
+  int m = frame_id % static_cast<int>(buffer_.size());
+  return m >= 0 ? m : m + static_cast<int>(buffer_.size());
 }
 
 }  // namespace video_coding
