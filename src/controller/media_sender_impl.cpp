@@ -1,3 +1,4 @@
+#include <vector>
 #include <bco/coroutine/cofunc.h>
 #include "media_sender_impl.h"
 #include "../video/packetizer/packetizer.h"
@@ -56,12 +57,19 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
     while (!stop_) {
         auto frame = co_await receive_from_encode_loop();
         Packetizer::PayloadSizeLimits limits;
-        //std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
+        std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
+        //RtpPacket需要预设头部
+        std::vector<uint32_t> csrcs { 456, 789 };
         RtpPacket packet;
-        //while (packetizer->next_packet(packet)) {
-        //    //加策略delay一下啥的
-        //    transport_->send_rtp(packet);
-        //}
+        packet.set_ssrc(123);
+        packet.set_csrcs(std::span<uint32_t>(csrcs));
+        packet.set_payload_type(1);
+        packet.set_timestamp(111);
+        //packet.set_extension();
+        while (packetizer->next_packet(packet)) {
+            //加策略delay一下啥的
+            transport_->send_rtp(packet);
+        }
     }
 }
 

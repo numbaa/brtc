@@ -68,6 +68,8 @@ static std::tuple<uint8_t*, int32_t> find_nalu(std::span<uint8_t> data)
             if (head[2] == 0x01) {
                 return { head, 3 };
             }
+            head += 3;
+            continue;
         }
         if (head[3] != 0x01) {
             head++;
@@ -130,6 +132,7 @@ bool PacketizerH264::do_fragmentation()
         return false;
     }
     nalus_len_ = index;
+    nalus_.resize(nalus_len_);
     for (uint32_t i = 0; i < nalus_len_; i++) {
         Nalu nalu;
         nalu.offset = static_cast<uint32_t>(nalus[i] - static_cast<uint8_t*>(frame_.data));

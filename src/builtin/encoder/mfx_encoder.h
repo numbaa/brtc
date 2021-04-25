@@ -20,7 +20,7 @@ namespace builtin {
 class MfxEncoder : public VideoEncoderInterface {
 public:
     MfxEncoder() = default;
-    ~MfxEncoder();
+    ~MfxEncoder() override;
 
     Frame encode_one_frame(Frame frame) override;
 

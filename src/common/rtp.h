@@ -275,7 +275,7 @@ struct ReceivedFrame : public Frame {
 
 class RtpPacket {
 public:
-    RtpPacket() = default;
+    RtpPacket();
     RtpPacket(bco::Buffer buff);
 
     bool marker() const;

@@ -21,7 +21,7 @@ bool MfxEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
 {
     device_ = device;
     allocator_ = std::make_shared<MfxEncoderFrameAllocator>(device);
-    mfxVersion ver = { { 30, 1 } };
+    mfxVersion ver = { { 0, 1 } };
     //FIXEME set impl to previous impl
     mfxIMPL impl = MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11;
     mfxStatus status = MFXInit(impl, &ver, &mfx_session_);
@@ -29,6 +29,8 @@ bool MfxEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
         mfx_session_ = nullptr;
         return false;
     }
+    MFXQueryIMPL(mfx_session_, &impl);
+    MFXQueryVersion(mfx_session_, &ver);
     status = MFXVideoCORE_SetHandle(mfx_session_, MFX_HANDLE_D3D11_DEVICE, device_.Get());
     if (status != MFX_ERR_NONE) {
         return false;

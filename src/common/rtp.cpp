@@ -46,6 +46,11 @@ constexpr size_t kFixedHeaderSize = 12;
 // |               padding         | Padding size  |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+RtpPacket::RtpPacket()
+    : buffer_(kFixedHeaderSize)
+{
+}
+
 RtpPacket::RtpPacket(bco::Buffer buff)
 {
     const bool has_padding = (buff[0] & 0x20) != 0;
@@ -189,12 +194,12 @@ void RtpPacket::set_sequence_number(uint16_t seq)
 
 void RtpPacket::set_timestamp(uint32_t timestamp)
 {
-    buffer_.write_big_endian_at(2, timestamp);
+    buffer_.write_big_endian_at(4, timestamp);
 }
 
 void RtpPacket::set_ssrc(uint32_t ssrc)
 {
-    buffer_.write_big_endian_at(4, ssrc);
+    buffer_.write_big_endian_at(8, ssrc);
 }
 
 void RtpPacket::set_csrcs(std::span<uint32_t> csrcs)

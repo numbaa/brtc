@@ -6,6 +6,7 @@ include("cmake/funcs.cmake")
 
 option(BRTC_BUILD_WITH_EXAMPLES "Build with examples" ON)
 option(BRTC_BUILD_BUILTIN "Build with builtin components" ON)
+option(BRTC_BUILD_NVCODEC "Build with nvcodec" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(PUBLIC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -27,5 +28,8 @@ if (BRTC_BUILD_BUILTIN)
 endif()
 
 if (BRTC_BUILD_WITH_EXAMPLES)
+  if (NOT BRTC_BUILD_BUILTIN)
+    message(FATAL_ERROR "You can not build examples without builtin components")
+  endif()
   add_subdirectory(examples)
 endif()

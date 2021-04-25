@@ -64,6 +64,6 @@ int main()
     brtc::TransportInfo transport_info { .socket = sock, .remote_addr = addr };
     SendStream stream { transport_info, device };
     stream.start();
-
+    std::this_thread::sleep_for(std::chrono::seconds { 10000 });
     return 0;
 }

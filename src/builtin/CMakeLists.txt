@@ -73,6 +73,37 @@ add_library(${PROJECT_NAME} STATIC
     $<TARGET_OBJECTS:brtc_p2p>
 )
 
+if(BRTC_BUILD_NVCODEC)
+    add_brtc_object(brtc_nv_encoder "src/builtin"
+        "encoder/builtin_nvenc.h"
+        "encoder/builtin_nvenc.cpp"
+        "encoder/nvenc_external_input.h"
+        "encoder/nvenc_external_input.cpp"
+    )
+    target_link_libraries(brtc_nv_encoder
+        PRIVATE
+            brtc
+            d3d11.lib
+            nvcodec
+            glog::glog
+    )
+    add_brtc_object(brtc_nv_decoder "src/builtin"
+        "decoder/builtin_nvdec.h"
+        "decoder/builtin_nvdec.cpp"
+    )
+    target_link_libraries(brtc_nv_decoder
+        PRIVATE
+            brtc
+            d3d11.lib
+            nvcodec
+            glog::glog
+    )
+    target_sources(${PROJECT_NAME} PRIVATE
+        $<TARGET_OBJECTS:brtc_nv_encoder>
+        $<TARGET_OBJECTS:brtc_nv_decoder>
+    )
+endif()
+
 target_include_directories(${PROJECT_NAME}
   PUBLIC ${PUBLIC_INCLUDE_DIR}
   PRIVATE ${SRC_DIR}
