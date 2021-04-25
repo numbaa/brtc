@@ -1,67 +1,67 @@
 project(brtc)
 
-add_brtc_object(media_sender "src/controller"
+add_brtc_object(brtc_media_sender "src/controller"
   "controller/media_sender_impl.h"
   "controller/media_sender_impl.cpp"
   "controller/media_sender.cpp"
 )
-target_link_libraries(media_sender
+target_link_libraries(brtc_media_sender
   PRIVATE
     bco
-    common
+    brtc_common
 )
 
-add_brtc_object(media_receiver "src/controller"
+add_brtc_object(brtc_media_receiver "src/controller"
   "controller/media_receiver_impl.h"
   "controller/media_receiver_impl.cpp"
   "controller/media_receiver.cpp"
 )
-target_link_libraries(media_receiver
+target_link_libraries(brtc_media_receiver
   PRIVATE
     bco
-    common
+    brtc_common
 )
 
 #transport
-add_brtc_object(transport "src/transport"
+add_brtc_object(brtc_transport "src/transport"
   "transport/transport.cpp"
   "transport/transport.h"
 )
-target_link_libraries(transport
+target_link_libraries(brtc_transport
   PRIVATE
     bco
 )
 
 
-add_brtc_object(rtp_transport "src/transport"
+add_brtc_object(brtc_rtp_transport "src/transport"
   "transport/rtp_transport.h"
   "transport/rtp_transport.cpp"
 )
-target_link_libraries(rtp_transport
+target_link_libraries(brtc_rtp_transport
   PRIVATE
     bco
 )
 
-add_brtc_object(quic_transport "src/transport"
+add_brtc_object(brtc_quic_transport "src/transport"
   "transport/quic_transport.h"
   "transport/quic_transport.cpp"
 )
-target_link_libraries(quic_transport
+target_link_libraries(brtc_quic_transport
   PRIVATE
     bco
 )
 
-add_brtc_object(sctp_transport "src/transport"
+add_brtc_object(brtc_sctp_transport "src/transport"
   "transport/sctp_transport.h"
   "transport/sctp_transport.cpp"
 )
-target_link_libraries(sctp_transport
+target_link_libraries(brtc_sctp_transport
   PRIVATE
     bco
 )
 
 #common
-add_brtc_object(common "src/common"
+add_brtc_object(brtc_common "src/common"
   "common/udp_packet.h"
   "common/rtp.h"
   "common/rtp.cpp"
@@ -69,47 +69,47 @@ add_brtc_object(common "src/common"
   "common/sequence_number_util.h"
   "common/mod_ops.h"
 )
-target_link_libraries(common
+target_link_libraries(brtc_common
   PUBLIC
     bco
 )
 
 #video
-add_brtc_object(packetizer "src/video"
+add_brtc_object(brtc_packetizer "src/video"
   "video/packetizer/packetizer.h"
   "video/packetizer/packetizer.cpp"
   "video/packetizer/packetizer_h264.h"
   "video/packetizer/packetizer_h264.cpp"
 )
-target_link_libraries(packetizer
+target_link_libraries(brtc_packetizer
   PRIVATE
     glog::glog
-    common
+    brtc_common
 )
 
-add_brtc_object(frame_assembler "src/video"
+add_brtc_object(brtc_frame_assembler "src/video"
   "video/frame_assembler/frame_assembler.h"
   "video/frame_assembler/frame_assembler.cpp"
 )
-target_link_libraries(frame_assembler
+target_link_libraries(brtc_frame_assembler
   PRIVATE
     glog::glog
-    common
+    brtc_common
 )
 
-add_brtc_object(frame_buffer "src/video"
+add_brtc_object(brtc_frame_buffer "src/video"
   "video/frame_buffer/frame_buffer.h"
   "video/frame_buffer/frame_buffer.cpp"
   "video/frame_buffer/decoded_frames_history.h"
   "video/frame_buffer/decoded_frames_history.cpp"
 )
-target_link_libraries(frame_buffer
+target_link_libraries(brtc_frame_buffer
   PRIVATE
     glog::glog
-    common
+    brtc_common
 )
 
-add_brtc_object(reference_finder "src/video"
+add_brtc_object(brtc_reference_finder "src/video"
   "video/reference_finder/reference_finder.h"
   "video/reference_finder/reference_finder.cpp"
   "video/reference_finder/rtp_generic_ref_finder.h"
@@ -127,24 +127,24 @@ add_brtc_object(reference_finder "src/video"
   "video/reference_finder/h264_globals.h"
   "video/reference_finder/common_constants.h"
 )
-target_link_libraries(reference_finder
+target_link_libraries(brtc_reference_finder
   PRIVATE
     glog::glog
-    common
+    brtc_common
 )
 
 add_library(${PROJECT_NAME} STATIC
-    $<TARGET_OBJECTS:media_sender>
-    $<TARGET_OBJECTS:media_receiver>
-    $<TARGET_OBJECTS:transport>
-    $<TARGET_OBJECTS:rtp_transport>
-    $<TARGET_OBJECTS:quic_transport>
-    $<TARGET_OBJECTS:sctp_transport>
-    $<TARGET_OBJECTS:common>
-    $<TARGET_OBJECTS:packetizer>
-    $<TARGET_OBJECTS:frame_assembler>
-    $<TARGET_OBJECTS:frame_buffer>
-    $<TARGET_OBJECTS:reference_finder>
+    $<TARGET_OBJECTS:brtc_media_sender>
+    $<TARGET_OBJECTS:brtc_media_receiver>
+    $<TARGET_OBJECTS:brtc_transport>
+    $<TARGET_OBJECTS:brtc_rtp_transport>
+    $<TARGET_OBJECTS:brtc_quic_transport>
+    $<TARGET_OBJECTS:brtc_sctp_transport>
+    $<TARGET_OBJECTS:brtc_common>
+    $<TARGET_OBJECTS:brtc_packetizer>
+    $<TARGET_OBJECTS:brtc_frame_assembler>
+    $<TARGET_OBJECTS:brtc_frame_buffer>
+    $<TARGET_OBJECTS:brtc_reference_finder>
 )
 
 target_link_libraries(${PROJECT_NAME}

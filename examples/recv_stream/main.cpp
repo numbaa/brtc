@@ -4,9 +4,12 @@
 #include <memory>
 
 #include <bco.h>
+#include <glog/logging.h>
 
 #include <brtc.h>
 #include <brtc/builtin.h>
+
+#include "../common/d3d_helper.h"
 
 class RecvStream {
 public:
@@ -34,10 +37,31 @@ void RecvStream::start()
     receiver_.start();
 }
 
+void init_winsock()
+{
+    WSADATA wsdata;
+    (void)WSAStartup(MAKEWORD(2, 2), &wsdata);
+}
+
+using UdpSocket = bco::net::UdpSocket<bco::net::Select>;
+
 int main()
 {
-    brtc::TransportInfo transport_info;
-    Microsoft::WRL::ComPtr<ID3D11Device> device;
+    init_winsock();
+    auto device = get_d3d11_device(GpuVendor::Intel);
+    if (device == nullptr) {
+        LOG(ERROR) << "get d3d11 device failed";
+        return -1;
+    }
+    auto socket_proactor = std::make_unique<bco::net::Select>();
+    socket_proactor->start(std::make_unique<bco::SimpleExecutor>());
+    auto [sock, err] = UdpSocket::create(socket_proactor.get(), AF_INET);
+    if (err != 0) {
+        LOG(ERROR) << "create udp socket failed";
+        return -1;
+    }
+    bco::net::Address addr { bco::net::IPv4 { "127.0.0.1" }, 43966 };
+    brtc::TransportInfo transport_info { .socket = sock, .remote_addr = addr };
     RecvStream stream { transport_info, device };
     stream.start();
 

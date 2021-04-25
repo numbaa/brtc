@@ -71,6 +71,7 @@ Microsoft::WRL::ComPtr<ID3D11Device> get_d3d11_device(GpuVendor vendor)
         if (desc.VendorId == get_vendor_id(vendor)) {
             return create_device(adapter);
         }
+        i++;
     }
     return nullptr;
 }

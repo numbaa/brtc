@@ -1,32 +1,32 @@
 project(brtc_builtin)
 
-add_brtc_object(dxgi_capture "src/builtin"
+add_brtc_object(brtc_dxgi_capture "src/builtin"
     "capture/dxgi_capture.h"
     "capture/dxgi_capture.cpp"
 )
-target_link_libraries(dxgi_capture
+target_link_libraries(brtc_dxgi_capture
     PRIVATE
         brtc
         d3d11.lib
         dxgi.lib
 )
 
-add_brtc_object(mfx_decoder "src/builtin"
+add_brtc_object(brtc_mfx_decoder "src/builtin"
     "decoder/mfx_decoder.h"
     "decoder/mfx_decoder.cpp"
 )
-target_link_libraries(mfx_decoder
+target_link_libraries(brtc_mfx_decoder
     PRIVATE
         brtc
         d3d11.lib
         mfx
 )
 
-add_brtc_object(mfx_encoder "src/builtin"
+add_brtc_object(brtc_mfx_encoder "src/builtin"
     "encoder/mfx_encoder.h"
     "encoder/mfx_encoder.cpp"
 )
-target_link_libraries(mfx_encoder
+target_link_libraries(brtc_mfx_encoder
     PRIVATE
         brtc
         d3d11.lib
@@ -34,22 +34,22 @@ target_link_libraries(mfx_encoder
         glog::glog
 )
 
-add_brtc_object(mfx_common "src/builtin"
+add_brtc_object(brtc_mfx_common "src/builtin"
     "mfx_common/mfx_allocator.h"
     "mfx_common/mfx_allocator.cpp"
 )
-target_link_libraries(mfx_common
+target_link_libraries(brtc_mfx_common
     PUBLIC
         d3d11.lib
         mfx
         glog::glog
 )
 
-add_brtc_object(d3d11_render "src/builtin"
+add_brtc_object(brtc_d3d11_render "src/builtin"
     "render/d3d11_render.h"
     "render/d3d11_render.cpp"
 )
-target_link_libraries(d3d11_render
+target_link_libraries(brtc_d3d11_render
     PRIVATE
         brtc
         d3d11.lib
@@ -57,7 +57,7 @@ target_link_libraries(d3d11_render
         SDL2-static
 )
 
-add_brtc_object(p2p "src/builtin"
+add_brtc_object(brtc_p2p "src/builtin"
     "p2p/p2p.h"
     "p2p/p2p.cpp"
 )
@@ -65,12 +65,12 @@ add_brtc_object(p2p "src/builtin"
 add_library(${PROJECT_NAME} STATIC
     ${BRTC_PUBLIC_HEADERS}
     "builtin.cpp"
-    $<TARGET_OBJECTS:dxgi_capture>
-    $<TARGET_OBJECTS:mfx_common>
-    $<TARGET_OBJECTS:mfx_decoder>
-    $<TARGET_OBJECTS:mfx_encoder>
-    $<TARGET_OBJECTS:d3d11_render>
-    $<TARGET_OBJECTS:p2p>
+    $<TARGET_OBJECTS:brtc_dxgi_capture>
+    $<TARGET_OBJECTS:brtc_mfx_common>
+    $<TARGET_OBJECTS:brtc_mfx_decoder>
+    $<TARGET_OBJECTS:brtc_mfx_encoder>
+    $<TARGET_OBJECTS:brtc_d3d11_render>
+    $<TARGET_OBJECTS:brtc_p2p>
 )
 
 target_include_directories(${PROJECT_NAME}
