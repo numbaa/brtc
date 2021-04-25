@@ -1,3 +1,4 @@
+#include <bco/coroutine/cofunc.h>
 #include "media_sender_impl.h"
 #include "../video/packetizer/packetizer.h"
 
@@ -45,6 +46,7 @@ bco::Routine MediaSenderImpl::capture_encode_loop(std::shared_ptr<MediaSenderImp
         auto raw_frame = capture_one_frame();
         auto encoded_frame = encode_one_frame(raw_frame);
         send_to_pacing_loop(encoded_frame);
+        co_await bco::sleep_for(std::chrono::milliseconds { 16 });
     }
     co_return;
 }
@@ -54,12 +56,12 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
     while (!stop_) {
         auto frame = co_await receive_from_encode_loop();
         Packetizer::PayloadSizeLimits limits;
-        std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
+        //std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
         RtpPacket packet;
-        while (packetizer->next_packet(packet)) {
-            //加策略delay一下啥的
-            transport_->send_rtp(packet);
-        }
+        //while (packetizer->next_packet(packet)) {
+        //    //加策略delay一下啥的
+        //    transport_->send_rtp(packet);
+        //}
     }
 }
 

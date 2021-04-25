@@ -36,6 +36,7 @@ mfxStatus MFX_CDECL MfxFrameAllocator::_free(mfxHDL pthis, mfxFrameAllocResponse
 
 MfxFrameAllocator::MfxFrameAllocator()
 {
+    this->pthis = this;
     this->Alloc = this->_alloc;
     this->Free = this->_free;
     this->GetHDL = this->_getHDL;

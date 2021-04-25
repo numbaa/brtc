@@ -63,6 +63,15 @@ void DxgiCapture::release_frame()
 
 Frame DxgiCapture::copy_frame(ComPtr<ID3D11Texture2D> inframe)
 {
+    struct AutoRelease {
+        AutoRelease(DxgiCapture* d)
+            : dxgi(d)
+        {
+        }
+        ~AutoRelease() { dxgi->release_frame(); }
+        DxgiCapture* dxgi;
+    };
+    AutoRelease r(this);
     D3D11_TEXTURE2D_DESC desc { 0 };
     inframe->GetDesc(&desc);
     desc.MipLevels = 1;
