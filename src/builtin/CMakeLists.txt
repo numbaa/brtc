@@ -75,10 +75,8 @@ add_library(${PROJECT_NAME} STATIC
 
 if(BRTC_BUILD_NVCODEC)
     add_brtc_object(brtc_nv_encoder "src/builtin"
-        "encoder/builtin_nvenc.h"
-        "encoder/builtin_nvenc.cpp"
-        "encoder/nvenc_external_input.h"
-        "encoder/nvenc_external_input.cpp"
+        "encoder/nv_encoder.h"
+        "encoder/nv_encoder.cpp"
     )
     target_link_libraries(brtc_nv_encoder
         PRIVATE

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <any>
 
 namespace brtc {
 
@@ -17,6 +18,7 @@ struct Frame {
     uint32_t width = 0;
     uint32_t height = 0;
     uint32_t timestamp = 0; // ??
+    std::any _data_holder;
 };
 
 } // brtc
