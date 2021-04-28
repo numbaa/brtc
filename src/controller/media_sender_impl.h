@@ -14,6 +14,7 @@ class MediaSenderImpl : public std::enable_shared_from_this<MediaSenderImpl> {
 public:
     MediaSenderImpl(
         const TransportInfo& info,
+        std::unique_ptr<Strategies>&& strategies,
         std::unique_ptr<VideoEncoderInterface>&& encoder,
         std::unique_ptr<VideoCaptureInterface>&& capture,
         std::shared_ptr<bco::Context> network_ctx,
@@ -30,12 +31,16 @@ private:
     Frame capture_one_frame();
     Frame encode_one_frame(Frame frame);
 
+    void after_capture();
+    void after_encode();
+
     inline void send_to_pacing_loop(Frame frame);
     inline bco::Task<Frame> receive_from_encode_loop();
 
 private:
     std::atomic<bool> stop_ { true };
     std::unique_ptr<Transport> transport_;
+    std::unique_ptr<Strategies> strategies_;
     std::unique_ptr<VideoEncoderInterface> encoder_;
     std::unique_ptr<VideoCaptureInterface> capture_;
     std::shared_ptr<bco::Context> network_ctx_;

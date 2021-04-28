@@ -7,12 +7,14 @@ namespace brtc {
 
 MediaSenderImpl::MediaSenderImpl(
             const TransportInfo& info,
+            std::unique_ptr<Strategies>&& strategies,
             std::unique_ptr<VideoEncoderInterface>&& encoder,
             std::unique_ptr<VideoCaptureInterface>&& capture,
             std::shared_ptr<bco::Context> network_ctx,
             std::shared_ptr<bco::Context> encode_ctx,
             std::shared_ptr<bco::Context> pacer_ctx)
     : transport_(std::make_unique<Transport>(info))
+    , strategies_(std::move(strategies))
     , encoder_(std::move(encoder))
     , capture_(std::move(capture))
     , network_ctx_(network_ctx)
@@ -45,7 +47,9 @@ bco::Routine MediaSenderImpl::capture_encode_loop(std::shared_ptr<MediaSenderImp
 {
     while (!stop_) {
         auto raw_frame = capture_one_frame();
+        after_capture();
         auto encoded_frame = encode_one_frame(raw_frame);
+        after_encode();
         send_to_pacing_loop(encoded_frame);
         co_await bco::sleep_for(std::chrono::milliseconds { 16 });
     }
@@ -61,10 +65,10 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
         //RtpPacket需要预设头部
         std::vector<uint32_t> csrcs { 456, 789 };
         RtpPacket packet;
-        packet.set_ssrc(123);
-        packet.set_csrcs(std::span<uint32_t>(csrcs));
-        packet.set_payload_type(1);
-        packet.set_timestamp(111);
+        //packet.set_ssrc(123);
+        //packet.set_csrcs(std::span<uint32_t>(csrcs));
+        //packet.set_payload_type(1);
+        //packet.set_timestamp(111);
         //packet.set_extension();
         while (packetizer->next_packet(packet)) {
             //加策略delay一下啥的
@@ -81,6 +85,20 @@ Frame MediaSenderImpl::capture_one_frame()
 Frame MediaSenderImpl::encode_one_frame(Frame frame)
 {
     return encoder_->encode_one_frame(frame);
+}
+
+void MediaSenderImpl::after_capture()
+{
+    if (strategies_->release_frame_after_capture()) {
+        capture_->release_frame();
+    }
+}
+
+void MediaSenderImpl::after_encode()
+{
+    if (strategies_->release_frame_after_encode()) {
+        capture_->release_frame();
+    }
 }
 
 void MediaSenderImpl::send_to_pacing_loop(Frame frame)

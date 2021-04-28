@@ -4,23 +4,23 @@ set(NVCODEC_API_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/../NvCodecSDK/Interface")
 set(NVCODEC_SRC_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/../NvCodecSDK/Samples/NvCodec")
 set(NVCODEC_LIB_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/../NvCodecSDK/Lib")
 set(NVCODEC_SOURCES
-    "${NVCODEC_SRC_FOLDER}/NvDecoder/NvDecoder.h"
-    "${NVCODEC_SRC_FOLDER}/NvDecoder/NvDecoder.cpp"
+    #"${NVCODEC_SRC_FOLDER}/NvDecoder/NvDecoder.h"
+    #"${NVCODEC_SRC_FOLDER}/NvDecoder/NvDecoder.cpp"
 
     "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderOutputInVidMemD3D11.cpp"
     "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderOutputInVidMemD3D11.h"
     "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoder.cpp"
     "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoder.h"
-    "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderCuda.cpp"
-    "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderCuda.h"
-    "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderD3D9.cpp"
-    "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderD3D9.h"
+    #"${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderCuda.cpp"
+    #"${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderCuda.h"
+    #"${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderD3D9.cpp"
+    #"${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderD3D9.h"
     "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderD3D11.cpp"
     "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderD3D11.h"
-    "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderGL.cpp"
-    "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderGL.h"
-    "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderOutputInVidMemCuda.cpp"
-    "${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderOutputInVidMemCuda.h"
+    #"${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderGL.cpp"
+    #"${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderGL.h"
+    #"${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderOutputInVidMemCuda.cpp"
+    #"${NVCODEC_SRC_FOLDER}/NvEncoder/NvEncoderOutputInVidMemCuda.h"
 
     "${NVCODEC_SRC_FOLDER}/../Utils/NvCodecUtils.h"
     "${NVCODEC_SRC_FOLDER}/../Utils/Logger.h"

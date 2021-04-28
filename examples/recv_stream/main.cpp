@@ -25,6 +25,7 @@ RecvStream::RecvStream(const brtc::TransportInfo& transport_info, Microsoft::WRL
     : context_(std::make_shared<bco::Context>(std::make_unique<bco::SimpleExecutor>()))
     , receiver_(
           transport_info,
+          brtc::builtin::create_strategies(2),
           brtc::builtin::create_decoder_mfx(device),
           brtc::builtin::create_render_d3d11(device),
           context_, context_, context_)

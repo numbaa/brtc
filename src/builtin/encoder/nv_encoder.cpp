@@ -2,28 +2,38 @@
 #include "common/time_utils.h"
 #include "nv_encoder.h"
 #include <NvEncoderCLIOptions.h>
+#include <Logger.h>
+
+simplelogger::Logger* logger;
 
 namespace brtc {
 
 namespace builtin {
 
-bool NvEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device, const NV_ENC_INITIALIZE_PARAMS& params)
+bool NvEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
 {
+    logger = simplelogger::LoggerFactory::CreateConsoleLogger();
     device_ = device;
-    nvenc_ = std::make_unique<NvEncoder::ExternalFrameNvEncoder>(device_.Get(), 1920, 1080, NV_ENC_BUFFER_FORMAT_ARGB);
+    auto nvenc = std::make_unique<NvEncoder::ExternalFrameNvEncoder>(device_.Get(), 1920, 1080);
 
-    NvEncoderInitParam cli_opts;
+    NvEncoderInitParam cli_opts { "-profile main -codec h264 -fps 30 -bitrate 4194304 -maxbitrate 8388608 -preset p1 -tuninginfo lowlatency" };
     NV_ENC_INITIALIZE_PARAMS init_params = { NV_ENC_INITIALIZE_PARAMS_VER };
     NV_ENC_CONFIG enc_cfg = { NV_ENC_CONFIG_VER };
     init_params.encodeConfig = &enc_cfg;
-    nvenc_->CreateDefaultEncoderParams(&init_params, cli_opts.GetEncodeGUID(), cli_opts.GetPresetGUID());
+    nvenc->CreateDefaultEncoderParams(&init_params, cli_opts.GetEncodeGUID(), cli_opts.GetPresetGUID(), cli_opts.GetTuningInfo());
     cli_opts.SetInitParams(&init_params, NV_ENC_BUFFER_FORMAT_ARGB);
-    nvenc_->CreateEncoder(&init_params);
+    try {
+        nvenc->CreateEncoder(&init_params);
+    } catch (const NVENCException& e) {
+        std::cout << e.getErrorCode() << ": " << e.getErrorString() << std::endl;
+        return false;
+    }
+    nvenc_ = std::move(nvenc);
+    return true;
 }
 
 Frame NvEncoder::encode_one_frame(Frame frame)
 {
-    const NvEncInputFrame* encoderInputFrame = nvenc_->GetNextInputFrame();
     switch (frame.type) {
     case brtc::Frame::UnderlyingType::kMemory:
         break;
@@ -40,12 +50,15 @@ Frame NvEncoder::encode_external_d3d11_texture2d(Frame frame)
     auto packets = std::make_shared<std::vector<std::vector<uint8_t>>>();
     nvenc_->encode_external_d3d11_texture2d(frame.data, frame.width, frame.height, *packets);
     Frame out;
-    out.height = frame.height;
-    out.width = frame.width;
-    out.data = packets->empty() ? nullptr : packets->front().data();
-    out.type = Frame::UnderlyingType::kMemory;
-    out.timestamp = static_cast<uint32_t>(brtc::MachineNowMilliseconds());
-    out._data_holder = packets;
+    if (!packets->empty()) {
+        out.length = packets->front().size();
+        out.height = frame.height;
+        out.width = frame.width;
+        out.data = packets->front().data();
+        out.type = Frame::UnderlyingType::kMemory;
+        out.timestamp = static_cast<uint32_t>(brtc::MachineNowMilliseconds());
+        out._data_holder = packets;
+    }
     return out;
 }
 
@@ -54,12 +67,6 @@ NvEncoder::ExternalFrameNvEncoder::ExternalFrameNvEncoder(Microsoft::WRL::ComPtr
         NV_ENC_DEVICE_TYPE::NV_ENC_DEVICE_TYPE_DIRECTX, device.Get(), width, height,
         NV_ENC_BUFFER_FORMAT::NV_ENC_BUFFER_FORMAT_ARGB, 0, false, false)
 {
-}
-
-void NvEncoder::ExternalFrameNvEncoder::CreateEncoder(const NV_ENC_INITIALIZE_PARAMS* pEncodeParams)
-{
-    ::NvEncoder::CreateEncoder(pEncodeParams);
-    output_buffer_.resize(m_nEncoderBuffer);
 }
 
 void NvEncoder::ExternalFrameNvEncoder::encode_external_d3d11_texture2d(void* frame, uint32_t width, uint32_t height, std::vector<std::vector<uint8_t>>& packets)
@@ -74,6 +81,16 @@ void NvEncoder::ExternalFrameNvEncoder::encode_external_d3d11_texture2d(void* fr
         assert(packets.size() == 0 || packets.size() == 1);
     } else {
         NVENC_THROW_ERROR("nvEncEncodePicture API failed", status);
+    }
+}
+
+void NvEncoder::ExternalFrameNvEncoder::AllocateInputBuffers(int32_t size)
+{
+    output_buffer_.resize(size);
+    for (int i = 0; i < size; i++) {
+        NV_ENC_CREATE_BITSTREAM_BUFFER createBitstreamBuffer = { NV_ENC_CREATE_BITSTREAM_BUFFER_VER };
+        NVENC_API_CALL(m_nvenc.nvEncCreateBitstreamBuffer(m_hEncoder, &createBitstreamBuffer));
+        output_buffer_[i] = createBitstreamBuffer.bitstreamBuffer;
     }
 }
 

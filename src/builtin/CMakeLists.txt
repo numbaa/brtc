@@ -57,6 +57,15 @@ target_link_libraries(brtc_d3d11_render
         SDL2-static
 )
 
+add_brtc_object(brtc_strategies "src/builtin"
+    "strategies/simple_strategies.cpp"
+    "strategies/simple_strategies.h"
+)
+target_link_libraries(brtc_strategies
+    PRIVATE
+        brtc
+)
+
 add_brtc_object(brtc_p2p "src/builtin"
     "p2p/p2p.h"
     "p2p/p2p.cpp"
@@ -71,6 +80,7 @@ add_library(${PROJECT_NAME} STATIC
     $<TARGET_OBJECTS:brtc_mfx_encoder>
     $<TARGET_OBJECTS:brtc_d3d11_render>
     $<TARGET_OBJECTS:brtc_p2p>
+    $<TARGET_OBJECTS:brtc_strategies>
 )
 
 if(BRTC_BUILD_NVCODEC)
@@ -112,6 +122,7 @@ target_link_libraries(${PROJECT_NAME}
         mfx
         SDL2main
         SDL2-static
+        nvcodec
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "src/builtin")

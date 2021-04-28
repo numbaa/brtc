@@ -125,7 +125,11 @@ bool PacketizerH264::do_fragmentation()
         nalus[index] = nalu;
         start_code_lens[index] = start_code_len;
         index++;
-        remain_data = remain_data.subspan(start_code_len);
+        size_t offset = nalu - remain_data.data() + start_code_len;
+        if (offset >= remain_data.size()) {
+            break;
+        }
+        remain_data = remain_data.subspan(offset);
     }
     if (index == 0) {
         is_valid_frame_ = false;
@@ -210,7 +214,7 @@ bool PacketizerH264::packetize_FuA(size_t index)
 
     for (size_t i = 0; i < payload_sizes.size(); ++i) {
         int packet_length = payload_sizes[i];
-        assert(packet_length == 0);
+        assert(packet_length != 0);
         packets_.push_back(PacketUnit(fragment.subspan(offset, packet_length),
             /*first_fragment=*/i == 0,
             /*last_fragment=*/i == payload_sizes.size() - 1,

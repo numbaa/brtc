@@ -5,14 +5,16 @@
 namespace brtc {
 
 MediaReceiver::MediaReceiver(
-        const TransportInfo& info,
-        std::unique_ptr<VideoDecoderInterface>&& decoder,
-        std::unique_ptr<RenderInterface>&& render,
-        std::shared_ptr<bco::Context> network_ctx,
-        std::shared_ptr<bco::Context> decode_ctx,
-        std::shared_ptr<bco::Context> render_ctx)
+    const TransportInfo& info,
+    std::unique_ptr<Strategies>&& strategies,
+    std::unique_ptr<VideoDecoderInterface>&& decoder,
+    std::unique_ptr<RenderInterface>&& render,
+    std::shared_ptr<bco::Context> network_ctx,
+    std::shared_ptr<bco::Context> decode_ctx,
+    std::shared_ptr<bco::Context> render_ctx)
     : impl_ { std::make_shared<MediaReceiverImpl>(
         info,
+        std::move(strategies),
         std::move(decoder),
         std::move(render),
         network_ctx,

@@ -17,6 +17,7 @@ class MediaReceiverImpl : public std::enable_shared_from_this<MediaReceiverImpl>
 public:
     MediaReceiverImpl(
         const TransportInfo& info,
+        std::unique_ptr<Strategies>&& strategies,
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
         std::shared_ptr<bco::Context> network_ctx,
@@ -39,6 +40,7 @@ private:
 private:
     std::atomic<bool> stop_ { true };
     std::unique_ptr<Transport> transport_;
+    std::unique_ptr<Strategies> strategies_;
     std::unique_ptr<VideoDecoderInterface> decoder_;
     std::unique_ptr<RenderInterface> render_;
     std::shared_ptr<bco::Context> network_ctx_;

@@ -44,12 +44,22 @@ public:
     virtual void render_one_frame(Frame frame) = 0;
 };
 
+class Strategies {
+public:
+    Strategies() = default;
+    virtual ~Strategies() { }
+
+    virtual bool release_frame_after_capture() = 0;
+    virtual bool release_frame_after_encode() = 0;
+};
+
 class MediaReceiverImpl;
 
 class MediaReceiver {
 public:
     MediaReceiver(
         const TransportInfo& info,
+        std::unique_ptr<Strategies>&& strategies,
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
         std::shared_ptr<bco::Context> network_ctx,
@@ -68,6 +78,7 @@ class MediaSender  {
 public:
     MediaSender(
         const TransportInfo& info,
+        std::unique_ptr<Strategies>&& strategies,
         std::unique_ptr<VideoEncoderInterface>&& encoder,
         std::unique_ptr<VideoCaptureInterface>&& capture,
         std::shared_ptr<bco::Context> network_ctx,
@@ -79,6 +90,5 @@ public:
 private:
     std::shared_ptr<MediaSenderImpl> impl_;
 };
-
 
 } // namespace brtc

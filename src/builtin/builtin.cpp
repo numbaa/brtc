@@ -1,9 +1,12 @@
+#include "..\..\include\brtc\builtin.h"
 #include <brtc/builtin.h>
 
 #include "builtin/capture/dxgi_capture.h"
 #include "builtin/decoder/mfx_decoder.h"
 #include "builtin/encoder/mfx_encoder.h"
 #include "builtin/render/d3d11_render.h"
+#include "builtin/encoder/nv_encoder.h"
+#include "builtin/strategies/simple_strategies.h"
 
 namespace brtc {
 
@@ -29,6 +32,16 @@ std::unique_ptr<VideoEncoderInterface> create_encoder_mfx(Microsoft::WRL::ComPtr
     }
 }
 
+std::unique_ptr<VideoEncoderInterface> create_encoder_nv(Microsoft::WRL::ComPtr<ID3D11Device> device)
+{
+    auto encoder = std::make_unique<brtc::builtin::NvEncoder>();
+    if (!encoder->init(device)) {
+        return nullptr;
+    } else {
+        return std::move(encoder);
+    }
+}
+
 std::unique_ptr<VideoDecoderInterface> create_decoder_mfx(Microsoft::WRL::ComPtr<ID3D11Device> device)
 {
     std::unique_ptr<MfxDecoder> decoder { new MfxDecoder };
@@ -46,6 +59,18 @@ std::unique_ptr<RenderInterface> create_render_d3d11(Microsoft::WRL::ComPtr<ID3D
         return nullptr;
     } else {
         return std::move(render);
+    }
+}
+
+std::unique_ptr<Strategies> create_strategies(int which)
+{
+    switch (which) {
+    case 1:
+        return std::make_unique<Strategies1>();
+    case 2:
+        return std::make_unique<Strategies2>();
+    default:
+        return nullptr;
     }
 }
 

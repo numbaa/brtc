@@ -51,7 +51,14 @@ Frame DxgiCapture::capture_one_frame()
         if (FAILED(hr)) {
             return Frame {};
         }
-        return copy_frame(texture2d);
+        Frame frame;
+        frame.data = texture2d.Get();
+        frame.type = Frame::UnderlyingType::kD3D11Texture2D;
+        frame.height = 1080;
+        frame.width = 1920;
+        frame._data_holder = texture2d;
+        return frame;
+        //return copy_frame(texture2d);
     }
     return Frame {};
 }
