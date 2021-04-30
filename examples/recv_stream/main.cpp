@@ -49,7 +49,7 @@ using UdpSocket = bco::net::UdpSocket<bco::net::Select>;
 int main()
 {
     init_winsock();
-    auto device = get_d3d11_device(GpuVendor::Intel);
+    auto device = get_d3d11_device(GpuVendor::Nvida);
     if (device == nullptr) {
         LOG(ERROR) << "get d3d11 device failed";
         return -1;
@@ -65,6 +65,6 @@ int main()
     brtc::TransportInfo transport_info { .socket = sock, .remote_addr = addr };
     RecvStream stream { transport_info, device };
     stream.start();
-
+    std::this_thread::sleep_for(std::chrono::seconds { 10000 });
     return 0;
 }

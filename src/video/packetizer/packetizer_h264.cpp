@@ -275,7 +275,7 @@ size_t PacketizerH264::packetize_StapA(size_t index)
         ++index;
         if (index == nalus_.size())
             break;
-        std::span<uint8_t> fragment { (uint8_t*)frame_.data + nalus_[index].offset + nalus_[index].start_code_length, nalus_[index].payload_length };
+        fragment = { (uint8_t*)frame_.data + nalus_[index].offset + nalus_[index].start_code_length, nalus_[index].payload_length };
     }
     assert(aggregated_fragments > 0);
     packets_.back().last_fragment = true;

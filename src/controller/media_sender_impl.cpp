@@ -73,6 +73,7 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
         while (packetizer->next_packet(packet)) {
             //加策略delay一下啥的
             transport_->send_rtp(packet);
+            packet = RtpPacket {};
         }
     }
 }
