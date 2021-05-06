@@ -13,7 +13,7 @@ MediaSenderImpl::MediaSenderImpl(
             std::shared_ptr<bco::Context> network_ctx,
             std::shared_ptr<bco::Context> encode_ctx,
             std::shared_ptr<bco::Context> pacer_ctx)
-    : transport_(std::make_unique<Transport>(info))
+    : transport_(std::make_unique<Transport>(network_ctx, info))
     , strategies_(std::move(strategies))
     , encoder_(std::move(encoder))
     , capture_(std::move(capture))

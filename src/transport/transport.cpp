@@ -3,13 +3,15 @@
 
 namespace brtc {
 
-Transport::Transport(const TransportInfo& info)
-    : remote_addr_(info.remote_addr)
+Transport::Transport(std::shared_ptr<bco::Context> ctx, const TransportInfo& info)
+    : ctx_(ctx)
+    , remote_addr_(info.remote_addr)
     , socket_(info.socket)
     , rtp_(new RtpTransport {std::bind(&Transport::send_packet, this, std::placeholders::_1)})
     , sctp_(new SctpTransport)
     , quic_(new QuicTransport)
 {
+    ctx_->spawn(std::bind(&Transport::recv_loop, this));
 }
 
 Transport::~Transport()
@@ -47,12 +49,14 @@ bco::Task<RtcpPacket> Transport::recv_rtcp()
     return rtp_->recv_rtcp_packet();
 }
 
-bco::Routine Transport::do_recv()
+bco::Routine Transport::recv_loop()
 {
-    bco::Buffer buff{1500};
-    auto [bytes, addr] = co_await socket_.recvfrom(buff);
-    std::apply([&buff](auto& ...sink) { (..., sink->on_recv_data(buff)); },
-               std::make_tuple(std::ref(rtp_), std::ref(sctp_), std::ref(quic_)));
+    while (true) {
+        bco::Buffer buff { 1500 };
+        auto [bytes, addr] = co_await socket_.recvfrom(buff);
+        std::apply([&buff](auto&... sink) { (..., sink->on_recv_data(buff)); },
+            std::make_tuple(std::ref(rtp_), std::ref(sctp_), std::ref(quic_)));
+    }
 }
 
 void Transport::send_packet(bco::Buffer packet)

@@ -38,7 +38,7 @@ private:
     void render_one_frame(Frame frame);
 
 private:
-    std::atomic<bool> stop_ { true };
+    std::atomic<bool> stop_ { false };
     std::unique_ptr<Transport> transport_;
     std::unique_ptr<Strategies> strategies_;
     std::unique_ptr<VideoDecoderInterface> decoder_;

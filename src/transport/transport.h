@@ -15,7 +15,7 @@ namespace brtc {
 
 class Transport {
 public:
-    Transport(const TransportInfo& info);
+    Transport(std::shared_ptr<bco::Context> ctx, const TransportInfo& info);
     ~Transport();
 
     void set_socket(bco::net::UdpSocket<bco::net::Select> socket);
@@ -34,11 +34,12 @@ public:
     void send_quic(); // 这个可能需要返回bco::Task
 
 private:
-    bco::Routine do_recv();
+    bco::Routine recv_loop();
     void send_packet(bco::Buffer packet);
     //bco::Task<bool> do_handshake();
 
 private:
+    std::shared_ptr<bco::Context> ctx_;
     bco::net::Address remote_addr_;
     bco::net::UdpSocket<bco::net::Select> socket_;
     std::unique_ptr<RtpTransport> rtp_;

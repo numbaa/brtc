@@ -61,8 +61,10 @@ int main()
         LOG(ERROR) << "create udp socket failed";
         return -1;
     }
-    bco::net::Address addr { bco::net::IPv4 { "127.0.0.1" }, 43966 };
-    brtc::TransportInfo transport_info { .socket = sock, .remote_addr = addr };
+    bco::net::Address local_addr { bco::net::IPv4 { "127.0.0.1" }, 43967 };
+    sock.bind(local_addr);
+    bco::net::Address remote_addr { bco::net::IPv4 { "127.0.0.1" }, 43966 };
+    brtc::TransportInfo transport_info { .socket = sock, .remote_addr = remote_addr };
     SendStream stream { transport_info, device };
     stream.start();
     std::this_thread::sleep_for(std::chrono::seconds { 10000 });

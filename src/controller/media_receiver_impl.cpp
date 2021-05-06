@@ -16,7 +16,7 @@ MediaReceiverImpl::MediaReceiverImpl(
                 std::shared_ptr<bco::Context> network_ctx,
                 std::shared_ptr<bco::Context> decode_ctx,
                 std::shared_ptr<bco::Context> render_ctx)
-    : transport_(std::make_unique<Transport>(info))
+    : transport_(std::make_unique<Transport>(network_ctx, info))
     , strategies_(std::move(strategies))
     , decoder_(std::move(decoder))
     , render_(std::move(render))
