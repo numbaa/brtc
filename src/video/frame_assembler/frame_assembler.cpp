@@ -14,8 +14,9 @@
 
 namespace brtc {
 
-FrameAssembler::FrameAssembler(size_t max_size)
+FrameAssembler::FrameAssembler(size_t start_size, size_t max_size)
     : max_size_(max_size)
+    , buffer_(start_size)
 {
 }
 

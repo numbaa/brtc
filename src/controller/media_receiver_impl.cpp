@@ -3,6 +3,7 @@
 namespace brtc {
 
 namespace {
+constexpr size_t kStartPacketBufferSize = 512;
 constexpr size_t kMaxPacketBufferSize = 1000;
 constexpr size_t kDecodedHistorySize = 1000;
 }
@@ -23,7 +24,7 @@ MediaReceiverImpl::MediaReceiverImpl(
     , network_ctx_(network_ctx)
     , decode_ctx_(decode_ctx)
     , render_ctx_(render_ctx)
-    , frame_assembler_(kMaxPacketBufferSize)
+    , frame_assembler_(kStartPacketBufferSize, kMaxPacketBufferSize)
     , frame_buffer_(kDecodedHistorySize)
 {
 }

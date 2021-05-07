@@ -11,9 +11,11 @@
 
 #include "../common/d3d_helper.h"
 
+using UdpSocket = bco::net::UdpSocket<bco::net::Select>;
+
 class RecvStream {
 public:
-    RecvStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device);
+    RecvStream(std::unique_ptr <bco::net::Select>&& proactor, const brtc::TransportInfo & transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device);
     void start();
 
 private:
@@ -21,7 +23,7 @@ private:
     brtc::MediaReceiver receiver_;
 };
 
-RecvStream::RecvStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device)
+RecvStream::RecvStream(std::unique_ptr<bco::net::Select>&& proactor, const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device)
     : context_(std::make_shared<bco::Context>(std::make_unique<bco::SimpleExecutor>()))
     , receiver_(
           transport_info,
@@ -30,6 +32,7 @@ RecvStream::RecvStream(const brtc::TransportInfo& transport_info, Microsoft::WRL
           brtc::builtin::create_render_d3d11(device),
           context_, context_, context_)
 {
+    context_->add_proactor(std::move(proactor));
 }
 
 void RecvStream::start()
@@ -43,8 +46,6 @@ void init_winsock()
     WSADATA wsdata;
     (void)WSAStartup(MAKEWORD(2, 2), &wsdata);
 }
-
-using UdpSocket = bco::net::UdpSocket<bco::net::Select>;
 
 int main()
 {
@@ -65,7 +66,7 @@ int main()
     sock.bind(local_addr);
     bco::net::Address remote_addr { bco::net::IPv4 { "127.0.0.1" }, 43967 };
     brtc::TransportInfo transport_info { .socket = sock, .remote_addr = remote_addr };
-    RecvStream stream { transport_info, device };
+    RecvStream stream { std::move(socket_proactor), transport_info, device };
     stream.start();
     std::this_thread::sleep_for(std::chrono::seconds { 10000 });
     return 0;

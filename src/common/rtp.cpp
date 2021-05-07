@@ -52,10 +52,11 @@ RtpPacket::RtpPacket()
 }
 
 RtpPacket::RtpPacket(bco::Buffer buff)
+    : buffer_(buff)
 {
-    const bool has_padding = (buff[0] & 0x20) != 0;
-    const bool has_extension = (buff[0] & 0x10) != 0;
-    const uint8_t number_of_crcs = buff[0] & 0x0f;
+    const bool has_padding = (buffer_[0] & 0x20) != 0;
+    const bool has_extension = (buffer_[0] & 0x10) != 0;
+    const uint8_t number_of_crcs = buffer_[0] & 0x0f;
     //主要是要获得extension_entries_
     if (has_extension) {
         uint16_t magic;

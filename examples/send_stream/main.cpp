@@ -13,7 +13,7 @@
 
 class SendStream {
 public:
-    SendStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device);
+    SendStream(std::unique_ptr<bco::net::Select>&& proactor, const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device);
     void start();
 
 private:
@@ -21,7 +21,7 @@ private:
     brtc::MediaSender sender_;
 };
 
-SendStream::SendStream(const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device)
+SendStream::SendStream(std::unique_ptr<bco::net::Select>&& proactor, const brtc::TransportInfo& transport_info, Microsoft::WRL::ComPtr<ID3D11Device> device)
     : context_(std::make_shared<bco::Context>(std::make_unique<bco::SimpleExecutor>()))
     , sender_(
         transport_info,
@@ -30,6 +30,7 @@ SendStream::SendStream(const brtc::TransportInfo& transport_info, Microsoft::WRL
         brtc::builtin::create_capture_dxgi(device),
         context_, context_, context_)
 {
+    context_->add_proactor(std::move(proactor));
 }
 
 void SendStream::start()
@@ -65,7 +66,7 @@ int main()
     sock.bind(local_addr);
     bco::net::Address remote_addr { bco::net::IPv4 { "127.0.0.1" }, 43966 };
     brtc::TransportInfo transport_info { .socket = sock, .remote_addr = remote_addr };
-    SendStream stream { transport_info, device };
+    SendStream stream { std::move(socket_proactor), transport_info, device };
     stream.start();
     std::this_thread::sleep_for(std::chrono::seconds { 10000 });
     return 0;

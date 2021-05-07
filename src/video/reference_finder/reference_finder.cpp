@@ -162,6 +162,9 @@ void RtpFrameReferenceFinder::ClearTo(uint16_t seq_num)
 
 std::unique_ptr<ReceivedFrame> RtpFrameReferenceFinder::pop_gop_inter_continous_frame()
 {
+    if (frames_.empty()) {
+        return nullptr;
+    }
     auto frame = std::move(frames_.front());
     frames_.pop();
     return std::move(frame);

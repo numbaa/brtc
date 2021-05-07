@@ -25,7 +25,7 @@ bool is_rtp(const bco::Buffer& buff)
     if (buffer.size() < kMinRtpPacketLen) {
         return false;
     }
-    return false;
+    return buffer[0] >> 6 == kRtpVersion;
 }
 
 bool is_rtcp(const bco::Buffer& buff)
@@ -87,14 +87,14 @@ void RtpTransport::send_packet(const RtcpPacket&)
 void RtpTransport::on_recv_data(bco::Buffer buff)
 {
     //parse Buffer -> RtpPacket
-    PacketType type = PacketType::Unknown;
+    PacketType type = infer_packet_type(buff);
     switch (type) {
-    case PacketType::Rtp: {
+    case PacketType::Rtcp: {
         RtcpPacket packet;
         rtcp_packets_.send(packet);
         break;
     }
-    case PacketType::Rtcp: {
+    case PacketType::Rtp: {
         RtpPacket packet { buff };
         //处理有问题的packet
         rtp_packets_.send(packet);
