@@ -44,6 +44,7 @@ class PacketizerH264 : public Packetizer {
 public:
     explicit PacketizerH264(Frame decoded_frame, PayloadSizeLimits limits);
     bool next_packet(RtpPacket& packet) override;
+    bool has_next_packet() const override;
 
 private:
     bool do_fragmentation();

@@ -122,8 +122,18 @@ target_link_libraries(${PROJECT_NAME}
         mfx
         SDL2main
         SDL2-static
-        nvcodec
 )
+
+if(BRTC_BUILD_NVCODEC)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            nvcodec
+    )
+    target_compile_definitions(${PROJECT_NAME}
+        PRIVATE
+            BRTC_BUILD_NVCODEC
+    )
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "src/builtin")
 

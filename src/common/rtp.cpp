@@ -1,8 +1,13 @@
 #include "rtp.h"
 
+namespace {
+constexpr size_t kFixedHeaderSize = 12;
+constexpr uint8_t kRtpVersion = 2;
+}
+
 namespace brtc {
 
-constexpr size_t kFixedHeaderSize = 12;
+
 
 //template <typename T>
 //void read_bigendian(const uint8_t* data, T& value)
@@ -49,6 +54,7 @@ constexpr size_t kFixedHeaderSize = 12;
 RtpPacket::RtpPacket()
     : buffer_(kFixedHeaderSize)
 {
+    buffer_[0] = kRtpVersion << 6;
 }
 
 RtpPacket::RtpPacket(bco::Buffer buff)
@@ -176,9 +182,9 @@ const bco::Buffer RtpPacket::data() const
 void RtpPacket::set_marker(bool marker)
 {
     if (marker) {
-        buffer_[0] |= 0b1000'0000;
+        buffer_[1] |= 0b1000'0000;
     } else {
-        buffer_[0] &= 0b0111'1111;
+        buffer_[1] &= 0b0111'1111;
     }
 }
 

@@ -47,6 +47,8 @@ private:
     std::shared_ptr<bco::Context> encode_ctx_;
     std::shared_ptr<bco::Context> pacer_ctx_;
     bco::Channel<Frame> encoded_frames_;
+    uint32_t start_timestamp_;
+    uint16_t seq_number_;
 };
 
 } // namespace brtc

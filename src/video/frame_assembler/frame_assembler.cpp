@@ -75,13 +75,28 @@ void FrameAssembler::insert(RtpPacket rtp_packet)
 
     update_missing_packets(seq_num);
 
-    //result.packets = find_frames(seq_num);
-    //return result;
+    find_frames(seq_num);
 }
 
 std::optional<Frame> FrameAssembler::pop_assembled_frame()
 {
-    return {};
+    if (assembled_frames_.empty())
+        return std::nullopt;
+    auto& packets = assembled_frames_.front();
+    auto frame_data = std::make_shared<std::vector<uint8_t>>();
+    std::vector<uint8_t> frame_data;
+    for (auto& packet : packets) {
+        auto payload_spans = packet.payload().data();
+        for (auto span : payload_spans) {
+            std::ranges::copy(span, std::back_inserter(*frame_data));
+        }
+    }
+    assembled_frames_.pop_front();
+    Frame frame {};
+    frame.type = Frame::UnderlyingType::kMemory;
+    frame.data = frame_data->data();
+    frame._data_holder = frame_data;
+    return frame;
 }
 
 void FrameAssembler::update_missing_packets(uint16_t seq_num)
@@ -137,7 +152,7 @@ bool FrameAssembler::potential_new_frame(uint16_t seq_num) const
 
 std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
 {
-    std::vector<RtpPacket> found_frames;
+    //std::vector<RtpPacket> found_frames;
     for (size_t i = 0; i < buffer_.size() && potential_new_frame(seq_num); ++i) {
         size_t index = seq_num % buffer_.size();
         buffer_[index].continuous = true;
@@ -171,7 +186,7 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
                     const auto& h264_header = buffer_[start_index].video_header<RTPVideoHeaderH264>();
                     //if (!h264_header || h264_header.nalus_length >= kMaxNalusPerPacket)
                     if (h264_header.nalus_length >= kMaxNalusPerPacket)
-                        return found_frames;
+                        return; //return found_frames;
 
                     for (size_t j = 0; j < h264_header.nalus_length; ++j) {
                         if (h264_header.nalus[j].type == H264NaluType::Sps) {
@@ -244,13 +259,14 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
                 // If this is not a keyframe, make sure there are no gaps in the packet
                 // sequence numbers up until this point.
                 if (!is_h264_keyframe && missing_packets_.upper_bound(start_seq_num) != missing_packets_.begin()) {
-                    return found_frames;
+                    return; //return found_frames;
                 }
             }
 
             const uint16_t end_seq_num = seq_num + 1;
             // Use uint16_t type to handle sequence number wrap around case.
             uint16_t num_packets = end_seq_num - start_seq_num;
+            std::vector<RtpPacket> found_frames;
             found_frames.reserve(found_frames.size() + num_packets);
             for (uint16_t i = start_seq_num; i != end_seq_num; ++i) {
                 RtpPacket& packet = buffer_[i % buffer_.size()];
@@ -260,13 +276,15 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
                 packet.video_header<RTPVideoHeader>().is_last_packet_in_frame = (i == seq_num);
                 found_frames.push_back(std::move(packet));
             }
+            if (not found_frames.empty()) {
+                assembled_frames_.push_back(std::move(found_frames));
+            }
 
             missing_packets_.erase(missing_packets_.begin(),
                 missing_packets_.upper_bound(seq_num));
         }
         ++seq_num;
     }
-    return found_frames;
 }
 
 bool FrameAssembler::expand_buffer()

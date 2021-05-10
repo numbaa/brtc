@@ -5,7 +5,9 @@
 #include "builtin/decoder/mfx_decoder.h"
 #include "builtin/encoder/mfx_encoder.h"
 #include "builtin/render/d3d11_render.h"
+#ifdef BRTC_BUILD_NVCODEC
 #include "builtin/encoder/nv_encoder.h"
+#endif
 #include "builtin/strategies/simple_strategies.h"
 
 namespace brtc {
@@ -32,6 +34,8 @@ std::unique_ptr<VideoEncoderInterface> create_encoder_mfx(Microsoft::WRL::ComPtr
     }
 }
 
+#ifdef BRTC_BUILD_NVCODEC
+
 std::unique_ptr<VideoEncoderInterface> create_encoder_nv(Microsoft::WRL::ComPtr<ID3D11Device> device)
 {
     auto encoder = std::make_unique<brtc::builtin::NvEncoder>();
@@ -41,6 +45,15 @@ std::unique_ptr<VideoEncoderInterface> create_encoder_nv(Microsoft::WRL::ComPtr<
         return std::move(encoder);
     }
 }
+
+#else
+
+std::unique_ptr<VideoEncoderInterface> create_encoder_nv(Microsoft::WRL::ComPtr<ID3D11Device>)
+{
+    return nullptr;
+}
+
+#endif // BRTC_BUILD_NVCODEC
 
 std::unique_ptr<VideoDecoderInterface> create_decoder_mfx(Microsoft::WRL::ComPtr<ID3D11Device> device)
 {

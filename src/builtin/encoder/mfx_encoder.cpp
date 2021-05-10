@@ -56,9 +56,9 @@ Frame MfxEncoder::encode_one_frame(Frame in_frame)
     memset(&vppout, 0, sizeof(mfxFrameSurface1));
     mfxBitstream bs;
     mfxSyncPoint syncp_encode, syncp_vpp;
-    uint8_t* output_buffer = new uint8_t[encode_param_.mfx.BufferSizeInKB * 1000];
+    auto data_holder = std::make_shared<std::vector<uint8_t>>(encode_param_.mfx.BufferSizeInKB * 1000);
     memset(&bs, 0, sizeof(bs));
-    bs.Data = output_buffer;
+    bs.Data = data_holder->data();
     bs.MaxLength = encode_param_.mfx.BufferSizeInKB * 1000;
 
     vppin.Data.MemId = in_frame.data;
@@ -88,11 +88,12 @@ Frame MfxEncoder::encode_one_frame(Frame in_frame)
         std::this_thread::sleep_for(std::chrono::milliseconds { 1 });
     }
     // ¼ÇµÃdelete [] out_frame.data
-    out_frame.data = output_buffer;
+    out_frame.data = data_holder->data();
     out_frame.type = Frame::UnderlyingType::kMemory;
     out_frame.length = bs.DataLength;
     out_frame.width = vppin.Info.Width;
     out_frame.height = vppin.Info.Height;
+    out_frame._data_holder = data_holder;
     return out_frame;
 }
 

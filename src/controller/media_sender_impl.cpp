@@ -3,6 +3,11 @@
 #include "media_sender_impl.h"
 #include "../video/packetizer/packetizer.h"
 
+namespace {
+constexpr uint32_t kDefaultSsrc = 11223344;
+constexpr uint32_t kDefaultPayloadType = 127;
+}
+
 namespace brtc {
 
 MediaSenderImpl::MediaSenderImpl(
@@ -21,6 +26,8 @@ MediaSenderImpl::MediaSenderImpl(
     , encode_ctx_(encode_ctx)
     , pacer_ctx_(pacer_ctx)
 {
+    start_timestamp_ = ::rand();
+    seq_number_ = ::rand();
 }
 
 void MediaSenderImpl::start()
@@ -62,18 +69,19 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
         auto frame = co_await receive_from_encode_loop();
         Packetizer::PayloadSizeLimits limits;
         std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
-        //RtpPacket需要预设头部
-        std::vector<uint32_t> csrcs { 456, 789 };
         RtpPacket packet;
-        //packet.set_ssrc(123);
-        //packet.set_csrcs(std::span<uint32_t>(csrcs));
-        //packet.set_payload_type(1);
-        //packet.set_timestamp(111);
-        //packet.set_extension();
-        while (packetizer->next_packet(packet)) {
-            //加策略delay一下啥的
+        while (packetizer->has_next_packet()) {
+            RtpPacket packet;
+            packet.set_ssrc(kDefaultSsrc);
+            packet.set_payload_type(kDefaultPayloadType);
+            packet.set_timestamp(frame.timestamp + start_timestamp_);
+            packet.set_sequence_number(seq_number_++);
+            //first packet of frame
+            //allow retransmission
+            //is key frame
+            //packet type
+            packetizer->next_packet(packet);
             transport_->send_rtp(packet);
-            packet = RtpPacket {};
         }
     }
 }

@@ -27,7 +27,7 @@ RecvStream::RecvStream(std::unique_ptr<bco::net::Select>&& proactor, const brtc:
     : context_(std::make_shared<bco::Context>(std::make_unique<bco::SimpleExecutor>()))
     , receiver_(
           transport_info,
-          brtc::builtin::create_strategies(2),
+          brtc::builtin::create_strategies(1),
           brtc::builtin::create_decoder_mfx(device),
           brtc::builtin::create_render_d3d11(device),
           context_, context_, context_)
@@ -50,7 +50,7 @@ void init_winsock()
 int main()
 {
     init_winsock();
-    auto device = get_d3d11_device(GpuVendor::Nvida);
+    auto device = get_d3d11_device(GpuVendor::Intel);
     if (device == nullptr) {
         LOG(ERROR) << "get d3d11 device failed";
         return -1;

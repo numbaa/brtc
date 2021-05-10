@@ -24,6 +24,7 @@ public:
     static std::unique_ptr<Packetizer> create(Frame decoded_frame, VideoCodecType codec_type, PayloadSizeLimits limits);
     bool is_valid_frame() const { return is_valid_frame_; }
     virtual bool next_packet(RtpPacket& packet) = 0;
+    virtual bool has_next_packet() const = 0;
 
 protected:
     bool is_valid_frame_ = false;

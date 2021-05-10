@@ -111,6 +111,11 @@ bool PacketizerH264::next_packet(RtpPacket& rtp_packet)
     return true;
 }
 
+bool PacketizerH264::has_next_packet() const
+{
+    return not packets_.empty();
+}
+
 bool PacketizerH264::do_fragmentation()
 {
     int32_t index = 0;

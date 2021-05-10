@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include <set>
+#include <deque>
 #include <brtc/frame.h>
 #include "common/sequence_number_util.h"
 #include "common/rtp.h"
@@ -43,6 +44,7 @@ private:
     std::optional<uint32_t> last_received_keyframe_rtp_timestamp_;
     std::optional<int64_t> last_received_keyframe_packet_ms_;
     std::vector<Packet> buffer_;
+    std::deque<std::vector<RtpPacket>> assembled_frames_;
     const size_t max_size_; //构造函数传进来
 };
 

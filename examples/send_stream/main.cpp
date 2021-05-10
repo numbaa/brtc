@@ -25,8 +25,8 @@ SendStream::SendStream(std::unique_ptr<bco::net::Select>&& proactor, const brtc:
     : context_(std::make_shared<bco::Context>(std::make_unique<bco::SimpleExecutor>()))
     , sender_(
         transport_info,
-        brtc::builtin::create_strategies(2),
-        brtc::builtin::create_encoder_nv(device),
+        brtc::builtin::create_strategies(1),
+        brtc::builtin::create_encoder_mfx(device),
         brtc::builtin::create_capture_dxgi(device),
         context_, context_, context_)
 {
@@ -50,7 +50,7 @@ using UdpSocket = bco::net::UdpSocket<bco::net::Select>;
 int main()
 {
     init_winsock();
-    auto device = get_d3d11_device(GpuVendor::Nvida);
+    auto device = get_d3d11_device(GpuVendor::Intel);
     if (device == nullptr) {
         LOG(ERROR) << "get d3d11 device failed";
         return -1;
