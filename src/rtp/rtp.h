@@ -13,6 +13,7 @@
 
 #include <brtc/frame.h>
 
+#include "rtp/extension.h"
 #include "video/reference_finder/vp9_globals.h"
 #include "video/reference_finder/vp8_globals.h"
 
@@ -23,55 +24,6 @@ constexpr uint32_t kMaxNalusPerPacket = 10;
 constexpr uint32_t kH264StartCodeLength = 4;
 constexpr uint32_t kOneByteHeaderExtensionMaxId = 14;
 constexpr uint32_t kOneByteHeaderExtensionMaxValueSize = 16;
-
-enum class RTPExtensionType : int {
-    kRtpExtensionNone,
-    kRtpExtensionTransmissionTimeOffset,
-    kRtpExtensionAudioLevel,
-    kRtpExtensionInbandComfortNoise,
-    kRtpExtensionAbsoluteSendTime,
-    kRtpExtensionAbsoluteCaptureTime,
-    kRtpExtensionVideoRotation,
-    kRtpExtensionTransportSequenceNumber,
-    kRtpExtensionTransportSequenceNumber02,
-    kRtpExtensionPlayoutDelay,
-    kRtpExtensionVideoContentType,
-    kRtpExtensionVideoLayersAllocation,
-    kRtpExtensionVideoTiming,
-    kRtpExtensionRtpStreamId,
-    kRtpExtensionRepairedRtpStreamId,
-    kRtpExtensionMid,
-    kRtpExtensionGenericFrameDescriptor00,
-    kRtpExtensionGenericFrameDescriptor = kRtpExtensionGenericFrameDescriptor00,
-    kRtpExtensionGenericFrameDescriptor02,
-    kRtpExtensionColorSpace,
-    kRtpExtensionNumberOfExtensions // Must be the last entity in the enum.
-};
-
-template <typename T>
-concept RtpExtension = requires(bco::Buffer buff, typename T::value_type& ref_value, const typename T::value_type& const_value)
-{
-    {
-        T::kId
-    }
-    ->std::same_as<const RTPExtensionType>;
-    {
-        T::kValueSizeBytes
-    }
-    ->std::same_as<const uint8_t>;
-    {
-        T::kUri
-    }
-    ->std::same_as<const char*>;
-    {
-        T::read_from_buff(buff, ref_value)
-    }
-    ->std::same_as<bool>;
-    {
-        T::write_to_buff(buff, const_value)
-    }
-    ->std::same_as<bool>;
-};
 
 enum class H264PacketizationTypes {
     kH264SingleNalu,
@@ -293,6 +245,7 @@ public:
     bool get_extension(typename T::value_type& ext) const;
     const bco::Buffer payload() const;
     size_t size() const;
+    bool empty_payload() const;
     const bco::Buffer data() const;
     template <typename T>
     const T& video_header() const {
@@ -320,7 +273,7 @@ public:
 
 private:
     void parse();
-    bco::Buffer find_extension(RTPExtensionType type);
+    bco::Buffer find_extension(RTPExtensionType type) const;
     
     template <typename T> requires RtpExtension<T>
     bool need_promotion() const;
@@ -369,8 +322,8 @@ private:
 template <typename T> requires RtpExtension<T>
 inline bool RtpPacket::get_extension(typename T::value_type& value) const
 {
-    auto buff = find_extension(T::kId);
-    if (buff.empty()) {
+    auto buff = find_extension(T::id());
+    if (buff.size() == 0) {
         return false;
     }
     return T::read_from_buff(buff, value);
@@ -379,8 +332,8 @@ inline bool RtpPacket::get_extension(typename T::value_type& value) const
 template <typename T> requires RtpExtension<T>
 inline bool RtpPacket::set_extension(const typename T::value_type& value)
 {
-    auto buff = find_extension(T::kId);
-    if (!buff.empty()) {
+    auto buff = find_extension(T::id());
+    if (buff.size() != 0) {
         return T::write_to_buff(buff, value);
     }
     if (need_promotion<T>()) {

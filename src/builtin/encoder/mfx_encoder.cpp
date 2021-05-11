@@ -3,6 +3,7 @@
 
 #include <glog/logging.h>
 
+#include "common/time_utils.h"
 #include "mfx_encoder.h"
 
 namespace brtc {
@@ -93,6 +94,7 @@ Frame MfxEncoder::encode_one_frame(Frame in_frame)
     out_frame.length = bs.DataLength;
     out_frame.width = vppin.Info.Width;
     out_frame.height = vppin.Info.Height;
+    out_frame.timestamp = static_cast<uint32_t>(brtc::MachineNowMilliseconds());
     out_frame._data_holder = data_holder;
     return out_frame;
 }

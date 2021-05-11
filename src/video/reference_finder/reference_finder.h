@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 #include <queue>
-#include "common/rtp.h"
+#include "rtp/rtp.h"
 
 namespace brtc {
 

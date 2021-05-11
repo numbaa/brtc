@@ -1,7 +1,7 @@
 #pragma once
 #include <optional>
 #include <map>
-#include "common/rtp.h"
+#include "rtp/rtp.h"
 #include "video/frame_buffer/decoded_frames_history.h"
 
 namespace brtc {

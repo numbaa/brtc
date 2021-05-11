@@ -174,6 +174,11 @@ size_t RtpPacket::size() const
     return buffer_.size();
 }
 
+bool RtpPacket::empty_payload() const
+{
+    return size() == kFixedHeaderSize;
+}
+
 const bco::Buffer RtpPacket::data() const
 {
     return buffer_;
@@ -249,7 +254,7 @@ void RtpPacket::parse()
 {
 }
 
-bco::Buffer RtpPacket::find_extension(RTPExtensionType type)
+bco::Buffer RtpPacket::find_extension(RTPExtensionType type) const
 {
     for (const auto& entry : extension_entries_) {
         if (entry.type == type) {

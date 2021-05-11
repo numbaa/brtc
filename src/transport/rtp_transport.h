@@ -5,7 +5,7 @@
 #include <bco/coroutine/task.h>
 #include <bco/coroutine/channel.h>
 
-#include "common/rtp.h"
+#include "rtp/rtp.h"
 
 namespace brtc {
 

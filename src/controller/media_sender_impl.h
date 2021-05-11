@@ -33,6 +33,8 @@ private:
 
     void after_capture();
     void after_encode();
+    void capture_empty_frame();
+    void encode_failed();
 
     inline void send_to_pacing_loop(Frame frame);
     inline bco::Task<Frame> receive_from_encode_loop();

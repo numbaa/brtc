@@ -53,12 +53,20 @@ bco::Routine MediaSenderImpl::network_loop(std::shared_ptr<MediaSenderImpl> that
 bco::Routine MediaSenderImpl::capture_encode_loop(std::shared_ptr<MediaSenderImpl> that)
 {
     while (!stop_) {
+        co_await bco::sleep_for(std::chrono::milliseconds { 16 });
         auto raw_frame = capture_one_frame();
+        if (raw_frame.data == nullptr) {
+            capture_empty_frame();
+            continue;
+        }
         after_capture();
         auto encoded_frame = encode_one_frame(raw_frame);
+        if (encoded_frame.data == nullptr) {
+            encode_failed();
+            continue;
+        }
         after_encode();
         send_to_pacing_loop(encoded_frame);
-        co_await bco::sleep_for(std::chrono::milliseconds { 16 });
     }
     co_return;
 }
@@ -104,6 +112,20 @@ void MediaSenderImpl::after_capture()
 }
 
 void MediaSenderImpl::after_encode()
+{
+    if (strategies_->release_frame_after_encode()) {
+        capture_->release_frame();
+    }
+}
+
+void MediaSenderImpl::capture_empty_frame()
+{
+    if (strategies_->release_frame_after_encode()) {
+        capture_->release_frame();
+    }
+}
+
+void MediaSenderImpl::encode_failed()
 {
     if (strategies_->release_frame_after_encode()) {
         capture_->release_frame();

@@ -4,7 +4,7 @@
 #include <deque>
 #include <brtc/frame.h>
 #include "common/sequence_number_util.h"
-#include "common/rtp.h"
+#include "rtp/rtp.h"
 
 namespace brtc {
 
@@ -28,7 +28,7 @@ public:
 private:
     void update_missing_packets(uint16_t seq_num);
     bool potential_new_frame(uint16_t seq_num) const;
-    std::vector<RtpPacket> find_frames(uint16_t seq_num);
+    void find_frames(uint16_t seq_num);
     bool expand_buffer();
     void clear_internal();
 

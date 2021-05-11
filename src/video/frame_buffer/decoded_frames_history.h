@@ -16,7 +16,7 @@
 #include <vector>
 #include <optional>
 
-#include "common/rtp.h"
+#include "rtp/rtp.h"
 
 namespace webrtc {
 namespace video_coding {

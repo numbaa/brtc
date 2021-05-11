@@ -9,7 +9,7 @@
 #include "transport/rtp_transport.h"
 #include "transport/sctp_transport.h"
 #include "transport/quic_transport.h"
-#include "common/rtp.h"
+#include "rtp/rtp.h"
 
 namespace brtc {
 

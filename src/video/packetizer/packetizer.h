@@ -4,7 +4,7 @@
 #include <array>
 #include <queue>
 #include <brtc/frame.h>
-#include "common/rtp.h"
+#include "rtp/rtp.h"
 
 namespace brtc
 {

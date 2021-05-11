@@ -63,13 +63,21 @@ target_link_libraries(brtc_sctp_transport
 #common
 add_brtc_object(brtc_common "src/common"
   "common/udp_packet.h"
-  "common/rtp.h"
-  "common/rtp.cpp"
   "common/time_utils.h"
   "common/sequence_number_util.h"
   "common/mod_ops.h"
+  "common/empty.cpp"
 )
-target_link_libraries(brtc_common
+
+
+#rtp
+add_brtc_object(brtc_rtp "src/rtp"
+  "rtp/rtp.h"
+  "rtp/rtp.cpp"
+  "rtp/extension.h"
+  "rtp/extension.cpp"
+)
+target_link_libraries(brtc_rtp
   PUBLIC
     bco
 )
@@ -85,6 +93,7 @@ target_link_libraries(brtc_packetizer
   PRIVATE
     glog::glog
     brtc_common
+    brtc_rtp
 )
 
 add_brtc_object(brtc_frame_assembler "src/video"
@@ -95,6 +104,7 @@ target_link_libraries(brtc_frame_assembler
   PRIVATE
     glog::glog
     brtc_common
+    brtc_rtp
 )
 
 add_brtc_object(brtc_frame_buffer "src/video"
@@ -107,6 +117,7 @@ target_link_libraries(brtc_frame_buffer
   PRIVATE
     glog::glog
     brtc_common
+    brtc_rtp
 )
 
 add_brtc_object(brtc_reference_finder "src/video"
@@ -131,6 +142,7 @@ target_link_libraries(brtc_reference_finder
   PRIVATE
     glog::glog
     brtc_common
+    brtc_rtp
 )
 
 add_library(${PROJECT_NAME} STATIC
@@ -145,6 +157,7 @@ add_library(${PROJECT_NAME} STATIC
     $<TARGET_OBJECTS:brtc_frame_assembler>
     $<TARGET_OBJECTS:brtc_frame_buffer>
     $<TARGET_OBJECTS:brtc_reference_finder>
+    $<TARGET_OBJECTS:brtc_rtp>
 )
 
 target_link_libraries(${PROJECT_NAME}

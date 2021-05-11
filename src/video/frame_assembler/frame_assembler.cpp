@@ -38,19 +38,19 @@ void FrameAssembler::insert(RtpPacket rtp_packet)
         first_seq_num_ = seq_num;
     }
 
-    if (buffer_[index].size() != 0) {
+    if (not buffer_[index].empty_payload()) {
         // Duplicate packet, just delete the payload.
         if (buffer_[index].sequence_number() == rtp_packet.sequence_number()) {
             return;
         }
 
         // The packet buffer is full, try to expand the buffer.
-        while (expand_buffer() && buffer_[seq_num % buffer_.size()].size() != 0) {
+        while (expand_buffer() && !buffer_[seq_num % buffer_.size()].empty_payload()) {
         }
         index = seq_num % buffer_.size();
 
         // Packet buffer is still full since we were unable to expand the buffer.
-        if (buffer_[index].size() != 0) {
+        if (not buffer_[index].empty_payload()) {
             // Clear the buffer, delete payload, and return false to signal that a
             // new keyframe is needed.
             LOG(WARNING) << "Clear PacketBuffer and request key frame.";
@@ -84,7 +84,6 @@ std::optional<Frame> FrameAssembler::pop_assembled_frame()
         return std::nullopt;
     auto& packets = assembled_frames_.front();
     auto frame_data = std::make_shared<std::vector<uint8_t>>();
-    std::vector<uint8_t> frame_data;
     for (auto& packet : packets) {
         auto payload_spans = packet.payload().data();
         for (auto span : payload_spans) {
@@ -132,13 +131,13 @@ bool FrameAssembler::potential_new_frame(uint16_t seq_num) const
     const auto& entry = buffer_[index];
     const auto& prev_entry = buffer_[prev_index];
 
-    if (entry.size() == 0)
+    if (entry.empty_payload())
         return false;
     if (entry.sequence_number() != seq_num)
         return false;
     if (entry.video_header<RTPVideoHeader>().is_first_packet_in_frame)
         return true;
-    if (prev_entry.size() == 0)
+    if (prev_entry.empty_payload())
         return false;
     if (prev_entry.sequence_number() != static_cast<uint16_t>(entry.sequence_number() - 1))
         return false;
@@ -150,7 +149,7 @@ bool FrameAssembler::potential_new_frame(uint16_t seq_num) const
     return false;
 }
 
-std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
+void FrameAssembler::find_frames(uint16_t seq_num)
 {
     //std::vector<RtpPacket> found_frames;
     for (size_t i = 0; i < buffer_.size() && potential_new_frame(seq_num); ++i) {
@@ -221,7 +220,7 @@ std::vector<RtpPacket> FrameAssembler::find_frames(uint16_t seq_num)
                 // the timestamp of that packet is the same as this one. This may cause
                 // the PacketBuffer to hand out incomplete frames.
                 // See: https://bugs.chromium.org/p/webrtc/issues/detail?id=7106
-                if (is_h264 && (buffer_[start_index].size() == 0 || buffer_[start_index].timestamp() != frame_timestamp)) {
+                if (is_h264 && (buffer_[start_index].empty_payload() || buffer_[start_index].timestamp() != frame_timestamp)) {
                     break;
                 }
 
@@ -298,7 +297,7 @@ bool FrameAssembler::expand_buffer()
     size_t new_size = std::min(max_size_, 2 * buffer_.size());
     std::vector<Packet> new_buffer(new_size);
     for (auto& entry : buffer_) {
-        if (entry.size() != 0) {
+        if (not entry.empty_payload()) {
             new_buffer[entry.sequence_number() % new_size] = entry;
         }
     }

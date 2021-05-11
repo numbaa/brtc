@@ -1,3 +1,4 @@
+#include "rtp/extension.h"
 #include "media_receiver_impl.h"
 
 namespace brtc {
@@ -45,6 +46,8 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
 {
     while (!stop_) {
         auto packet = co_await transport_->recv_rtp();
+        RtpGenericFrameDescriptor descriptor;
+        packet.get_extension<RtpGenericFrameDescriptorExtension00>(descriptor);
         frame_assembler_.insert(packet);
         while (auto frame = frame_assembler_.pop_assembled_frame()) {
             //TODO: Frame -> ReceivedFrame

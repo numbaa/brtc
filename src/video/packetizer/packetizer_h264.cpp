@@ -449,7 +449,7 @@ void PacketizerH264::next_aggregate_packet(RtpPacket& rtp_packet)
         is_last_fragment = packet->last_fragment;
     }
     assert(is_last_fragment);
-    rtp_packet.set_payload(std::move(buffer));
+    rtp_packet.set_payload(std::span<uint8_t>(buffer.data(), index));
 }
 
 } // namespace brtc
