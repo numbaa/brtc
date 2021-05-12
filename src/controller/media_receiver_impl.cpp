@@ -46,8 +46,7 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
 {
     while (!stop_) {
         auto packet = co_await transport_->recv_rtp();
-        RtpGenericFrameDescriptor descriptor;
-        packet.get_extension<RtpGenericFrameDescriptorExtension00>(descriptor);
+        parse_rtp_extensions(packet);
         frame_assembler_.insert(packet);
         while (auto frame = frame_assembler_.pop_assembled_frame()) {
             //TODO: Frame -> ReceivedFrame
@@ -108,6 +107,15 @@ Frame MediaReceiverImpl::decode_one_frame(Frame frame)
 void MediaReceiverImpl::render_one_frame(Frame frame)
 {
     render_->render_one_frame(frame);
+}
+
+void MediaReceiverImpl::parse_rtp_extensions(RtpPacket& packet)
+{
+    RtpGenericFrameDescriptor descriptor;
+    if (packet.get_extension<RtpGenericFrameDescriptorExtension00>(descriptor)) {
+        auto& video_header = packet.video_header<RTPVideoHeader>();
+        video_header.is_first_packet_in_frame = descriptor.FirstPacketInSubFrame();
+    }
 }
 
 } // namespace brtc

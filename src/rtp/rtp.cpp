@@ -63,28 +63,73 @@ RtpPacket::RtpPacket(bco::Buffer buff)
     const bool has_padding = (buffer_[0] & 0x20) != 0;
     const bool has_extension = (buffer_[0] & 0x10) != 0;
     const uint8_t number_of_crcs = buffer_[0] & 0x0f;
+    uint8_t padding_size = 0;
+    if (has_padding) {
+        padding_size = buffer_.data().back().back();
+    }
     //主要是要获得extension_entries_
     if (has_extension) {
         uint16_t magic;
+        size_t extension_header_length;
         buffer_.read_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t), magic);
         if (magic == 0xBEDE) {
             extension_mode_ = ExtensionMode::kOneByte;
+            extension_header_length = 1;
         } else if (magic == 0x0100) {
             extension_mode_ = ExtensionMode::kTwoByte;
+            extension_header_length = 2;
         } else {
             //error handling
             return;
         }
-        uint16_t number_of_extension;
-        buffer_.read_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint16_t), number_of_extension);
+        uint16_t number_of_extension = 0;
+        size_t extension_bytes;
+        buffer_.read_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint16_t), extension_bytes);
+        extension_bytes *= sizeof(uint32_t);
         size_t extension_offset = kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t);
-        (void)extension_offset;
         //解析出extension_entries_
-        for (uint16_t i = 0; i < number_of_extension; i++) {
-            //
+        constexpr uint8_t kPaddingByte = 0;
+        constexpr uint8_t kOneByteHeaderExtensionReservedId = 15;
+        constexpr uint8_t kPaddingId = 0;
+        while (number_of_extension + extension_header_length < extension_bytes) {
+            if (buffer_[extension_offset + number_of_extension] == kPaddingByte) {
+                number_of_extension++;
+                continue;
+            }
+            int id;
+            uint8_t length;
+            if (extension_mode_ == ExtensionMode::kOneByte) {
+                id = buffer_[extension_offset + number_of_extension] >> 4;
+                length = 1 + (buffer_[extension_offset + number_of_extension] & 0xf);
+                if (id == kOneByteHeaderExtensionReservedId || (id == kPaddingId && length != 1)) {
+                    break;
+                }
+            } else {
+                id = buffer_[extension_offset + number_of_extension];
+                length = buffer_[extension_offset + number_of_extension + 1];
+            }
+
+            if (number_of_extension + extension_header_length + length > extension_bytes) {
+                //LOG(WARNING) << "Oversized rtp header extension.";
+                break;
+            }
+
+            ExtensionInfo& extension_info = find_or_create_extension_info(static_cast <RTPExtensionType>(id));
+            if (extension_info.length != 0) {
+                //LOG(VERBOSE)
+                //    << "Duplicate rtp header extension id " << id << ". Overwriting.";
+            }
+
+            size_t offset = extension_offset + number_of_extension + extension_header_length;
+            //if (!rtc::IsValueInRangeForNumericType<uint16_t>(offset)) {
+                //LOG(WARNING) << "Oversized rtp header extension.";
+               // break;
+            //}
+            extension_info.offset = static_cast<uint16_t>(offset);
+            extension_info.length = length;
+            number_of_extension += extension_header_length + length;
         }
     }
-
 }
 
 bool RtpPacket::marker() const
@@ -183,6 +228,16 @@ const bco::Buffer RtpPacket::data() const
 {
     return buffer_;
 }
+
+//const ExtraRtpInfo& RtpPacket::extra_info() const
+//{
+//    return extra_rtp_info_;
+//}
+//
+//ExtraRtpInfo& RtpPacket::extra_info()
+//{
+//    return extra_rtp_info_;
+//}
 
 void RtpPacket::set_marker(bool marker)
 {
@@ -309,6 +364,17 @@ void RtpPacket::allocate_n_bytes_for_extension(uint8_t bytes)
     } else {
         buffer_.push_back(std::vector<uint8_t>(bytes));
     }
+}
+
+RtpPacket::ExtensionInfo& RtpPacket::find_or_create_extension_info(RTPExtensionType type)
+{
+    for (ExtensionInfo& extension : extension_entries_) {
+        if (extension.type == type) {
+            return extension;
+        }
+    }
+    extension_entries_.emplace_back(type);
+    return extension_entries_.back();
 }
 
 } // namespace brtc

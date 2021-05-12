@@ -14,6 +14,7 @@
 #include <brtc/frame.h>
 
 #include "rtp/extension.h"
+#include "rtp/extra_rtp_info.h"
 #include "video/reference_finder/vp9_globals.h"
 #include "video/reference_finder/vp8_globals.h"
 
@@ -255,6 +256,8 @@ public:
     T& video_header() {
         return std::get<T>(video_header_);
     }
+    //const ExtraRtpInfo& extra_info() const;
+    //ExtraRtpInfo& extra_info();
 
     void set_marker(bool marker);
     void set_payload_type(uint8_t pt);
@@ -276,7 +279,7 @@ private:
     bco::Buffer find_extension(RTPExtensionType type) const;
     
     template <typename T> requires RtpExtension<T>
-    bool need_promotion() const;
+    bool need_promotion(const typename T::value_type& value) const;
 
     template <typename T> requires RtpExtension<T>
     bool need_more_buffer_space() const;
@@ -309,10 +312,13 @@ private:
         kTwoByte,
     };
 
+    ExtensionInfo& find_or_create_extension_info(RTPExtensionType type);
+
 private:
     ExtensionMode extension_mode_ = ExtensionMode::kOneByte;
     std::vector<ExtensionInfo> extension_entries_;
     std::variant<RTPVideoHeader, RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9> video_header_;
+    //ExtraRtpInfo extra_rtp_info_;
     mutable bco::Buffer buffer_;
     //mutable Frame frame_;
 };
@@ -336,21 +342,22 @@ inline bool RtpPacket::set_extension(const typename T::value_type& value)
     if (buff.size() != 0) {
         return T::write_to_buff(buff, value);
     }
-    if (need_promotion<T>()) {
-        promote_two_bytes_header_and_reserve_n_bytes(T::kValueSizeBytes + 2);
+    if (need_promotion<T>(value)) {
+        promote_two_bytes_header_and_reserve_n_bytes(T::value_size(value) + 2);
     } else { //if (need_more_buffer_space<T>()) { 空间不是预留式的，所以不需要need_more_buffer_space
-        size_t size = extension_mode_ == ExtensionMode::kOneByte ? T::kValueSizeBytes + 1 : T::kValueSizeBytes + 2;
+        size_t size = extension_mode_ == ExtensionMode::kOneByte ? T::value_size(value) + 1 : T::value_size(value) + 2;
         allocate_n_bytes_for_extension(size);
     }
     return push_back_extension<T>(value);
 }
 
 template <typename T> requires RtpExtension<T>
-inline bool RtpPacket::need_promotion() const
+inline bool RtpPacket::need_promotion(const typename T::value_type& value) const
 {
-    assert(T::kId != 15 && T::kId != 0);
+    uint32_t id = static_cast<uint32_t>(T::id());
+    assert(id != 15 && id != 0);
     return extension_mode_ == ExtensionMode::kOneByte
-        && (T::kId > kOneByteHeaderExtensionMaxId || T::kValueSizeBytes > kOneByteHeaderExtensionMaxValueSize);
+        && (id > kOneByteHeaderExtensionMaxId || T::value_size(value) > kOneByteHeaderExtensionMaxValueSize);
 }
 
 template <typename T>  requires RtpExtension<T>
@@ -364,21 +371,23 @@ template <typename T> requires RtpExtension<T>
 bool RtpPacket::push_back_extension(const typename T::value_type& value)
 {
     constexpr size_t kFixedHeaderSize = 12;
-    size_t insert_pos;
+    uint8_t insert_pos;
     if (not extension_entries_.empty()) {
         insert_pos = extension_entries_.back().offset + extension_entries_.back().length;
     } else {
         insert_pos = kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t);
     }
+    const uint8_t id = static_cast<uint8_t>(T::id());
+    const uint8_t value_size = T::value_size(value);
     if (extension_mode_ == ExtensionMode::kOneByte) {
-        buffer_[insert_pos] = (T::kId << 4) | (T::kValueSizeBytes - 1);
-        T::write_to_buff(buffer_.subbuf(insert_pos + 1, T::kValueSizeBytes), value);
-        extension_entries_.push_back(ExtensionInfo {T::kId, insert_pos, T::kValueSizeBytes + 1});
+        buffer_[insert_pos] = (id << 4) | (value_size - 1);
+        T::write_to_buff(buffer_.subbuf(insert_pos + 1, value_size), value);
+        extension_entries_.push_back(ExtensionInfo { T::id(), insert_pos, uint8_t ( value_size + 1 ) });
     } else {
-        buffer_[insert_pos] = T::kId;
-        buffer_[insert_pos + 1] = T::kValueSizeBytes - 1;
-        T::write_to_buff(buffer_.subbuf(insert_pos + 2, T::kValueSizeBytes), value);
-        extension_entries_.push_back(ExtensionInfo { T::kId, insert_pos, T::kValueSizeBytes + 2 });
+        buffer_[insert_pos] = id;
+        buffer_[insert_pos + 1] = value_size - 1;
+        T::write_to_buff(buffer_.subbuf(insert_pos + 2, value_size), value);
+        extension_entries_.push_back(ExtensionInfo { T::id(), insert_pos, uint8_t ( value_size + 2 ) });
     }
     return true;
 }

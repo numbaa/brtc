@@ -76,6 +76,7 @@ add_brtc_object(brtc_rtp "src/rtp"
   "rtp/rtp.cpp"
   "rtp/extension.h"
   "rtp/extension.cpp"
+  "rtp/extra_rtp_info.h"
 )
 target_link_libraries(brtc_rtp
   PUBLIC

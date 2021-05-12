@@ -88,6 +88,7 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
             //allow retransmission
             //is key frame
             //packet type
+            add_required_rtp_extensions(packet);
             packetizer->next_packet(packet);
             transport_->send_rtp(packet);
         }
@@ -140,6 +141,30 @@ void MediaSenderImpl::send_to_pacing_loop(Frame frame)
 inline bco::Task<Frame> MediaSenderImpl::receive_from_encode_loop()
 {
     return encoded_frames_.recv();
+}
+
+void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet)
+{
+    auto& video_header = packet.video_header<RTPVideoHeader>();
+    RtpGenericFrameDescriptor descriptor;
+    descriptor.SetFirstPacketInSubFrame(false); //first packet
+    descriptor.SetLastPacketInSubFrame(false); //last packet
+    if (false) { //first packet
+        descriptor.SetFrameId(static_cast<uint16_t>(video_header.generic->frame_id));
+        for (int64_t dep : video_header.generic->dependencies) {
+            descriptor.AddFrameDependencyDiff(video_header.generic->frame_id - dep);
+        }
+
+        uint8_t spatial_bimask = 1 << video_header.generic->spatial_index;
+        descriptor.SetSpatialLayersBitmask(spatial_bimask);
+
+        descriptor.SetTemporalLayer(video_header.generic->temporal_index);
+
+        if (video_header.frame_type == VideoFrameType::VideoFrameKey) {
+            descriptor.SetResolution(video_header.width, video_header.height);
+        }
+    }
+    packet.set_extension<RtpGenericFrameDescriptorExtension00>(descriptor);
 }
 
 

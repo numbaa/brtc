@@ -36,6 +36,7 @@ private:
     inline bco::Task<Frame> receive_from_decode_loop();
     Frame decode_one_frame(Frame frame);
     void render_one_frame(Frame frame);
+    void parse_rtp_extensions(RtpPacket& packet);
 
 private:
     std::atomic<bool> stop_ { false };
