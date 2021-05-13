@@ -338,6 +338,7 @@ inline bool RtpPacket::get_extension(typename T::value_type& value) const
 template <typename T> requires RtpExtension<T>
 inline bool RtpPacket::set_extension(const typename T::value_type& value)
 {
+    buffer_[0] |= 0b0001'0000;
     auto buff = find_extension(T::id());
     if (buff.size() != 0) {
         return T::write_to_buff(buff, value);
@@ -385,7 +386,7 @@ bool RtpPacket::push_back_extension(const typename T::value_type& value)
         extension_entries_.push_back(ExtensionInfo { T::id(), insert_pos, uint8_t ( value_size + 1 ) });
     } else {
         buffer_[insert_pos] = id;
-        buffer_[insert_pos + 1] = value_size - 1;
+        buffer_[insert_pos + 1] = value_size;
         T::write_to_buff(buffer_.subbuf(insert_pos + 2, value_size), value);
         extension_entries_.push_back(ExtensionInfo { T::id(), insert_pos, uint8_t ( value_size + 2 ) });
     }

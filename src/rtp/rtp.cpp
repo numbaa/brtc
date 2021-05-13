@@ -75,7 +75,7 @@ RtpPacket::RtpPacket(bco::Buffer buff)
         if (magic == 0xBEDE) {
             extension_mode_ = ExtensionMode::kOneByte;
             extension_header_length = 1;
-        } else if (magic == 0x0100) {
+        } else if (magic == 0x1000) {
             extension_mode_ = ExtensionMode::kTwoByte;
             extension_header_length = 2;
         } else {
@@ -282,20 +282,26 @@ void RtpPacket::set_csrcs(std::span<uint32_t> csrcs)
 
 void RtpPacket::set_payload(const std::span<uint8_t>& payload)
 {
-    auto ext = buffer_.data().back();
-    auto mod = ext.size() % 4;
+    auto ext_bytes = buffer_.data().back().size() - 4;
+    auto mod = ext_bytes % 4;
     if (mod != 0) {
         buffer_.push_back(std::vector<uint8_t>(4 - mod, 0));
+        buffer_.write_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint16_t), uint16_t(ext_bytes / 4 + 1));
+    } else {
+        buffer_.write_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint16_t), uint16_t(ext_bytes / 4));
     }
     buffer_.push_back(payload, true);
 }
 
 void RtpPacket::set_payload(std::vector<uint8_t>&& payload)
 {
-    auto ext = buffer_.data().back();
-    auto mod = ext.size() % 4;
+    auto ext_bytes = buffer_.data().back().size() - 4;
+    auto mod = ext_bytes % 4;
     if (mod != 0) {
         buffer_.push_back(std::vector<uint8_t>(4 - mod, 0));
+        buffer_.write_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint16_t), uint16_t(ext_bytes / 4 + 1));
+    } else {
+        buffer_.write_big_endian_at(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint16_t), uint16_t(ext_bytes / 4));
     }
     buffer_.push_back(std::move(payload), true);
 }
@@ -313,7 +319,7 @@ bco::Buffer RtpPacket::find_extension(RTPExtensionType type) const
 {
     for (const auto& entry : extension_entries_) {
         if (entry.type == type) {
-            return buffer_.subbuf(entry.offset, entry.offset + entry.length);
+            return buffer_.subbuf(entry.offset, entry.length);
         }
     }
     return bco::Buffer();
@@ -326,9 +332,9 @@ void RtpPacket::promote_two_bytes_header_and_reserve_n_bytes(uint8_t n_bytes)
         //第一次插入ext elem，并且是two bytes
         //插入16字节的特殊xx
         //reserve n bytes
-        buffer_.push_back(std::vector<uint8_t>(2 + n_bytes));
         size_t pos = buffer_.size();
-        uint16_t magic = static_cast<uint16_t>(0x100);
+        buffer_.push_back(std::vector<uint8_t>(4 + n_bytes), true);
+        uint16_t magic = static_cast<uint16_t>(0x1000);
         buffer_.write_big_endian_at(pos, magic);
     } else {
         //uint16_t magic = 0x1'0000;
