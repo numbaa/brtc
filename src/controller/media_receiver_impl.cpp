@@ -49,9 +49,7 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
         parse_rtp_extensions(packet);
         frame_assembler_.insert(packet);
         while (auto frame = frame_assembler_.pop_assembled_frame()) {
-            //TODO: Frame -> ReceivedFrame
-            std::unique_ptr<ReceivedFrame> received_frame;
-            reference_finder_.ManageFrame(std::move(received_frame));
+            reference_finder_.ManageFrame(std::move(frame));
         }
         while (auto frame = reference_finder_.pop_gop_inter_continous_frame()) {
             frame_buffer_.insert(*frame);
@@ -115,6 +113,7 @@ void MediaReceiverImpl::parse_rtp_extensions(RtpPacket& packet)
     if (packet.get_extension<RtpGenericFrameDescriptorExtension00>(descriptor)) {
         auto& video_header = packet.video_header<RTPVideoHeader>();
         video_header.is_first_packet_in_frame = descriptor.FirstPacketInSubFrame();
+        video_header.is_last_packet_in_frame = descriptor.LastPacketInSubFrame();
     }
 }
 

@@ -78,7 +78,10 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
         Packetizer::PayloadSizeLimits limits;
         std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
         RtpPacket packet;
-        while (packetizer->has_next_packet()) {
+        size_t num_packets = packetizer->num_packets();
+        for (size_t i = 0; i < num_packets; i++) {
+            const bool is_first_packet = i == 0;
+            const bool is_last_packet = i == num_packets - 1;
             RtpPacket packet;
             packet.set_ssrc(kDefaultSsrc);
             packet.set_payload_type(kDefaultPayloadType);
@@ -88,7 +91,7 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
             //allow retransmission
             //is key frame
             //packet type
-            add_required_rtp_extensions(packet);
+            add_required_rtp_extensions(packet, is_first_packet, is_last_packet);
             packetizer->next_packet(packet);
             transport_->send_rtp(packet);
         }
@@ -121,7 +124,7 @@ void MediaSenderImpl::after_encode()
 
 void MediaSenderImpl::capture_empty_frame()
 {
-    if (strategies_->release_frame_after_encode()) {
+    if (strategies_->release_frame_after_capture()) {
         capture_->release_frame();
     }
 }
@@ -143,13 +146,13 @@ inline bco::Task<Frame> MediaSenderImpl::receive_from_encode_loop()
     return encoded_frames_.recv();
 }
 
-void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet)
+void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet, bool is_first_packet, bool is_last_packet)
 {
     auto& video_header = packet.video_header<RTPVideoHeader>();
     RtpGenericFrameDescriptor descriptor;
-    descriptor.SetFirstPacketInSubFrame(false); //first packet
-    descriptor.SetLastPacketInSubFrame(false); //last packet
-    if (false) { //first packet
+    descriptor.SetFirstPacketInSubFrame(is_first_packet);
+    descriptor.SetLastPacketInSubFrame(is_last_packet);
+    if (false) {
         descriptor.SetFrameId(static_cast<uint16_t>(video_header.generic->frame_id));
         for (int64_t dep : video_header.generic->dependencies) {
             descriptor.AddFrameDependencyDiff(video_header.generic->frame_id - dep);

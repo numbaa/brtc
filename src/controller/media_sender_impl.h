@@ -39,7 +39,7 @@ private:
     inline void send_to_pacing_loop(Frame frame);
     inline bco::Task<Frame> receive_from_encode_loop();
 
-    void add_required_rtp_extensions(RtpPacket& packet);
+    void add_required_rtp_extensions(RtpPacket& packet, bool is_first_packet, bool is_last_packet);
 
 private:
     std::atomic<bool> stop_ { true };

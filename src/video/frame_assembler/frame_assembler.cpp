@@ -78,10 +78,10 @@ void FrameAssembler::insert(RtpPacket rtp_packet)
     find_frames(seq_num);
 }
 
-std::optional<Frame> FrameAssembler::pop_assembled_frame()
+std::unique_ptr<ReceivedFrame> FrameAssembler::pop_assembled_frame()
 {
     if (assembled_frames_.empty())
-        return std::nullopt;
+        return nullptr;
     auto& packets = assembled_frames_.front();
     auto frame_data = std::make_shared<std::vector<uint8_t>>();
     for (auto& packet : packets) {
@@ -91,10 +91,16 @@ std::optional<Frame> FrameAssembler::pop_assembled_frame()
         }
     }
     assembled_frames_.pop_front();
-    Frame frame {};
-    frame.type = Frame::UnderlyingType::kMemory;
-    frame.data = frame_data->data();
-    frame._data_holder = frame_data;
+    auto frame = std::make_unique<ReceivedFrame>();
+    frame->type = Frame::UnderlyingType::kMemory;
+    frame->data = frame_data->data();
+    frame->_data_holder = frame_data;
+
+    frame->codec_type = VideoCodecType::H264;
+    const RTPVideoHeaderH264& video_header = std::get<RTPVideoHeaderH264>(frame->video_header);
+    //TODO: fill other fields
+    //frame->frame_type
+    //frame->video_header
     return frame;
 }
 
