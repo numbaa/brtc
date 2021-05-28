@@ -49,9 +49,10 @@ bool MfxEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
     return true;
 }
 
-Frame MfxEncoder::encode_one_frame(Frame in_frame)
+EncodedFrame MfxEncoder::encode_one_frame(Frame in_frame)
 {
-    Frame out_frame;
+    //TODO: add codec specific info
+    EncodedFrame out_frame;
     mfxFrameSurface1 vppin, vppout;
     memset(&vppin, 0, sizeof(mfxFrameSurface1));
     memset(&vppout, 0, sizeof(mfxFrameSurface1));
@@ -90,7 +91,7 @@ Frame MfxEncoder::encode_one_frame(Frame in_frame)
     }
     // ¼ÇµÃdelete [] out_frame.data
     out_frame.data = data_holder->data();
-    out_frame.type = Frame::UnderlyingType::kMemory;
+    out_frame.underlying_type = Frame::UnderlyingType::kMemory;
     out_frame.length = bs.DataLength;
     out_frame.width = vppin.Info.Width;
     out_frame.height = vppin.Info.Height;

@@ -15,7 +15,7 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include "video/reference_finder/common_constants.h"
+#include <brtc/video/common_constants.h>
 
 namespace webrtc {
 
@@ -209,8 +209,8 @@ struct RTPVideoHeaderVP9 {
   size_t num_spatial_layers;  // Always populated.
   size_t first_active_layer;  // Not sent on wire, used to adjust ss data.
   bool spatial_layer_resolution_present;
-  uint16_t width[kMaxVp9NumberOfSpatialLayers];
-  uint16_t height[kMaxVp9NumberOfSpatialLayers];
+  uint16_t _width[kMaxVp9NumberOfSpatialLayers];
+  uint16_t _height[kMaxVp9NumberOfSpatialLayers];
   GofInfoVP9 gof;
 
   bool end_of_picture;  // This frame is the last frame in picture.

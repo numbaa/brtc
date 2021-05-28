@@ -18,6 +18,16 @@ set(BRTC_PUBLIC_HEADERS
   "${PUBLIC_INCLUDE_DIR}/brtc/frame.h"
   "${PUBLIC_INCLUDE_DIR}/brtc/interface.h"
   "${PUBLIC_INCLUDE_DIR}/brtc/builtin.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/codec_type.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/codec_interface.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/webrtc_key_value_config.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/dependency_descriptor.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/generic_frame_info.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/color_space.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/hdr_metadata.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/common_constants.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/vp9_globals.h"
+  "${PUBLIC_INCLUDE_DIR}/brtc/video/vp8_globals.h"
 )
 
 add_subdirectory(${SRC_DIR})

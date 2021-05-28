@@ -110,7 +110,7 @@ Frame MfxDecoder::decode_one_frame(Frame encoded_frame)
         if (status == MFX_ERR_NONE) {
             delete encoded_frame.data;
             decoded_frame.data = surface_out->Data.MemId;
-            decoded_frame.type = Frame::UnderlyingType::kD3D11Texture2D;
+            decoded_frame.underlying_type = Frame::UnderlyingType::kD3D11Texture2D;
             decoded_frame.height = surface_out->Info.Height;
             decoded_frame.width = surface_out->Info.Width;
             return decoded_frame;

@@ -22,7 +22,7 @@ public:
     MfxEncoder() = default;
     ~MfxEncoder() override;
 
-    Frame encode_one_frame(Frame frame) override;
+    EncodedFrame encode_one_frame(Frame frame) override;
 
     bool init(Microsoft::WRL::ComPtr<ID3D11Device> device);
 

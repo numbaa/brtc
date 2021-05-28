@@ -77,10 +77,18 @@ add_brtc_object(brtc_rtp "src/rtp"
   "rtp/extension.h"
   "rtp/extension.cpp"
   "rtp/extra_rtp_info.h"
+  "rtp/rtp_payload_params.h"
+  "rtp/rtp_payload_params.cpp"
+  "rtp/rtp_config.h"
+  "rtp/rtp_config.cpp"
+  "rtp/rtp_parameters.h"
+  "rtp/rtp_parameters.cpp"
 )
 target_link_libraries(brtc_rtp
   PUBLIC
     bco
+  PRIVATE
+    glog::glog
 )
 
 #video
@@ -134,10 +142,7 @@ add_brtc_object(brtc_reference_finder "src/video"
   "video/reference_finder/rtp_vp9_ref_finder.h"
   "video/reference_finder/rtp_frame_id_only_ref_finder.cpp"
   "video/reference_finder/rtp_frame_id_only_ref_finder.h"
-  "video/reference_finder/vp9_globals.h"
-  "video/reference_finder/vp8_globals.h"
   "video/reference_finder/h264_globals.h"
-  "video/reference_finder/common_constants.h"
 )
 target_link_libraries(brtc_reference_finder
   PRIVATE
@@ -159,6 +164,14 @@ add_library(${PROJECT_NAME} STATIC
     $<TARGET_OBJECTS:brtc_frame_buffer>
     $<TARGET_OBJECTS:brtc_reference_finder>
     $<TARGET_OBJECTS:brtc_rtp>
+    "video/frame_dependencies_calculator.cpp"
+    "video/frame_dependencies_calculator.h"
+    "video/generic_frame_info.cpp"
+    "video/dependency_descriptor.cpp"
+    "video/color_space.cpp"
+    "video/hdr_metadata.cpp"
+    "video/chain_diff_calculator.h"
+    "video/chain_diff_calculator.cpp"
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -166,11 +179,14 @@ target_link_libraries(${PROJECT_NAME}
     bco
   PRIVATE
     ${PLAT_SPEC_LIBRARIES}
+    glog::glog
 )
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     ${PUBLIC_INCLUDE_DIR}
+  PRIVATE
+    ${SRC_DIR}
 )
 
 set_target_properties(${PROJECT_NAME}

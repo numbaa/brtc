@@ -32,7 +32,7 @@ bool NvEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
     return true;
 }
 
-Frame NvEncoder::encode_one_frame(Frame frame)
+EncodedFrame NvEncoder::encode_one_frame(Frame frame)
 {
     switch (frame.type) {
     case brtc::Frame::UnderlyingType::kMemory:
@@ -42,14 +42,15 @@ Frame NvEncoder::encode_one_frame(Frame frame)
     default:
         break;
     }
-    return Frame();
+    return EncodedFrame();
 }
 
-Frame NvEncoder::encode_external_d3d11_texture2d(Frame frame)
+EncodedFrame NvEncoder::encode_external_d3d11_texture2d(Frame frame)
 {
     auto packets = std::make_shared<std::vector<std::vector<uint8_t>>>();
     nvenc_->encode_external_d3d11_texture2d(frame.data, frame.width, frame.height, *packets);
-    Frame out;
+    //TODO: add codec specific info
+    EncodedFrame out;
     if (!packets->empty()) {
         out.length = packets->front().size();
         out.height = frame.height;

@@ -17,8 +17,8 @@
 #include <array>
 
 #include <brtc/frame.h>
+#include <brtc/video/vp9_globals.h>
 #include "video/reference_finder/reference_finder.h"
-#include "video/reference_finder/vp9_globals.h"
 #include "common/sequence_number_util.h"
 
 namespace webrtc {

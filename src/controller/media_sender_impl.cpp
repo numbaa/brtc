@@ -75,6 +75,7 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
 {
     while (!stop_) {
         auto frame = co_await receive_from_encode_loop();
+        auto video_header = get_rtp_video_header(frame);
         Packetizer::PayloadSizeLimits limits;
         std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
         RtpPacket packet;
@@ -91,7 +92,7 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
             //allow retransmission
             //is key frame
             //packet type
-            add_required_rtp_extensions(packet, is_first_packet, is_last_packet);
+            add_required_rtp_extensions(packet, video_header, is_first_packet, is_last_packet);
             packetizer->next_packet(packet);
             transport_->send_rtp(packet);
         }
@@ -103,7 +104,7 @@ Frame MediaSenderImpl::capture_one_frame()
     return capture_->capture_one_frame();
 }
 
-Frame MediaSenderImpl::encode_one_frame(Frame frame)
+EncodedFrame MediaSenderImpl::encode_one_frame(Frame frame)
 {
     return encoder_->encode_one_frame(frame);
 }
@@ -136,22 +137,23 @@ void MediaSenderImpl::encode_failed()
     }
 }
 
-void MediaSenderImpl::send_to_pacing_loop(Frame frame)
+void MediaSenderImpl::send_to_pacing_loop(EncodedFrame frame)
 {
     encoded_frames_.send(frame);
 }
 
-inline bco::Task<Frame> MediaSenderImpl::receive_from_encode_loop()
+inline bco::Task<EncodedFrame> MediaSenderImpl::receive_from_encode_loop()
 {
     return encoded_frames_.recv();
 }
 
-void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet, bool is_first_packet, bool is_last_packet)
+void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet, const UnionRTPVideoHeader& rtp_video_header, bool is_first_packet, bool is_last_packet)
 {
-    auto& video_header = packet.video_header<RTPVideoHeader>();
+    //TODO: add more extensions
     RtpGenericFrameDescriptor descriptor;
     descriptor.SetFirstPacketInSubFrame(is_first_packet);
     descriptor.SetLastPacketInSubFrame(is_last_packet);
+    auto& video_header = std::get<brtc::RTPVideoHeader>(rtp_video_header);
     if (false) {
         descriptor.SetFrameId(static_cast<uint16_t>(video_header.generic->frame_id));
         for (int64_t dep : video_header.generic->dependencies) {
@@ -168,6 +170,17 @@ void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet, bool is_fir
         }
     }
     packet.set_extension<RtpGenericFrameDescriptorExtension00>(descriptor);
+}
+
+UnionRTPVideoHeader MediaSenderImpl::get_rtp_video_header(EncodedFrame& frame)
+{
+    // TODO: Not only get rtp video header
+    size_t stream_index = 0;
+    if (frame.codec_info.has_value() && (frame.codec_info->codecType == VideoCodecType::VP8 || frame.codec_info->codecType == VideoCodecType::H264 || frame.codec_info->codecType == VideoCodecType::Generic)) {
+        // Map spatial index to simulcast.
+        stream_index = frame.spatial_index.value_or(0);
+    }
+    return params_[stream_index].GetRtpVideoHeader(frame, &frame.codec_info.value(), 0);
 }
 
 

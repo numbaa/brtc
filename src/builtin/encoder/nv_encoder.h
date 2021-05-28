@@ -35,7 +35,7 @@ public:
 
     bool init(Microsoft::WRL::ComPtr<ID3D11Device> device);
 
-    Frame encode_one_frame(Frame frame) override;
+    EncodedFrame encode_one_frame(Frame frame) override;
 
 private:
     Frame encode_external_d3d11_texture2d(Frame frame);

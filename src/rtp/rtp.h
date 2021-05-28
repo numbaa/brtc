@@ -12,11 +12,15 @@
 #include <bco/buffer.h>
 
 #include <brtc/frame.h>
-
+#include <brtc/video/codec_type.h>
+#include <brtc/video/dependency_descriptor.h>
+#include <brtc/video/color_space.h>
+#include <brtc/video/codec_interface.h>
+#include <brtc/video/vp9_globals.h>
+#include <brtc/video/vp8_globals.h>
 #include "rtp/extension.h"
 #include "rtp/extra_rtp_info.h"
-#include "video/reference_finder/vp9_globals.h"
-#include "video/reference_finder/vp8_globals.h"
+
 
 namespace brtc
 {
@@ -57,26 +61,57 @@ enum H264NaluType : uint8_t {
     FuA = 28
 };
 
-enum class VideoCodecType : uint8_t {
-    Unknown,
-    H264,
-    H265,
-    VP8,
-    VP9,
+// RTCP mode to use. Compound mode is described by RFC 4585 and reduced-size
+// RTCP mode is described by RFC 5506.
+enum class RtcpMode { kOff,
+    kCompound,
+    kReducedSize
 };
 
-enum class VideoFrameType {
-    EmptyFrame = 0,
-    VideoFrameKey = 3,
-    VideoFrameDelta = 4,
+//// Relationship of a frame to a Decode target.
+//enum class DecodeTargetIndication {
+//    kNotPresent = 0, // DecodeTargetInfo symbol '-'
+//    kDiscardable = 1, // DecodeTargetInfo symbol 'D'
+//    kSwitch = 2, // DecodeTargetInfo symbol 'S'
+//    kRequired = 3 // DecodeTargetInfo symbol 'R'
+//};
+
+enum class VideoRotation {
+    kVideoRotation_0 = 0,
+    kVideoRotation_90 = 90,
+    kVideoRotation_180 = 180,
+    kVideoRotation_270 = 270
 };
 
-// Relationship of a frame to a Decode target.
-enum class DecodeTargetIndication {
-    kNotPresent = 0, // DecodeTargetInfo symbol '-'
-    kDiscardable = 1, // DecodeTargetInfo symbol 'D'
-    kSwitch = 2, // DecodeTargetInfo symbol 'S'
-    kRequired = 3 // DecodeTargetInfo symbol 'R'
+enum class VideoContentType : uint8_t {
+    UNSPECIFIED = 0,
+    SCREENSHARE = 1,
+};
+
+// Minimum and maximum playout delay values from capture to render.
+// These are best effort values.
+//
+// A value < 0 indicates no change from previous valid value.
+//
+// min = max = 0 indicates that the receiver should try and render
+// frame as soon as possible.
+//
+// min = x, max = y indicates that the receiver is free to adapt
+// in the range (x, y) based on network jitter.
+struct VideoPlayoutDelay {
+    VideoPlayoutDelay() = default;
+    VideoPlayoutDelay(int min_ms, int max_ms)
+        : min_ms(min_ms)
+        , max_ms(max_ms)
+    {
+    }
+    int min_ms = -1;
+    int max_ms = -1;
+
+    bool operator==(const VideoPlayoutDelay& rhs) const
+    {
+        return min_ms == rhs.min_ms && max_ms == rhs.max_ms;
+    }
 };
 
 struct RTPVideoHeader {
@@ -88,7 +123,7 @@ struct RTPVideoHeader {
         int64_t frame_id = 0;
         int spatial_index = 0;
         int temporal_index = 0;
-        std::vector<DecodeTargetIndication> decode_target_indications;
+        std::vector<webrtc::DecodeTargetIndication> decode_target_indications;
         std::vector<int64_t> dependencies;
         std::vector<int> chain_diffs;
         std::bitset<32> active_decode_targets = ~uint32_t { 0 };
@@ -97,11 +132,20 @@ struct RTPVideoHeader {
     VideoFrameType frame_type = VideoFrameType::EmptyFrame;
     uint16_t width = 0;
     uint16_t height = 0;
+    //VideoRotation rotation = VideoRotation::kVideoRotation_0; // useless
+    //VideoContentType content_type = VideoContentType::UNSPECIFIED; //useless
     bool is_first_packet_in_frame = false;
     bool is_last_packet_in_frame = false;
     bool is_last_frame_in_picture = true;
     uint8_t simulcastIdx = 0;
-    VideoCodecType codec = VideoCodecType::Unknown;
+    VideoCodecType codec = VideoCodecType::Generic;
+
+    //VideoPlayoutDelay playout_delay; //useless
+    //VideoSendTiming video_timing; //useless
+    std::optional<webrtc::ColorSpace> color_space;
+    // This field is meant for media quality testing purpose only. When enabled it
+    // carries the webrtc::VideoFrame id field from the sender to the receiver.
+    //std::optional<uint16_t> video_frame_tracking_id;
 };
 
 struct RTPVideoHeaderH264 : public RTPVideoHeader {
@@ -148,76 +192,15 @@ struct RTPVideoHeaderVP8 : public RTPVideoHeader, public webrtc::RTPVideoHeaderV
 };
 
 struct RTPVideoHeaderVP9 : public RTPVideoHeader, public webrtc::RTPVideoHeaderVP9 {
-    /*
-    void InitRTPVideoHeaderVP9()
-    {
-        inter_pic_predicted = false;
-        flexible_mode = false;
-        beginning_of_frame = false;
-        end_of_frame = false;
-        ss_data_available = false;
-        non_ref_for_inter_layer_pred = false;
-        picture_id = kNoPictureId;
-        max_picture_id = webrtc::kMaxTwoBytePictureId;
-        tl0_pic_idx = kNoTl0PicIdx;
-        temporal_idx = kNoTemporalIdx;
-        spatial_idx = webrtc::kNoSpatialIdx;
-        temporal_up_switch = false;
-        inter_layer_predicted = false;
-        gof_idx = webrtc::kNoGofIdx;
-        num_ref_pics = 0;
-        num_spatial_layers = 1;
-        first_active_layer = 0;
-        end_of_picture = true;
-    }
-
-    bool inter_pic_predicted; // This layer frame is dependent on previously
-        // coded frame(s).
-    bool flexible_mode; // This frame is in flexible mode.
-    bool beginning_of_frame; // True if this packet is the first in a VP9 layer
-        // frame.
-    bool end_of_frame; // True if this packet is the last in a VP9 layer frame.
-    bool ss_data_available; // True if SS data is available in this payload
-        // descriptor.
-    bool non_ref_for_inter_layer_pred; // True for frame which is not used as
-        // reference for inter-layer prediction.
-    int16_t picture_id; // PictureID index, 15 bits;
-        // kNoPictureId if PictureID does not exist.
-    int16_t max_picture_id; // Maximum picture ID index; either 0x7F or 0x7FFF;
-    int16_t tl0_pic_idx; // TL0PIC_IDX, 8 bits;
-        // kNoTl0PicIdx means no value provided.
-    uint8_t temporal_idx; // Temporal layer index, or kNoTemporalIdx.
-    uint8_t spatial_idx; // Spatial layer index, or kNoSpatialIdx.
-    bool temporal_up_switch; // True if upswitch to higher frame rate is possible
-        // starting from this frame.
-    bool inter_layer_predicted; // Frame is dependent on directly lower spatial
-        // layer frame.
-
-    uint8_t gof_idx; // Index to predefined temporal frame info in SS data.
-
-    uint8_t num_ref_pics; // Number of reference pictures used by this layer
-        // frame.
-    uint8_t pid_diff[webrtc::kMaxVp9RefPics]; // P_DIFF signaled to derive the PictureID
-        // of the reference pictures.
-    int16_t ref_picture_id[webrtc::kMaxVp9RefPics]; // PictureID of reference pictures.
-
-    // SS data.
-    size_t num_spatial_layers; // Always populated.
-    size_t first_active_layer; // Not sent on wire, used to adjust ss data.
-    bool spatial_layer_resolution_present;
-    uint16_t width[webrtc::kMaxVp9NumberOfSpatialLayers];
-    uint16_t height[webrtc::kMaxVp9NumberOfSpatialLayers];
-    webrtc::GofInfoVP9 gof;
-
-    bool end_of_picture; // This frame is the last frame in picture.
-    */
 };
+
+using UnionRTPVideoHeader = std::variant<RTPVideoHeader, RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9>;
 
 constexpr size_t kMaxFrameReferences = 5;
 struct ReceivedFrame : public Frame {
     VideoCodecType codec_type;
     VideoFrameType frame_type;
-    std::variant<RTPVideoHeader, RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9> video_header;
+    UnionRTPVideoHeader video_header;
     int spatial_index;
     uint16_t first_seq_num;
     uint16_t last_seq_num;

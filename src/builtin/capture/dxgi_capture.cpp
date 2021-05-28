@@ -53,7 +53,7 @@ Frame DxgiCapture::capture_one_frame()
         }
         Frame frame;
         frame.data = texture2d.Get();
-        frame.type = Frame::UnderlyingType::kD3D11Texture2D;
+        frame.underlying_type = Frame::UnderlyingType::kD3D11Texture2D;
         frame.height = 1080;
         frame.width = 1920;
         frame._data_holder = texture2d;
@@ -99,7 +99,7 @@ Frame DxgiCapture::copy_frame(ComPtr<ID3D11Texture2D> inframe)
 
     Frame frame;
     frame.data = tmp_frame.Get();
-    frame.type = Frame::UnderlyingType::kD3D11Texture2D;
+    frame.underlying_type = Frame::UnderlyingType::kD3D11Texture2D;
     frame.height = desc.Height;
     frame.width = desc.Width;
     tmp_frame->AddRef();

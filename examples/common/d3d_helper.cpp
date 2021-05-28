@@ -17,7 +17,7 @@ UINT get_vendor_id(GpuVendor vendor)
     case GpuVendor::Amd:
         return 0x1002;
         break;
-    case GpuVendor::Nvida:
+    case GpuVendor::Nvidia:
         return 0x10de;
     default:
         return 0;

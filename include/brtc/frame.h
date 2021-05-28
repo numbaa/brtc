@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <any>
+#include <optional>
 
 namespace brtc {
 
@@ -12,7 +13,7 @@ struct Frame {
         kD3D11Texture2D,
         kOpenGLTexture2D,
     };
-    UnderlyingType type = UnderlyingType::kUknown;
+    UnderlyingType underlying_type = UnderlyingType::kUknown;
     void* data = nullptr;
     uint32_t length = 0;
     uint32_t width = 0;

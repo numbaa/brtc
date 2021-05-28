@@ -92,7 +92,7 @@ std::unique_ptr<ReceivedFrame> FrameAssembler::pop_assembled_frame()
     }
     assembled_frames_.pop_front();
     auto frame = std::make_unique<ReceivedFrame>();
-    frame->type = Frame::UnderlyingType::kMemory;
+    frame->underlying_type = Frame::UnderlyingType::kMemory;
     frame->data = frame_data->data();
     frame->_data_holder = frame_data;
 

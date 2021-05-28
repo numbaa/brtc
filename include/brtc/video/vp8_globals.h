@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "video/reference_finder/common_constants.h"
+#include <brtc/video/common_constants.h>
 
 namespace webrtc {
 

@@ -9,6 +9,7 @@
 #include <bco/context.h>
 
 #include <brtc/frame.h>
+#include <brtc/video/codec_interface.h>
 
 namespace brtc
 {
@@ -34,7 +35,7 @@ public:
 class VideoEncoderInterface {
 public:
     virtual ~VideoEncoderInterface() { }
-    virtual Frame encode_one_frame(Frame frame) = 0;
+    virtual EncodedFrame encode_one_frame(Frame frame) = 0;
 };
 
 
