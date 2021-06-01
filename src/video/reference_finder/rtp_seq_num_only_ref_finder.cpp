@@ -21,16 +21,16 @@ brtc::RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
 
   brtc::RtpFrameReferenceFinder::ReturnVector res;
   switch (decision) {
-    case kStash:
+    case FrameDecision::kStash:
       if (stashed_frames_.size() > kMaxStashedFrames)
         stashed_frames_.pop_back();
       stashed_frames_.push_front(std::move(frame));
       return res;
-    case kHandOff:
+    case FrameDecision::kHandOff:
       res.push_back(std::move(frame));
       RetryStashedFrames(res);
       return res;
-    case kDrop:
+    case FrameDecision::kDrop:
       return res;
   }
 
@@ -47,7 +47,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(brtc::ReceivedFrame* frame) {
 
   // We have received a frame but not yet a keyframe, stash this frame.
   if (last_seq_num_gop_.empty())
-    return kStash;
+      return FrameDecision::kStash;
 
   // Clean up info for old keyframes but make sure to keep info
   // for the last keyframe.
@@ -65,7 +65,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(brtc::ReceivedFrame* frame) {
                         << frame->first_seq_num << ", "
                         << frame->last_seq_num
                         << "] has no GoP, dropping frame.";
-    return kDrop;
+    return FrameDecision::kDrop;
   }
   seq_num_it--;
 
@@ -77,7 +77,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(brtc::ReceivedFrame* frame) {
     uint16_t prev_seq_num = frame->first_seq_num - 1;
 
     if (prev_seq_num != last_picture_id_with_padding_gop)
-      return kStash;
+      return FrameDecision::kStash;
   }
 
   assert(webrtc::AheadOrAt(frame->last_seq_num, seq_num_it->first));
@@ -95,7 +95,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(brtc::ReceivedFrame* frame) {
   UpdateLastPictureIdWithPadding(frame->id);
   frame->spatial_index = 0;
   frame->id = rtp_seq_num_unwrapper_.Unwrap(frame->id);
-  return kHandOff;
+  return FrameDecision::kHandOff;
 }
 
 void RtpSeqNumOnlyRefFinder::RetryStashedFrames(
@@ -108,13 +108,14 @@ void RtpSeqNumOnlyRefFinder::RetryStashedFrames(
       FrameDecision decision = ManageFrameInternal(frame_it->get());
 
       switch (decision) {
-        case kStash:
+        case FrameDecision::kStash:
           ++frame_it;
           break;
-        case kHandOff:
+        case FrameDecision::kHandOff:
           complete_frame = true;
           res.push_back(std::move(*frame_it));
-        case kDrop:
+          [[fallthrough]];
+        case FrameDecision::kDrop:
           frame_it = stashed_frames_.erase(frame_it);
       }
     }

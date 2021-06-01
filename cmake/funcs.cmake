@@ -24,10 +24,13 @@ endfunction()
 function(add_brtc_object object_name ide_folder)
     add_library(${object_name} OBJECT ${ARGN})
     set_target_properties(${object_name} PROPERTIES FOLDER ${ide_folder})
-    target_compile_definitions(${object_name} PUBLIC
-        WIN32_LEAN_AND_MEAN
-        NOMINMAX
-    )
+    if (MSVC)
+        target_compile_definitions(${object_name} PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN)
+        target_compile_options(${object_name} PRIVATE /W4 /GR-) #/WX
+    else()
+        target_compile_options(${object_name} PRIVATE -fcoroutines -fno-rtti)
+        target_compile_options(${object_name} PRIVATE -Wall -Wextra -pedantic -Werror)
+    endif()
     target_include_directories(${object_name}
         PRIVATE
             ${PUBLIC_INCLUDE_DIR}

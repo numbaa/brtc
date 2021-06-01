@@ -189,6 +189,8 @@ mfxStatus MfxEncoderFrameAllocator::alloc(mfxFrameAllocRequest* request, mfxFram
 mfxStatus MfxEncoderFrameAllocator::lock(mfxMemId mid, mfxFrameData* ptr)
 {
     //throw std::exception { "MfxEncoderFrameAllocator::lock()" };
+    (void)mid;
+    (void)ptr;
     LOG(INFO) << "MfxEncoderFrameAllocator::lock()";
     return MFX_ERR_NONE;
 }
@@ -196,6 +198,8 @@ mfxStatus MfxEncoderFrameAllocator::lock(mfxMemId mid, mfxFrameData* ptr)
 mfxStatus MfxEncoderFrameAllocator::unlock(mfxMemId mid, mfxFrameData* ptr)
 {
     //throw std::exception { "MfxEncoderFrameAllocator::unlock()" };
+    (void)mid;
+    (void)ptr;
     LOG(INFO) << "MfxEncoderFrameAllocator::unlock()";
     return MFX_ERR_NONE;
 }
@@ -229,12 +233,16 @@ mfxStatus MfxDecoderFrameAllocator::alloc(mfxFrameAllocRequest* request, mfxFram
 mfxStatus MfxDecoderFrameAllocator::lock(mfxMemId mid, mfxFrameData* ptr)
 {
     LOG(INFO) << "MfxDecoderFrameAllocator::lock()";
+    (void)mid;
+    (void)ptr;
     return MFX_ERR_NONE;
 }
 
 mfxStatus MfxDecoderFrameAllocator::unlock(mfxMemId mid, mfxFrameData* ptr)
 {
     LOG(INFO) << "MfxDecoderFrameAllocator::unlock()";
+    (void)mid;
+    (void)ptr;
     return MFX_ERR_NONE;
 }
 
@@ -249,12 +257,14 @@ mfxStatus MfxDecoderFrameAllocator::get_hdl(mfxMemId mid, mfxHDL* handle)
 mfxStatus MfxDecoderFrameAllocator::free(mfxFrameAllocResponse* response)
 {
     LOG(INFO) << "MfxDecoderFrameAllocator::free()";
+    (void)response;
     return MFX_ERR_NONE;
 }
 
 mfxStatus MfxDecoderFrameAllocator::release_frame(ComPtr<ID3D11Texture2D> frame)
 {
     LOG(INFO) << "MfxDecoderFrameAllocator::release_frame()";
+    (void)frame;
     return MFX_ERR_NONE;
 }
 

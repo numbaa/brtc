@@ -27,7 +27,7 @@ MediaSenderImpl::MediaSenderImpl(
     , pacer_ctx_(pacer_ctx)
 {
     start_timestamp_ = ::rand();
-    seq_number_ = ::rand();
+    seq_number_ = static_cast<uint16_t>(::rand());
 }
 
 void MediaSenderImpl::start()
@@ -78,7 +78,6 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
         auto video_header = get_rtp_video_header(frame);
         Packetizer::PayloadSizeLimits limits;
         std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
-        RtpPacket packet;
         size_t num_packets = packetizer->num_packets();
         for (size_t i = 0; i < num_packets; i++) {
             const bool is_first_packet = i == 0;
@@ -157,13 +156,13 @@ void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet, const Union
     if (false) {
         descriptor.SetFrameId(static_cast<uint16_t>(video_header.generic->frame_id));
         for (int64_t dep : video_header.generic->dependencies) {
-            descriptor.AddFrameDependencyDiff(video_header.generic->frame_id - dep);
+            descriptor.AddFrameDependencyDiff(static_cast<uint16_t>(video_header.generic->frame_id - dep));
         }
 
         uint8_t spatial_bimask = 1 << video_header.generic->spatial_index;
         descriptor.SetSpatialLayersBitmask(spatial_bimask);
 
-        descriptor.SetTemporalLayer(video_header.generic->temporal_index);
+        descriptor.SetTemporalLayer(static_cast<uint8_t>(video_header.generic->temporal_index));
 
         if (video_header.frame_type == VideoFrameType::VideoFrameKey) {
             descriptor.SetResolution(video_header.width, video_header.height);

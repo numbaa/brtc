@@ -24,13 +24,13 @@ GenericFrameInfo GenericFrameInfo::Builder::Build() const {
   return info_;
 }
 
-GenericFrameInfo::Builder& GenericFrameInfo::Builder::T(int temporal_id) {
-  info_.temporal_id = temporal_id;
+GenericFrameInfo::Builder& GenericFrameInfo::Builder::T(int _temporal_id) {
+  info_.temporal_id = _temporal_id;
   return *this;
 }
 
-GenericFrameInfo::Builder& GenericFrameInfo::Builder::S(int spatial_id) {
-  info_.spatial_id = spatial_id;
+GenericFrameInfo::Builder& GenericFrameInfo::Builder::S(int _spatial_id) {
+  info_.spatial_id = _spatial_id;
   return *this;
 }
 

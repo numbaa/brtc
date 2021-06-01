@@ -39,7 +39,7 @@ class RtpVp9RefFinder {
   static constexpr int kMaxStashedFrames = 100;
   static constexpr int kMaxTemporalLayers = 5;
 
-  enum FrameDecision { kStash, kHandOff, kDrop };
+  enum class FrameDecision { kStash, kHandOff, kDrop };
 
   struct GofInfo {
     GofInfo(webrtc::GofInfoVP9* gof, uint16_t last_picture_id)

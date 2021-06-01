@@ -29,6 +29,7 @@ const char* DegradationPreferenceToString(
       return "balanced";
   }
   assert(false);
+  return "";
 }
 
 const double kDefaultBitratePriority = 1.0;

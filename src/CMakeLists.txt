@@ -174,6 +174,14 @@ add_library(${PROJECT_NAME} STATIC
     "video/chain_diff_calculator.cpp"
 )
 
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /GR-)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -fcoroutines -fno-rtti)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
+endif()
+
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
     bco

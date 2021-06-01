@@ -54,13 +54,13 @@ RtpGenericFrameDescriptor::RtpGenericFrameDescriptor(
     = default;
 RtpGenericFrameDescriptor::~RtpGenericFrameDescriptor() = default;
 
-int RtpGenericFrameDescriptor::TemporalLayer() const
+uint8_t RtpGenericFrameDescriptor::TemporalLayer() const
 {
     assert(FirstPacketInSubFrame());
     return temporal_layer_;
 }
 
-void RtpGenericFrameDescriptor::SetTemporalLayer(int temporal_layer)
+void RtpGenericFrameDescriptor::SetTemporalLayer(uint8_t temporal_layer)
 {
     assert(temporal_layer >= 0);
     assert(temporal_layer <= kMaxTemporalLayers);
@@ -159,7 +159,7 @@ uint8_t RtpGenericFrameDescriptorExtension00::value_size(const RtpGenericFrameDe
     if (descriptor.FirstPacketInSubFrame() && descriptor.FrameDependenciesDiffs().empty() && descriptor.Width() > 0 && descriptor.Height() > 0) {
         size += 4;
     }
-    return size;
+    return static_cast<uint8_t>(size);
 }
 
 bool RtpGenericFrameDescriptorExtension00::read_from_buff(bco::Buffer buff, RtpGenericFrameDescriptor& descriptor)
@@ -241,17 +241,17 @@ bool RtpGenericFrameDescriptorExtension00::write_to_buff(bco::Buffer buff, const
     std::span<const uint16_t> fdiffs = descriptor.FrameDependenciesDiffs();
     size_t offset = 4;
     if (descriptor.FirstPacketInSubFrame() && fdiffs.empty() && descriptor.Width() > 0 && descriptor.Height() > 0) {
-        data[offset++] = (descriptor.Width() >> 8);
-        data[offset++] = (descriptor.Width() & 0xFF);
-        data[offset++] = (descriptor.Height() >> 8);
-        data[offset++] = (descriptor.Height() & 0xFF);
+        data[offset++] = static_cast<uint8_t>((descriptor.Width() >> 8));
+        data[offset++] = static_cast<uint8_t>((descriptor.Width() & 0xFF));
+        data[offset++] = static_cast<uint8_t>((descriptor.Height() >> 8));
+        data[offset++] = static_cast<uint8_t>((descriptor.Height() & 0xFF));
     }
     for (size_t i = 0; i < fdiffs.size(); i++) {
         bool extended = fdiffs[i] >= (1 << 6);
         bool more = i < fdiffs.size() - 1;
         data[offset++] = ((fdiffs[i] & 0x3f) << 2) | (extended ? kFlageXtendedOffset : 0) | (more ? kFlagMoreDependencies : 0);
         if (extended) {
-            data[offset++] = fdiffs[i] >> 6;
+            data[offset++] = static_cast<uint8_t>(fdiffs[i] >> 6);
         }
     }
     return true;

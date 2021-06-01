@@ -127,7 +127,7 @@ RtpPacket::RtpPacket(bco::Buffer buff)
             //}
             extension_info.offset = static_cast<uint16_t>(offset);
             extension_info.length = length;
-            number_of_extension += extension_header_length + length;
+            number_of_extension += static_cast<uint16_t>(extension_header_length + length);
         }
     }
 }

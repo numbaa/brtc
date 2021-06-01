@@ -47,7 +47,7 @@ struct NaluInfo {
     int pps_id;
 };
 
-enum H264NaluType : uint8_t {
+enum class H264NaluType : uint8_t {
     Slice = 1,
     Idr = 5,
     Sei = 6,
@@ -330,7 +330,7 @@ inline bool RtpPacket::set_extension(const typename T::value_type& value)
         promote_two_bytes_header_and_reserve_n_bytes(T::value_size(value) + 2);
     } else { //if (need_more_buffer_space<T>()) { 空间不是预留式的，所以不需要need_more_buffer_space
         size_t size = extension_mode_ == ExtensionMode::kOneByte ? T::value_size(value) + 1 : T::value_size(value) + 2;
-        allocate_n_bytes_for_extension(size);
+        allocate_n_bytes_for_extension(static_cast<uint8_t>(size));
     }
     return push_back_extension<T>(value);
 }
@@ -357,9 +357,9 @@ bool RtpPacket::push_back_extension(const typename T::value_type& value)
     constexpr size_t kFixedHeaderSize = 12;
     uint8_t insert_pos;
     if (not extension_entries_.empty()) {
-        insert_pos = extension_entries_.back().offset + extension_entries_.back().length;
+        insert_pos = static_cast<uint8_t>(extension_entries_.back().offset + extension_entries_.back().length);
     } else {
-        insert_pos = kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t);
+        insert_pos = static_cast<uint8_t>(kFixedHeaderSize + csrcs_size() * sizeof(uint32_t) + sizeof(uint32_t));
     }
     const uint8_t id = static_cast<uint8_t>(T::id());
     const uint8_t value_size = T::value_size(value);

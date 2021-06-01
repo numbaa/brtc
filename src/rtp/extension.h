@@ -72,8 +72,8 @@ public:
 
     // Properties below undefined if !FirstPacketInSubFrame()
     // Valid range for temporal layer: [0, 7]
-    int TemporalLayer() const;
-    void SetTemporalLayer(int temporal_layer);
+    uint8_t TemporalLayer() const;
+    void SetTemporalLayer(uint8_t temporal_layer);
 
     // Frame might by used, possible indirectly, for spatial layer sid iff
     // (bitmask & (1 << sid)) != 0

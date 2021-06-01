@@ -35,7 +35,7 @@ class RtpSeqNumOnlyRefFinder {
   static constexpr int kMaxStashedFrames = 100;
   static constexpr int kMaxPaddingAge = 100;
 
-  enum FrameDecision { kStash, kHandOff, kDrop };
+  enum class FrameDecision { kStash, kHandOff, kDrop };
 
   FrameDecision ManageFrameInternal(brtc::ReceivedFrame* frame);
   void RetryStashedFrames(brtc::RtpFrameReferenceFinder::ReturnVector& res);

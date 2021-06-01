@@ -49,7 +49,7 @@ struct CodecSpecificInfoVP8 {
     size_t updatedBuffers[kBuffersCount];
     size_t updatedBuffersCount;
 };
-static_assert(std::is_pod<CodecSpecificInfoVP8>::value, "");
+static_assert(std::is_standard_layout<CodecSpecificInfoVP8>::value && std::is_trivial<CodecSpecificInfoVP8>::value, "");
 
 // Hack alert - the code assumes that thisstruct is memset when constructed.
 struct CodecSpecificInfoVP9 {
@@ -81,7 +81,7 @@ struct CodecSpecificInfoVP9 {
 
     [[deprecated]] bool end_of_picture;
 };
-static_assert(std::is_pod<CodecSpecificInfoVP9>::value, "");
+static_assert(std::is_standard_layout<CodecSpecificInfoVP9>::value && std::is_trivial<CodecSpecificInfoVP9>::value, "");
 
 // Hack alert - the code assumes that thisstruct is memset when constructed.
 struct CodecSpecificInfoH264 {
@@ -90,14 +90,14 @@ struct CodecSpecificInfoH264 {
     bool base_layer_sync;
     bool idr_frame;
 };
-static_assert(std::is_pod<CodecSpecificInfoH264>::value, "");
+static_assert(std::is_standard_layout<CodecSpecificInfoH264>::value && std::is_trivial<CodecSpecificInfoH264>::value, "");
 
 union CodecSpecificInfoUnion {
     CodecSpecificInfoVP8 VP8;
     CodecSpecificInfoVP9 VP9;
     CodecSpecificInfoH264 H264;
 };
-static_assert(std::is_pod<CodecSpecificInfoUnion>::value, "");
+static_assert(std::is_standard_layout<CodecSpecificInfoUnion>::value && std::is_trivial<CodecSpecificInfoUnion>::value, "");
 
 // Note: if any pointers are added to this struct or its sub-structs, it
 // must be fitted with a copy-constructor. This is because it is copied

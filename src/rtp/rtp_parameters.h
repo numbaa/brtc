@@ -19,7 +19,8 @@
 
 namespace webrtc {
 
-enum class MediaType { ANY,
+enum class MediaType {
+    ANY,
     AUDIO,
     VIDEO,
     DATA
@@ -43,7 +44,7 @@ enum class Priority {
 
 namespace __inline_cricket {
 
-enum MediaType {
+enum class MediaType {
     MEDIA_TYPE_AUDIO,
     MEDIA_TYPE_VIDEO,
     MEDIA_TYPE_DATA,
@@ -54,21 +55,21 @@ const char kMediaTypeVideo[] = "video";
 const char kMediaTypeAudio[] = "audio";
 const char kMediaTypeData[] = "data";
 
-std::string MediaTypeToString(MediaType type)
+inline std::string MediaTypeToString(MediaType type)
 {
     switch (type) {
-    case MEDIA_TYPE_AUDIO:
+    case MediaType::MEDIA_TYPE_AUDIO:
         return kMediaTypeAudio;
-    case MEDIA_TYPE_VIDEO:
+    case MediaType::MEDIA_TYPE_VIDEO:
         return kMediaTypeVideo;
-    case MEDIA_TYPE_DATA:
+    case MediaType::MEDIA_TYPE_DATA:
         return kMediaTypeData;
-    case MEDIA_TYPE_UNSUPPORTED:
+    case MediaType::MEDIA_TYPE_UNSUPPORTED:
+    default:
         // Unsupported media stores the m=<mediatype> differently.
         assert(false);
         return "";
     }
-    assert(false);
 }
 
 } // namespace __inline_cricket
@@ -181,7 +182,7 @@ struct RtpCodecCapability {
   std::string name;
 
   // The media type of this codec. Equivalent to MIME top-level type.
-  __inline_cricket::MediaType kind = __inline_cricket::MEDIA_TYPE_AUDIO;
+  __inline_cricket::MediaType kind = __inline_cricket::MediaType::MEDIA_TYPE_AUDIO;
 
   // Clock rate in Hertz. If unset, the codec is applicable to any clock rate.
   std::optional<int> clock_rate;
@@ -564,7 +565,7 @@ struct RtpCodecParameters {
   std::string name;
 
   // The media type of this codec. Equivalent to MIME top-level type.
-  __inline_cricket::MediaType kind = __inline_cricket::MEDIA_TYPE_AUDIO;
+  __inline_cricket::MediaType kind = __inline_cricket::MediaType::MEDIA_TYPE_AUDIO;
 
   // Payload type used to identify this codec in RTP packets.
   // This must always be present, and must be unique across all codecs using

@@ -126,14 +126,15 @@ inline bool StartsWith(std::string_view text, std::string_view prefix) noexcept
 RtpPayloadParams::RtpPayloadParams(const uint32_t ssrc,
                                    const RtpPayloadState* state,
                                    const WebRtcKeyValueConfig& trials)
-    : ssrc_(ssrc),
+    : buffer_id_to_frame_id_{-1, -1, -1},
+      ssrc_(ssrc),
       generic_picture_id_experiment_(
           StartsWith(trials.Lookup("WebRTC-GenericPictureId"),
                            "Enabled")) {
   for (auto& spatial_layer : last_shared_frame_id_)
     spatial_layer.fill(-1);
 
-  buffer_id_to_frame_id_.fill(-1);
+  //buffer_id_to_frame_id_.fill(-1);
 
   //Random random(rtc::TimeMicros());
   //state_.picture_id =
@@ -411,7 +412,7 @@ void RtpPayloadParams::SetDependenciesVp8Deprecated(
   new_version_used_ = false;
 
   if (is_keyframe) {
-    assert(temporal_index = 0);
+    assert(temporal_index == 0);
     last_shared_frame_id_[spatial_index].fill(-1);
     last_shared_frame_id_[spatial_index][temporal_index] = shared_frame_id;
     return;

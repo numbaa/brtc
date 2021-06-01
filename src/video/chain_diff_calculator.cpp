@@ -32,7 +32,7 @@ std::vector<int> ChainDiffCalculator::ChainDiffs(
   std::vector<int> result;
   result.reserve(last_frame_in_chain_.size());
   for (const auto& frame_id_in_chain : last_frame_in_chain_) {
-    result.push_back(frame_id_in_chain ? (frame_id - *frame_id_in_chain) : 0);
+      result.push_back(frame_id_in_chain ? static_cast<int>((frame_id - *frame_id_in_chain)) : 0);
   }
   return result;
 }

@@ -31,7 +31,7 @@ const size_t kMaxVp9NumberOfSpatialLayers = 8;
 const size_t kMinVp9SpatialLayerWidth = 240;
 const size_t kMinVp9SpatialLayerHeight = 135;
 
-enum TemporalStructureMode {
+enum class TemporalStructureMode {
   kTemporalStructureMode1,  // 1 temporal layer structure - i.e., IPPP...
   kTemporalStructureMode2,  // 2 temporal layers 01...
   kTemporalStructureMode3,  // 3 temporal layers 0212...
@@ -41,14 +41,14 @@ enum TemporalStructureMode {
 struct GofInfoVP9 {
   void SetGofInfoVP9(TemporalStructureMode tm) {
     switch (tm) {
-      case kTemporalStructureMode1:
+      case TemporalStructureMode::kTemporalStructureMode1:
         num_frames_in_gof = 1;
         temporal_idx[0] = 0;
         temporal_up_switch[0] = false;
         num_ref_pics[0] = 1;
         pid_diff[0][0] = 1;
         break;
-      case kTemporalStructureMode2:
+      case TemporalStructureMode::kTemporalStructureMode2:
         num_frames_in_gof = 2;
         temporal_idx[0] = 0;
         temporal_up_switch[0] = false;
@@ -60,7 +60,7 @@ struct GofInfoVP9 {
         num_ref_pics[1] = 1;
         pid_diff[1][0] = 1;
         break;
-      case kTemporalStructureMode3:
+      case TemporalStructureMode::kTemporalStructureMode3:
         num_frames_in_gof = 4;
         temporal_idx[0] = 0;
         temporal_up_switch[0] = false;
@@ -82,7 +82,7 @@ struct GofInfoVP9 {
         num_ref_pics[3] = 1;
         pid_diff[3][0] = 1;
         break;
-      case kTemporalStructureMode4:
+      case TemporalStructureMode::kTemporalStructureMode4:
         num_frames_in_gof = 8;
         temporal_idx[0] = 0;
         temporal_up_switch[0] = false;

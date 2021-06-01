@@ -194,11 +194,11 @@ void FrameAssembler::find_frames(uint16_t seq_num)
                         return; //return found_frames;
 
                     for (size_t j = 0; j < h264_header.nalus_length; ++j) {
-                        if (h264_header.nalus[j].type == H264NaluType::Sps) {
+                        if (h264_header.nalus[j].type == static_cast<uint8_t>(H264NaluType::Sps)) {
                             has_h264_sps = true;
-                        } else if (h264_header.nalus[j].type == H264NaluType::Pps) {
+                        } else if (h264_header.nalus[j].type == static_cast<uint8_t>(H264NaluType::Pps)) {
                             has_h264_pps = true;
-                        } else if (h264_header.nalus[j].type == H264NaluType::Idr) {
+                        } else if (h264_header.nalus[j].type == static_cast<uint8_t>(H264NaluType::Idr)) {
                             has_h264_idr = true;
                         }
                     }
