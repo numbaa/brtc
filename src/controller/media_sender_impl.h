@@ -41,8 +41,8 @@ private:
     inline void send_to_pacing_loop(EncodedFrame frame);
     inline bco::Task<EncodedFrame> receive_from_encode_loop();
 
-    void add_required_rtp_extensions(RtpPacket& packet, const UnionRTPVideoHeader& rtp_video_header, bool is_first_packet, bool is_last_packet);
-    UnionRTPVideoHeader get_rtp_video_header(EncodedFrame& frame);
+    void add_required_rtp_extensions(RtpPacket& packet, const RTPVideoHeader& rtp_video_header, bool is_first_packet, bool is_last_packet);
+    RTPVideoHeader get_rtp_video_header(EncodedFrame& frame);
 
 private:
     std::atomic<bool> stop_ { true };
@@ -57,6 +57,7 @@ private:
     uint32_t start_timestamp_;
     uint16_t seq_number_;
     std::vector<webrtc::RtpPayloadParams> params_;
+    int64_t shared_frame_id_ = 0;
 };
 
 } // namespace brtc

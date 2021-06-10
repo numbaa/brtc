@@ -43,7 +43,7 @@ brtc::RtpFrameReferenceFinder::ReturnVector RtpVp9RefFinder::ManageFrame(
 
 RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     brtc::ReceivedFrame* frame) {
-    const brtc::RTPVideoHeaderVP9& video_header = std::get<brtc::RTPVideoHeaderVP9>(frame->video_header);
+    const brtc::RTPVideoHeaderVP9& video_header = std::get<brtc::RTPVideoHeaderVP9>(frame->video_header.video_type_header);
 
   // Protect against corrupted packets with arbitrary large temporal idx.
   if (video_header.temporal_idx >= kMaxTemporalLayers ||

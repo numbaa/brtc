@@ -31,7 +31,7 @@ enum FuDefs : uint8_t {
     kRBit = 0x20
 };
 
-enum NaluType : uint8_t {
+enum class NaluType : uint8_t {
     kSlice = 1,
     kIdr = 5,
     kSei = 6,
@@ -45,6 +45,17 @@ enum NaluType : uint8_t {
     kStapA = 24,
     kFuA = 28
 };
+
+NaluType determine_nalu_type(uint8_t nalu_header)
+{
+    constexpr uint8_t kNaluTypeMask = 0b0001'1111;
+    return static_cast<NaluType>(nalu_header & kNaluTypeMask);
+}
+
+bool is_idr(uint8_t nalu_header)
+{
+    return NaluType::kIdr == determine_nalu_type(nalu_header);
+}
 
 } // namespace
 
@@ -133,6 +144,9 @@ bool PacketizerH264::do_fragmentation()
         size_t offset = nalu - remain_data.data() + start_code_len;
         if (offset >= remain_data.size()) {
             break;
+        }
+        if (is_idr(nalu[start_code_len])) {
+            is_key_frame_ = true;
         }
         remain_data = remain_data.subspan(offset);
     }
@@ -378,7 +392,7 @@ void PacketizerH264::next_fragment_packet(RtpPacket& rtp_packet)
     // NAL unit fragmented over multiple packets (FU-A).
     // We do not send original NALU header, so it will be replaced by the
     // FU indicator header of the first packet.
-    uint8_t fu_indicator = (packet->header & (kFBit | kNriMask)) | NaluType::kFuA;
+    uint8_t fu_indicator = (packet->header & (kFBit | kNriMask)) | static_cast<uint8_t>(NaluType::kFuA);
     uint8_t fu_header = 0;
 
     // S | E | R | 5 bit type.
@@ -427,7 +441,7 @@ void PacketizerH264::next_aggregate_packet(RtpPacket& rtp_packet)
     PacketUnit* packet = &packets_.front();
     assert(packet->first_fragment == true);
     // STAP-A NALU header.
-    buffer[0] = (packet->header & (kFBit | kNriMask)) | NaluType::kStapA;
+    buffer[0] = (packet->header & (kFBit | kNriMask)) | static_cast<uint8_t>(NaluType::kStapA);
     size_t index = kNalHeaderSize;
     bool is_last_fragment = packet->last_fragment;
     while (packet->aggregated) {

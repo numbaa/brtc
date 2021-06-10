@@ -114,6 +114,22 @@ void MediaReceiverImpl::parse_rtp_extensions(RtpPacket& packet)
         auto& video_header = packet.video_header<RTPVideoHeader>();
         video_header.is_first_packet_in_frame = descriptor.FirstPacketInSubFrame();
         video_header.is_last_packet_in_frame = descriptor.LastPacketInSubFrame();
+        if (descriptor.FirstPacketInSubFrame()) {
+            video_header.frame_type = descriptor.FrameDependenciesDiffs().empty()
+                ? VideoFrameType::VideoFrameKey
+                : VideoFrameType::VideoFrameDelta;
+
+            auto& generic_descriptor_info = video_header.generic.emplace();
+            int64_t frame_id = frame_id_unwrapper_.Unwrap(descriptor.FrameId());
+            generic_descriptor_info.frame_id = frame_id;
+            generic_descriptor_info.spatial_index = descriptor.SpatialLayer();
+            generic_descriptor_info.temporal_index = descriptor.TemporalLayer();
+            for (uint16_t fdiff : descriptor.FrameDependenciesDiffs()) {
+                generic_descriptor_info.dependencies.push_back(frame_id - fdiff);
+            }
+        }
+        video_header.width = descriptor.Width();
+        video_header.height = descriptor.Height();
     }
 }
 

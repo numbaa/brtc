@@ -69,9 +69,9 @@ void FrameAssembler::insert(RtpPacket rtp_packet)
         last_received_keyframe_rtp_timestamp_ = rtp_packet.timestamp();
     }
 
-    Packet packet { std::move(rtp_packet) };
+    Packet packet { rtp_packet };
     packet.continuous = false;
-    buffer_[index] = std::move(packet);
+    buffer_[index] = packet;
 
     update_missing_packets(seq_num);
 
@@ -97,7 +97,7 @@ std::unique_ptr<ReceivedFrame> FrameAssembler::pop_assembled_frame()
     frame->_data_holder = frame_data;
 
     frame->codec_type = VideoCodecType::H264;
-    const RTPVideoHeaderH264& video_header = std::get<RTPVideoHeaderH264>(frame->video_header);
+    const RTPVideoHeaderH264& video_header = std::get<RTPVideoHeaderH264>(frame->video_header.video_type_header);
     //TODO: fill other fields
     //frame->frame_type
     //frame->video_header
@@ -279,10 +279,10 @@ void FrameAssembler::find_frames(uint16_t seq_num)
                 // Ensure frame boundary flags are properly set.
                 packet.video_header<RTPVideoHeader>().is_first_packet_in_frame = (i == start_seq_num);
                 packet.video_header<RTPVideoHeader>().is_last_packet_in_frame = (i == seq_num);
-                found_frames.push_back(std::move(packet));
+                found_frames.push_back(packet);
             }
             if (not found_frames.empty()) {
-                assembled_frames_.push_back(std::move(found_frames));
+                assembled_frames_.push_back(found_frames);
             }
 
             missing_packets_.erase(missing_packets_.begin(),
@@ -307,7 +307,7 @@ bool FrameAssembler::expand_buffer()
             new_buffer[entry.sequence_number() % new_size] = entry;
         }
     }
-    buffer_ = std::move(new_buffer);
+    buffer_ = new_buffer;
     LOG(INFO) << "PacketBuffer size expanded to " << new_size;
     return true;
 }

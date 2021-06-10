@@ -52,6 +52,7 @@ private:
     RtpFrameReferenceFinder reference_finder_;
     bco::Channel<Frame> undecoded_frames_;
     bco::Channel<Frame> decoded_frames_;
+    webrtc::SeqNumUnwrapper<uint16_t> frame_id_unwrapper_;
 };
 
 } // namespace brtc

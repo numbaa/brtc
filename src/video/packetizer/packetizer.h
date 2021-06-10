@@ -23,11 +23,13 @@ public:
     virtual ~Packetizer() { }
     static std::unique_ptr<Packetizer> create(Frame decoded_frame, VideoCodecType codec_type, PayloadSizeLimits limits);
     bool is_valid_frame() const { return is_valid_frame_; }
+    bool is_key_frame() const { return is_key_frame_; }
     virtual bool next_packet(RtpPacket& packet) = 0;
     virtual size_t num_packets() const = 0;
 
 protected:
     bool is_valid_frame_ = false;
+    bool is_key_frame_ = false;
 };
 
 } // namespace brtc

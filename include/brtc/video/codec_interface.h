@@ -88,7 +88,7 @@ struct CodecSpecificInfoH264 {
     //H264PacketizationMode packetization_mode;  //useless
     uint8_t temporal_idx;
     bool base_layer_sync;
-    bool idr_frame;
+    //bool idr_frame;
 };
 static_assert(std::is_standard_layout<CodecSpecificInfoH264>::value && std::is_trivial<CodecSpecificInfoH264>::value, "");
 

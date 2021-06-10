@@ -40,7 +40,7 @@ brtc::RtpFrameReferenceFinder::ReturnVector RtpVp8RefFinder::ManageFrame(
 
 RtpVp8RefFinder::FrameDecision RtpVp8RefFinder::ManageFrameInternal(
     brtc::ReceivedFrame* frame) {
-  const brtc::RTPVideoHeaderVP8& video_header = std::get<brtc::RTPVideoHeaderVP8>(frame->video_header);
+  const brtc::RTPVideoHeaderVP8& video_header = std::get<brtc::RTPVideoHeaderVP8>(frame->video_header.video_type_header);
 
   // Protect against corrupted packets with arbitrary large temporal idx.
   if (video_header.temporalIdx >= kMaxTemporalLayers)

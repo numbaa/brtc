@@ -34,7 +34,7 @@ bool NvEncoder::init(Microsoft::WRL::ComPtr<ID3D11Device> device)
 
 EncodedFrame NvEncoder::encode_one_frame(Frame frame)
 {
-    switch (frame.type) {
+    switch (frame.underlying_type) {
     case brtc::Frame::UnderlyingType::kMemory:
         break;
     case brtc::Frame::UnderlyingType::kD3D11Texture2D:
@@ -56,9 +56,16 @@ EncodedFrame NvEncoder::encode_external_d3d11_texture2d(Frame frame)
         out.height = frame.height;
         out.width = frame.width;
         out.data = packets->front().data();
-        out.type = Frame::UnderlyingType::kMemory;
+        out.underlying_type = Frame::UnderlyingType::kMemory;
         out.timestamp = static_cast<uint32_t>(brtc::MachineNowMilliseconds());
         out._data_holder = packets;
+        CodecSpecificInfo codec_info;
+        codec_info.codecType = VideoCodecType::H264;
+        codec_info.codecSpecific.H264 = CodecSpecificInfoH264 {
+            .temporal_idx = kNoTemporalIdx,
+            .base_layer_sync = false,
+        };
+        out.codec_info = codec_info;
     }
     return out;
 }

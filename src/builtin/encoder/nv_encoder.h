@@ -38,7 +38,7 @@ public:
     EncodedFrame encode_one_frame(Frame frame) override;
 
 private:
-    Frame encode_external_d3d11_texture2d(Frame frame);
+    EncodedFrame encode_external_d3d11_texture2d(Frame frame);
 
 private:
     Microsoft::WRL::ComPtr<ID3D11Device> device_;

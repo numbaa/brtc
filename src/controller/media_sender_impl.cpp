@@ -10,6 +10,11 @@ constexpr uint32_t kDefaultPayloadType = 127;
 
 namespace brtc {
 
+class _fake_cfg : public webrtc::WebRtcKeyValueConfig {
+public:
+    std::string Lookup(std::string_view key) const { return ""; }
+};
+
 MediaSenderImpl::MediaSenderImpl(
             const TransportInfo& info,
             std::unique_ptr<Strategies>&& strategies,
@@ -28,6 +33,7 @@ MediaSenderImpl::MediaSenderImpl(
 {
     start_timestamp_ = ::rand();
     seq_number_ = static_cast<uint16_t>(::rand());
+    params_.push_back(RtpPayloadParams(kDefaultSsrc, nullptr, _fake_cfg {}));
 }
 
 void MediaSenderImpl::start()
@@ -75,9 +81,13 @@ bco::Routine MediaSenderImpl::pacing_loop(std::shared_ptr<MediaSenderImpl> that)
 {
     while (!stop_) {
         auto frame = co_await receive_from_encode_loop();
-        auto video_header = get_rtp_video_header(frame);
+        shared_frame_id_++;
         Packetizer::PayloadSizeLimits limits;
         std::unique_ptr<Packetizer> packetizer = Packetizer::create(frame, VideoCodecType::H264, limits);
+
+        frame.video_frame_type = packetizer->is_key_frame() ? VideoFrameType::VideoFrameKey : VideoFrameType::VideoFrameDelta;
+        auto video_header = get_rtp_video_header(frame);
+
         size_t num_packets = packetizer->num_packets();
         for (size_t i = 0; i < num_packets; i++) {
             const bool is_first_packet = i == 0;
@@ -146,32 +156,31 @@ inline bco::Task<EncodedFrame> MediaSenderImpl::receive_from_encode_loop()
     return encoded_frames_.recv();
 }
 
-void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet, const UnionRTPVideoHeader& rtp_video_header, bool is_first_packet, bool is_last_packet)
+void MediaSenderImpl::add_required_rtp_extensions(RtpPacket& packet, const RTPVideoHeader& rtp_video_header, bool is_first_packet, bool is_last_packet)
 {
     //TODO: add more extensions
     RtpGenericFrameDescriptor descriptor;
     descriptor.SetFirstPacketInSubFrame(is_first_packet);
     descriptor.SetLastPacketInSubFrame(is_last_packet);
-    auto& video_header = std::get<brtc::RTPVideoHeader>(rtp_video_header);
-    if (false) {
-        descriptor.SetFrameId(static_cast<uint16_t>(video_header.generic->frame_id));
-        for (int64_t dep : video_header.generic->dependencies) {
-            descriptor.AddFrameDependencyDiff(static_cast<uint16_t>(video_header.generic->frame_id - dep));
+    if (is_first_packet) {
+        descriptor.SetFrameId(static_cast<uint16_t>(rtp_video_header.generic->frame_id));
+        for (int64_t dep : rtp_video_header.generic->dependencies) {
+            descriptor.AddFrameDependencyDiff(static_cast<uint16_t>(rtp_video_header.generic->frame_id - dep));
         }
 
-        uint8_t spatial_bimask = 1 << video_header.generic->spatial_index;
+        uint8_t spatial_bimask = 1 << rtp_video_header.generic->spatial_index;
         descriptor.SetSpatialLayersBitmask(spatial_bimask);
 
-        descriptor.SetTemporalLayer(static_cast<uint8_t>(video_header.generic->temporal_index));
+        descriptor.SetTemporalLayer(static_cast<uint8_t>(rtp_video_header.generic->temporal_index));
 
-        if (video_header.frame_type == VideoFrameType::VideoFrameKey) {
-            descriptor.SetResolution(video_header.width, video_header.height);
+        if (rtp_video_header.frame_type == VideoFrameType::VideoFrameKey) {
+            descriptor.SetResolution(rtp_video_header.width, rtp_video_header.height);
         }
     }
     packet.set_extension<RtpGenericFrameDescriptorExtension00>(descriptor);
 }
 
-UnionRTPVideoHeader MediaSenderImpl::get_rtp_video_header(EncodedFrame& frame)
+RTPVideoHeader MediaSenderImpl::get_rtp_video_header(EncodedFrame& frame)
 {
     // TODO: Not only get rtp video header
     size_t stream_index = 0;
@@ -179,7 +188,7 @@ UnionRTPVideoHeader MediaSenderImpl::get_rtp_video_header(EncodedFrame& frame)
         // Map spatial index to simulcast.
         stream_index = frame.spatial_index.value_or(0);
     }
-    return params_[stream_index].GetRtpVideoHeader(frame, &frame.codec_info.value(), 0);
+    return params_[stream_index].GetRtpVideoHeader(frame, frame.codec_info.has_value() ? &frame.codec_info.value() : nullptr, shared_frame_id_);
 }
 
 

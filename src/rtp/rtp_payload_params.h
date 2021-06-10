@@ -35,7 +35,7 @@ class RtpPayloadParams final {
   RtpPayloadParams(const RtpPayloadParams& other);
   ~RtpPayloadParams();
 
-  brtc::UnionRTPVideoHeader GetRtpVideoHeader(const brtc::EncodedFrame& image,
+  brtc::RTPVideoHeader GetRtpVideoHeader(const brtc::EncodedFrame& image,
                                    const CodecSpecificInfo* codec_specific_info,
                                    int64_t shared_frame_id);
 
@@ -44,7 +44,7 @@ class RtpPayloadParams final {
   RtpPayloadState state() const;
 
  private:
-  void SetCodecSpecific(brtc::UnionRTPVideoHeader* rtp_video_header,
+  void SetCodecSpecific(brtc::RTPVideoHeader* rtp_video_header,
                         bool first_frame_in_picture);
   brtc::RTPVideoHeader::GenericDescriptorInfo GenericDescriptorFromFrameInfo(
       const GenericFrameInfo& frame_info,
@@ -52,21 +52,21 @@ class RtpPayloadParams final {
   void SetGeneric(const CodecSpecificInfo* codec_specific_info,
                   int64_t frame_id,
                   bool is_keyframe,
-                  brtc::UnionRTPVideoHeader* rtp_video_header);
+                  brtc::RTPVideoHeader* rtp_video_header);
 
   void Vp8ToGeneric(const CodecSpecificInfoVP8& vp8_info,
                     int64_t shared_frame_id,
                     bool is_keyframe,
-                    brtc::UnionRTPVideoHeader* rtp_video_header);
+                    brtc::RTPVideoHeader* rtp_video_header);
 
   void H264ToGeneric(const CodecSpecificInfoH264& h264_info,
                      int64_t shared_frame_id,
                      bool is_keyframe,
-                     brtc::UnionRTPVideoHeader* rtp_video_header);
+                     brtc::RTPVideoHeader* rtp_video_header);
 
   void GenericToGeneric(int64_t shared_frame_id,
                         bool is_keyframe,
-                        brtc::UnionRTPVideoHeader* rtp_video_header);
+                        brtc::RTPVideoHeader* rtp_video_header);
 
   // TODO(bugs.webrtc.org/10242): Delete SetDependenciesVp8Deprecated() and move
   // the logic in SetDependenciesVp8New() into Vp8ToGeneric() once all hardware

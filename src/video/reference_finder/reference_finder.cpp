@@ -34,16 +34,14 @@ private:
 RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
     std::unique_ptr<ReceivedFrame> frame)
 {
-    const RTPVideoHeader& video_header = std::get<RTPVideoHeader>(frame->video_header);
-
-    if (video_header.generic.has_value()) {
+    if (frame->video_header.generic.has_value()) {
         return GetRefFinderAs<webrtc::RtpGenericFrameRefFinder>().ManageFrame(
-            std::move(frame), *video_header.generic);
+            std::move(frame), *frame->video_header.generic);
     }
 
     switch (frame->codec_type) {
     case VideoCodecType::VP8: {
-        const RTPVideoHeaderVP8& vp8_header = std::get<RTPVideoHeaderVP8>(frame->video_header);
+        const RTPVideoHeaderVP8& vp8_header = std::get<RTPVideoHeaderVP8>(frame->video_header.video_type_header);
 
         if (vp8_header.temporalIdx == webrtc::kNoTemporalIdx || vp8_header.tl0PicIdx == webrtc::kNoTl0PicIdx) {
             if (vp8_header.pictureId == webrtc::kNoPictureId) {
@@ -58,7 +56,7 @@ RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
         return GetRefFinderAs<webrtc::RtpVp8RefFinder>().ManageFrame(std::move(frame));
     }
     case VideoCodecType::VP9: {
-        const RTPVideoHeaderVP9& vp9_header = std::get<RTPVideoHeaderVP9>(frame->video_header);
+        const RTPVideoHeaderVP9& vp9_header = std::get<RTPVideoHeaderVP9>(frame->video_header.video_type_header);
 
         if (vp9_header.temporal_idx == webrtc::kNoTemporalIdx) {
             if (vp9_header.picture_id == webrtc::kNoPictureId) {

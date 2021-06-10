@@ -13,8 +13,8 @@ private:
     class Packet : public RtpPacket {
     public:
         Packet() = default;
-        Packet(RtpPacket&& rtp_packet)
-            : RtpPacket { std::move(rtp_packet) }
+        Packet(RtpPacket rtp_packet)
+            : RtpPacket { rtp_packet }
         {
         }
         bool continuous = false;

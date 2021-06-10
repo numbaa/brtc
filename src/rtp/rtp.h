@@ -114,6 +114,26 @@ struct VideoPlayoutDelay {
     }
 };
 
+struct RTPVideoHeaderH264 {
+    H264NaluType nalu_type;
+    H264PacketizationTypes packetization_type;
+    NaluInfo nalus[kMaxNalusPerPacket];
+    uint32_t nalus_length;
+    H264PacketizationMode packetization_mode;
+    uint16_t picture_id;
+    int64_t timestamp_local;
+    bool has_last_fragement;
+};
+
+struct RTPVideoHeaderH265 {
+};
+
+using RTPVideoHeaderVP8 = webrtc::RTPVideoHeaderVP8;
+
+using RTPVideoHeaderVP9 = webrtc::RTPVideoHeaderVP9;
+
+using RTPVideoTypeHeader = std::variant<RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9>;
+
 struct RTPVideoHeader {
     struct GenericDescriptorInfo {
         GenericDescriptorInfo() = default;
@@ -146,61 +166,14 @@ struct RTPVideoHeader {
     // This field is meant for media quality testing purpose only. When enabled it
     // carries the webrtc::VideoFrame id field from the sender to the receiver.
     //std::optional<uint16_t> video_frame_tracking_id;
+    RTPVideoTypeHeader video_type_header;
 };
-
-struct RTPVideoHeaderH264 : public RTPVideoHeader {
-    H264NaluType nalu_type;
-    H264PacketizationTypes packetization_type;
-    NaluInfo nalus[kMaxNalusPerPacket];
-    uint32_t nalus_length;
-    H264PacketizationMode packetization_mode;
-    uint16_t picture_id;
-    int64_t timestamp_local;
-    bool has_last_fragement;
-};
-
-struct RTPVideoHeaderH265 : public RTPVideoHeader {
-};
-
-struct RTPVideoHeaderVP8 : public RTPVideoHeader, public webrtc::RTPVideoHeaderVP8 {
-    /*
-    void InitRTPVideoHeaderVP8()
-    {
-        nonReference = false;
-        pictureId = kNoPictureId;
-        tl0PicIdx = kNoTl0PicIdx;
-        temporalIdx = kNoTemporalIdx;
-        layerSync = false;
-        keyIdx = kNoKeyIdx;
-        partitionId = 0;
-        beginningOfPartition = false;
-    }
-
-    bool nonReference; // Frame is discardable.
-    int16_t pictureId; // Picture ID index, 15 bits;
-        // kNoPictureId if PictureID does not exist.
-    int16_t tl0PicIdx; // TL0PIC_IDX, 8 bits;
-        // kNoTl0PicIdx means no value provided.
-    uint8_t temporalIdx; // Temporal layer index, or kNoTemporalIdx.
-    bool layerSync; // This frame is a layer sync frame.
-        // Disabled if temporalIdx == kNoTemporalIdx.
-    int keyIdx; // 5 bits; kNoKeyIdx means not used.
-    int partitionId; // VP8 partition ID
-    bool beginningOfPartition; // True if this packet is the first
-        // in a VP8 partition. Otherwise false
-    */
-};
-
-struct RTPVideoHeaderVP9 : public RTPVideoHeader, public webrtc::RTPVideoHeaderVP9 {
-};
-
-using UnionRTPVideoHeader = std::variant<RTPVideoHeader, RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9>;
 
 constexpr size_t kMaxFrameReferences = 5;
 struct ReceivedFrame : public Frame {
     VideoCodecType codec_type;
     VideoFrameType frame_type;
-    UnionRTPVideoHeader video_header;
+    RTPVideoHeader video_header;
     int spatial_index;
     uint16_t first_seq_num;
     uint16_t last_seq_num;
