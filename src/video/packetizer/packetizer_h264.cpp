@@ -124,7 +124,7 @@ bool PacketizerH264::next_packet(RtpPacket& rtp_packet)
 
 size_t PacketizerH264::num_packets() const
 {
-    return packets_.size();
+    return num_packets_left_;
 }
 
 bool PacketizerH264::do_fragmentation()

@@ -142,8 +142,8 @@ void RtpFrameReferenceFinder::ManageFrame(std::unique_ptr<ReceivedFrame> frame)
         f->id = f->id + picture_id_offset_;
         for (size_t i = 0; i < f->num_references; ++i) {
             f->references[i] += picture_id_offset_;
-            frames_.push(std::move(f));
         }
+        frames_.push(std::move(f));
     }
 }
 

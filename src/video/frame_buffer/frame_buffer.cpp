@@ -1,3 +1,4 @@
+#include <queue>
 #include <glog/logging.h>
 #include "common/sequence_number_util.h"
 #include "common/time_utils.h"
@@ -30,7 +31,7 @@ void FrameBuffer::insert(ReceivedFrame frame)
 
     if (!valid_references(frame)) {
         LOG(WARNING) << "Frame " << frame.id
-                            << " has invalid frame references, dropping frame.";
+                     << " has invalid frame references, dropping frame.";
         //return last_continuous_frame_id;
         return;
     }
@@ -38,13 +39,13 @@ void FrameBuffer::insert(ReceivedFrame frame)
     if (frames_.size() >= kMaxFramesBuffered) {
         if (frame.frame_type == VideoFrameType::VideoFrameKey) {
             LOG(WARNING) << "Inserting keyframe " << frame.id
-                                << " but buffer is full, clearing"
-                                   " buffer and inserting the frame.";
+                         << " but buffer is full, clearing"
+                            " buffer and inserting the frame.";
             clear_frames_and_history();
         } else {
             LOG(WARNING) << "Frame " << frame.id
-                                << " could not be inserted due to the frame "
-                                   "buffer being full, dropping frame.";
+                         << " could not be inserted due to the frame "
+                            "buffer being full, dropping frame.";
             //return last_continuous_frame_id;
             return;
         }
@@ -65,8 +66,8 @@ void FrameBuffer::insert(ReceivedFrame frame)
             last_continuous_frame_id = -1;
         } else {
             LOG(WARNING) << "Frame " << frame.id << " inserted after frame "
-                                << *last_decoded_frame
-                                << " was handed off for decoding, dropping frame.";
+                         << *last_decoded_frame
+                         << " was handed off for decoding, dropping frame.";
             //return last_continuous_frame_id;
             return;
         }
@@ -96,8 +97,11 @@ void FrameBuffer::insert(ReceivedFrame frame)
     //if (!frame->delayed_by_retransmission())
     //    timing_->IncomingTimestamp(frame.timestamp, frame->ReceivedTime());
 
-
     info->second.frame = std::move(frame);
+    if (info->second.num_missing_continuous == 0) {
+        info->second.continuous = true;
+        propagate_continuity(info);
+    }
 }
 
 std::optional<ReceivedFrame> FrameBuffer::pop_decodable_frame()
@@ -183,6 +187,40 @@ bool FrameBuffer::update_frame_info_with_incoming_frame(const ReceivedFrame& fra
     }
 
     return true;
+}
+
+void FrameBuffer::propagate_continuity(FrameMap::iterator start)
+{
+    assert(start->second.continuous);
+
+    std::queue<FrameMap::iterator> continuous_frames;
+    continuous_frames.push(start);
+
+    // A simple BFS to traverse continuous frames.
+    while (!continuous_frames.empty()) {
+        auto frame = continuous_frames.front();
+        continuous_frames.pop();
+
+        if (!last_continuous_frame_ || *last_continuous_frame_ < frame->first) {
+            last_continuous_frame_ = frame->first;
+        }
+
+        // Loop through all dependent frames, and if that frame no longer has
+        // any unfulfilled dependencies then that frame is continuous as well.
+        for (size_t d = 0; d < frame->second.dependent_frames.size(); ++d) {
+            auto frame_ref = frames_.find(frame->second.dependent_frames[d]);
+            assert(frame_ref != frames_.end());
+
+            // TODO(philipel): Look into why we've seen this happen.
+            if (frame_ref != frames_.end()) {
+                --frame_ref->second.num_missing_continuous;
+                if (frame_ref->second.num_missing_continuous == 0) {
+                    frame_ref->second.continuous = true;
+                    continuous_frames.push(frame_ref);
+                }
+            }
+        }
+    }
 }
 
 } // namespace brtc

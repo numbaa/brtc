@@ -46,6 +46,7 @@ private:
     std::vector<Packet> buffer_;
     std::deque<std::vector<RtpPacket>> assembled_frames_;
     const size_t max_size_; //构造函数传进来
+    std::optional<RTPVideoHeader> video_header_;
 };
 
-}
+} // namespace brtc

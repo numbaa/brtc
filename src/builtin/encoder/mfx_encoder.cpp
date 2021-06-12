@@ -97,6 +97,13 @@ EncodedFrame MfxEncoder::encode_one_frame(Frame in_frame)
     out_frame.height = vppin.Info.Height;
     out_frame.timestamp = static_cast<uint32_t>(brtc::MachineNowMilliseconds());
     out_frame._data_holder = data_holder;
+    CodecSpecificInfo codec_info;
+    codec_info.codecType = VideoCodecType::H264;
+    codec_info.codecSpecific.H264 = CodecSpecificInfoH264 {
+        .temporal_idx = kNoTemporalIdx,
+        .base_layer_sync = false,
+    };
+    out_frame.codec_info = codec_info;
     return out_frame;
 }
 

@@ -229,6 +229,16 @@ const bco::Buffer RtpPacket::data() const
     return buffer_;
 }
 
+const RTPVideoHeader& RtpPacket::video_header() const
+{
+    return video_header_;
+}
+
+RTPVideoHeader& RtpPacket::video_header()
+{
+    return video_header_;
+}
+
 //const ExtraRtpInfo& RtpPacket::extra_info() const
 //{
 //    return extra_rtp_info_;
@@ -381,6 +391,11 @@ RtpPacket::ExtensionInfo& RtpPacket::find_or_create_extension_info(RTPExtensionT
     }
     extension_entries_.emplace_back(type);
     return extension_entries_.back();
+}
+
+void RtpPacket::set_video_header(const RTPVideoHeader& header)
+{
+    video_header_ = header;
 }
 
 } // namespace brtc

@@ -204,16 +204,8 @@ public:
     size_t size() const;
     bool empty_payload() const;
     const bco::Buffer data() const;
-    template <typename T>
-    const T& video_header() const {
-        return std::get<T>(video_header_);
-    }
-    template <typename T>
-    T& video_header() {
-        return std::get<T>(video_header_);
-    }
-    //const ExtraRtpInfo& extra_info() const;
-    //ExtraRtpInfo& extra_info();
+    const RTPVideoHeader& video_header() const;
+    RTPVideoHeader& video_header();
 
     void set_marker(bool marker);
     void set_payload_type(uint8_t pt);
@@ -225,10 +217,7 @@ public:
     bool set_extension(const typename T::value_type& ext);
     void set_payload(const std::span<uint8_t>& payload);
     void set_payload(std::vector<uint8_t>&& payload);
-    template <typename T>
-    void set_video_header(const T& header) {
-        video_header_ = header;
-    }
+    void set_video_header(const RTPVideoHeader& header);
 
 private:
     void parse();
@@ -273,7 +262,7 @@ private:
 private:
     ExtensionMode extension_mode_ = ExtensionMode::kOneByte;
     std::vector<ExtensionInfo> extension_entries_;
-    std::variant<RTPVideoHeader, RTPVideoHeaderH264, RTPVideoHeaderH265, RTPVideoHeaderVP8, RTPVideoHeaderVP9> video_header_;
+    RTPVideoHeader video_header_;
     //ExtraRtpInfo extra_rtp_info_;
     mutable bco::Buffer buffer_;
     //mutable Frame frame_;

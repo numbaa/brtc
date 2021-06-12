@@ -46,6 +46,7 @@ private:
     void clear_frames_and_history();
     bool update_frame_info_with_incoming_frame(const ReceivedFrame& frame,
         FrameMap::iterator info);
+    void propagate_continuity(FrameMap::iterator start);
 
 private:
     std::optional<int64_t> last_continuous_frame_;

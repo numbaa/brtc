@@ -1,5 +1,6 @@
 #include "rtp/extension.h"
 #include "media_receiver_impl.h"
+#include <glog/logging.h>
 
 namespace brtc {
 
@@ -111,7 +112,7 @@ void MediaReceiverImpl::parse_rtp_extensions(RtpPacket& packet)
 {
     RtpGenericFrameDescriptor descriptor;
     if (packet.get_extension<RtpGenericFrameDescriptorExtension00>(descriptor)) {
-        auto& video_header = packet.video_header<RTPVideoHeader>();
+        auto& video_header = packet.video_header();
         video_header.is_first_packet_in_frame = descriptor.FirstPacketInSubFrame();
         video_header.is_last_packet_in_frame = descriptor.LastPacketInSubFrame();
         if (descriptor.FirstPacketInSubFrame()) {
