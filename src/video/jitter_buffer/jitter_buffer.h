@@ -1,12 +1,14 @@
 #pragma once
 #include <optional>
 #include <map>
+#include <bco/coroutine/task.h>
+#include <bco/coroutine/channel.h>
 #include "rtp/rtp.h"
-#include "video/frame_buffer/decoded_frames_history.h"
+#include "video/jitter_buffer/decoded_frames_history.h"
 
 namespace brtc {
 
-class FrameBuffer {
+class JitterBuffer {
     struct FrameInfo {
         FrameInfo() = default;
         FrameInfo(FrameInfo&&) = default;
@@ -37,9 +39,9 @@ class FrameBuffer {
     using FrameMap = std::map<int64_t, FrameInfo>;
 
 public:
-    FrameBuffer(size_t decoded_history_size);
+    JitterBuffer(size_t decoded_history_size);
     void insert(ReceivedFrame frame);
-    std::optional<ReceivedFrame> pop_decodable_frame();
+    bco::Task<ReceivedFrame> pop_decodable_frame();
 
 private:
     bool valid_references(ReceivedFrame frame);
@@ -47,13 +49,20 @@ private:
     bool update_frame_info_with_incoming_frame(const ReceivedFrame& frame,
         FrameMap::iterator info);
     void propagate_continuity(FrameMap::iterator start);
+    void propagate_decodability(const FrameInfo& info);
+
+    //draft
+    void main_loop();
+    std::vector<FrameMap::iterator> find_next_frame();
+    ReceivedFrame get_next_frame(std::vector<FrameMap::iterator>& frames_to_decode);
 
 private:
     std::optional<int64_t> last_continuous_frame_;
     FrameMap frames_;
     webrtc::video_coding::DecodedFramesHistory decoded_frames_history_;
-    std::vector<FrameMap::iterator> frames_to_decode_;
     int64_t last_log_non_decoded_ms_;
+    bool keyframe_required_ = false;
+    bco::Channel<ReceivedFrame> decodale_frames_;
 };
 
 } // namespace brtc

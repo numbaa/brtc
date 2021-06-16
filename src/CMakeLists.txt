@@ -117,13 +117,13 @@ target_link_libraries(brtc_frame_assembler
     brtc_rtp
 )
 
-add_brtc_object(brtc_frame_buffer "src/video"
-  "video/frame_buffer/frame_buffer.h"
-  "video/frame_buffer/frame_buffer.cpp"
-  "video/frame_buffer/decoded_frames_history.h"
-  "video/frame_buffer/decoded_frames_history.cpp"
+add_brtc_object(brtc_jitter_buffer "src/video"
+  "video/jitter_buffer/jitter_buffer.h"
+  "video/jitter_buffer/jitter_buffer.cpp"
+  "video/jitter_buffer/decoded_frames_history.h"
+  "video/jitter_buffer/decoded_frames_history.cpp"
 )
-target_link_libraries(brtc_frame_buffer
+target_link_libraries(brtc_jitter_buffer
   PRIVATE
     glog::glog
     brtc_common
@@ -162,7 +162,7 @@ add_library(${PROJECT_NAME} STATIC
     $<TARGET_OBJECTS:brtc_common>
     $<TARGET_OBJECTS:brtc_packetizer>
     $<TARGET_OBJECTS:brtc_frame_assembler>
-    $<TARGET_OBJECTS:brtc_frame_buffer>
+    $<TARGET_OBJECTS:brtc_jitter_buffer>
     $<TARGET_OBJECTS:brtc_reference_finder>
     $<TARGET_OBJECTS:brtc_rtp>
     "video/frame_dependencies_calculator.cpp"

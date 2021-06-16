@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <glog/logging.h>
 
-#include "video/frame_buffer/decoded_frames_history.h"
+#include "video/jitter_buffer/decoded_frames_history.h"
 
 
 namespace webrtc {

@@ -8,7 +8,7 @@
 #include <bco/context.h>
 #include "transport/transport.h"
 #include "video/frame_assembler/frame_assembler.h"
-#include "video/frame_buffer/frame_buffer.h"
+#include "video/jitter_buffer/jitter_buffer.h"
 #include "video/reference_finder/reference_finder.h"
 
 namespace brtc {
@@ -30,6 +30,7 @@ private:
     bco::Routine network_loop(std::shared_ptr<MediaReceiverImpl> that);
     bco::Routine decode_loop(std::shared_ptr<MediaReceiverImpl> that);
     bco::Routine render_loop(std::shared_ptr<MediaReceiverImpl> that);
+    bco::Routine jitter_loop(std::shared_ptr<MediaReceiverImpl> that);
     inline void send_to_decode_loop(Frame frame);
     inline void send_to_render_loop(Frame frame);
     inline bco::Task<Frame> receive_from_network_loop();
@@ -48,7 +49,7 @@ private:
     std::shared_ptr<bco::Context> decode_ctx_;
     std::shared_ptr<bco::Context> render_ctx_;
     FrameAssembler frame_assembler_;
-    FrameBuffer frame_buffer_;
+    JitterBuffer frame_buffer_;
     RtpFrameReferenceFinder reference_finder_;
     bco::Channel<Frame> undecoded_frames_;
     bco::Channel<Frame> decoded_frames_;

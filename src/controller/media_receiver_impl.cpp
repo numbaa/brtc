@@ -34,6 +34,7 @@ MediaReceiverImpl::MediaReceiverImpl(
 void MediaReceiverImpl::start()
 {
     network_ctx_->spawn(std::bind(&MediaReceiverImpl::network_loop, this, shared_from_this()));
+    network_ctx_->spawn(std::bind(&MediaReceiverImpl::jitter_loop, this, shared_from_this()));
     decode_ctx_->spawn(std::bind(&MediaReceiverImpl::decode_loop, this, shared_from_this()));
     render_ctx_->spawn(std::bind(&MediaReceiverImpl::render_loop, this, shared_from_this()));
 }
@@ -55,9 +56,14 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
         while (auto frame = reference_finder_.pop_gop_inter_continous_frame()) {
             frame_buffer_.insert(*frame);
         }
-        while (auto frame = frame_buffer_.pop_decodable_frame()) {
-            send_to_decode_loop(frame.value());
-        }
+    }
+}
+
+bco::Routine MediaReceiverImpl::jitter_loop(std::shared_ptr<MediaReceiverImpl> that)
+{
+    while (!stop_) {
+        auto frame = co_await frame_buffer_.pop_decodable_frame();
+        send_to_decode_loop(frame);
     }
 }
 
