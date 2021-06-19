@@ -1,4 +1,5 @@
 #include <queue>
+#include <bco/coroutine/cofunc.h>
 #include <glog/logging.h>
 #include "common/sequence_number_util.h"
 #include "common/time_utils.h"
@@ -19,10 +20,23 @@ constexpr int64_t kLogNonDecodedIntervalMs = 5000;
 } // namespace
 
 namespace brtc {
-JitterBuffer::JitterBuffer(size_t decoded_history_size)
-    : decoded_frames_history_(decoded_history_size)
+JitterBuffer::JitterBuffer(size_t decoded_history_size, std::shared_ptr<bco::Context> ctx)
+    : decoded_frames_history_ { decoded_history_size }
+    , context_ {ctx}
 {
 }
+
+void JitterBuffer::start()
+{
+    latest_return_time_ms_ = MachineNowMilliseconds();
+    context_->spawn(std::bind(&JitterBuffer::main_loop, this));
+}
+
+void JitterBuffer::stop()
+{
+    stop_ = true;
+}
+
 void JitterBuffer::insert(ReceivedFrame frame)
 {
     //MutexLock lock(&mutex_);
@@ -235,21 +249,21 @@ void JitterBuffer::propagate_decodability(const FrameInfo& info)
     }
 }
 
-void JitterBuffer::main_loop()
+bco::Routine JitterBuffer::main_loop()
 {
-    //TODO: add jitter
-    while (true) {
-        auto frame_to_decode = find_next_frame();
+    while (!stop_) {
+        auto [frame_to_decode, wait_ms] = find_next_frame();
+        co_await bco::sleep_for(std::chrono::milliseconds { wait_ms });
         auto frame = get_next_frame(frame_to_decode);
         decodale_frames_.send(frame);
     }
 }
 
-std::vector<JitterBuffer::FrameMap::iterator> JitterBuffer::find_next_frame()
+std::tuple<std::vector<JitterBuffer::FrameMap::iterator>, int64_t> JitterBuffer::find_next_frame()
 {
     std::vector<FrameMap::iterator> frames_to_decode;
-    int64_t wait_ms = 0;
-    //int64_t wait_ms = latest_return_time_ms_ - now_ms;
+    int64_t now_ms = MachineNowMilliseconds();
+    int64_t wait_ms = latest_return_time_ms_ - now_ms;
     // |last_continuous_frame_| may be empty below, but nullopt is smaller
     // than everything else and loop will immediately terminate as expected.
     for (auto frame_it = frames_.begin();
@@ -322,11 +336,11 @@ std::vector<JitterBuffer::FrameMap::iterator> JitterBuffer::find_next_frame()
 
         frames_to_decode = std::move(current_superframe);
 
-        //TODO: Render Time
-        //if (frame->RenderTime() == -1) {
-        //    frame->SetRenderTime(timing_->RenderTimeMs(frame->Timestamp(), now_ms));
+        // TODO: render time
+        //if (frame->render_time == std::nullopt) {
+        //    frame->render_time = timing_->RenderTimeMs(frame->timestamp, now_ms);
         //}
-        //wait_ms = timing_->MaxWaitingTime(frame->RenderTime(), now_ms);
+        //wait_ms = timing_->MaxWaitingTime(frame->render_time.value(), now_ms);
 
         // This will cause the frame buffer to prefer high framerate rather
         // than high resolution in the case of the decoder not decoding fast
@@ -338,7 +352,9 @@ std::vector<JitterBuffer::FrameMap::iterator> JitterBuffer::find_next_frame()
         }
         break;
     }
-    return frames_to_decode;
+    wait_ms = std::min<int64_t>(wait_ms, latest_return_time_ms_ - now_ms);
+    wait_ms = std::max<int64_t>(wait_ms, 0);
+    return { frames_to_decode, wait_ms };
 }
 
 ReceivedFrame JitterBuffer::get_next_frame(std::vector<FrameMap::iterator>& frames_to_decode)

@@ -8,6 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4244; disable:26812)
+#endif
+
 
 #include <glog/logging.h>
 #include <utility>
@@ -216,6 +221,7 @@ void RtpVp8RefFinder::RetryStashedFrames(
         case kHandOff:
           complete_frame = true;
           res.push_back(std::move(*frame_it));
+          [[fallthrough]];
         case kDrop:
           frame_it = stashed_frames_.erase(frame_it);
       }
@@ -241,3 +247,8 @@ void RtpVp8RefFinder::ClearTo(uint16_t seq_num) {
 }
 
 }  // namespace webrtc
+
+
+#ifdef _WIN32
+#pragma warning(pop)
+#endif

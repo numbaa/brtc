@@ -12,7 +12,7 @@ namespace brtc {
 
 class _fake_cfg : public webrtc::WebRtcKeyValueConfig {
 public:
-    std::string Lookup(std::string_view key) const { return ""; }
+    std::string Lookup(std::string_view) const { return ""; }
 };
 
 MediaSenderImpl::MediaSenderImpl(

@@ -7,6 +7,11 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable:4244;disable:4100)
+#endif
+
 #include <stddef.h>
 #include <optional>
 #include <algorithm>
@@ -485,3 +490,7 @@ void RtpPayloadParams::SetDependenciesVp8New(
 }
 
 }  // namespace webrtc
+
+#ifdef _WIN32
+#pragma warning(pop)
+#endif

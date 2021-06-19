@@ -64,6 +64,7 @@ public:
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
         std::shared_ptr<bco::Context> network_ctx,
+        std::shared_ptr<bco::Context> jitter_ctx,
         std::shared_ptr<bco::Context> decode_ctx,
         std::shared_ptr<bco::Context> render_ctx);
     void start();

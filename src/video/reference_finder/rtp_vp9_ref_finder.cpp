@@ -8,7 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4244)
+#endif
 
 #include <algorithm>
 #include <utility>
@@ -353,3 +356,7 @@ void RtpVp9RefFinder::ClearTo(uint16_t seq_num) {
 }
 
 }  // namespace webrtc
+
+#ifdef _WIN32
+#pragma warning(pop)
+#endif

@@ -100,7 +100,7 @@ std::unique_ptr<ReceivedFrame> FrameAssembler::pop_assembled_frame()
     frame->_data_holder = frame_data;
 
     frame->codec_type = VideoCodecType::H264;
-    const RTPVideoHeaderH264& video_header = std::get<RTPVideoHeaderH264>(frame->video_header.video_type_header);
+    //const RTPVideoHeaderH264& video_header = std::get<RTPVideoHeaderH264>(frame->video_header.video_type_header);
     //TODO: fill other fields
     //frame->frame_type
     if (video_header_.has_value()) {
@@ -261,8 +261,8 @@ void FrameAssembler::find_frames(uint16_t seq_num)
                     if (idr_width > 0 && idr_height > 0) {
                         // IDR frame was finalized and we have the correct resolution for
                         // IDR; update first packet to have same resolution as IDR.
-                        buffer_[first_packet_index].video_header().width = idr_width;
-                        buffer_[first_packet_index].video_header().height = idr_height;
+                        buffer_[first_packet_index].video_header().width = static_cast<uint16_t>(idr_width);
+                        buffer_[first_packet_index].video_header().height = static_cast<uint16_t>(idr_height);
                     }
                 } else {
                     buffer_[first_packet_index].video_header().frame_type = VideoFrameType::VideoFrameDelta;
@@ -280,12 +280,12 @@ void FrameAssembler::find_frames(uint16_t seq_num)
             uint16_t num_packets = end_seq_num - start_seq_num;
             std::vector<RtpPacket> found_frames;
             found_frames.reserve(found_frames.size() + num_packets);
-            for (uint16_t i = start_seq_num; i != end_seq_num; ++i) {
-                RtpPacket& packet = buffer_[i % buffer_.size()];
-                assert(i == packet.sequence_number());
+            for (uint16_t j = start_seq_num; j != end_seq_num; ++j) {
+                RtpPacket& packet = buffer_[j % buffer_.size()];
+                assert(j == packet.sequence_number());
                 // Ensure frame boundary flags are properly set.
-                packet.video_header().is_first_packet_in_frame = (i == start_seq_num);
-                packet.video_header().is_last_packet_in_frame = (i == seq_num);
+                packet.video_header().is_first_packet_in_frame = (j == start_seq_num);
+                packet.video_header().is_last_packet_in_frame = (j == seq_num);
                 found_frames.push_back(packet);
             }
             if (not found_frames.empty()) {

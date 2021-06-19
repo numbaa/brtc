@@ -3,6 +3,7 @@
 #include <map>
 #include <bco/coroutine/task.h>
 #include <bco/coroutine/channel.h>
+#include <bco/executor.h>
 #include "rtp/rtp.h"
 #include "video/jitter_buffer/decoded_frames_history.h"
 
@@ -39,7 +40,9 @@ class JitterBuffer {
     using FrameMap = std::map<int64_t, FrameInfo>;
 
 public:
-    JitterBuffer(size_t decoded_history_size);
+    JitterBuffer(size_t decoded_history_size, std::shared_ptr<bco::Context> ctx);
+    void start();
+    void stop();
     void insert(ReceivedFrame frame);
     bco::Task<ReceivedFrame> pop_decodable_frame();
 
@@ -51,17 +54,19 @@ private:
     void propagate_continuity(FrameMap::iterator start);
     void propagate_decodability(const FrameInfo& info);
 
-    //draft
-    void main_loop();
-    std::vector<FrameMap::iterator> find_next_frame();
+    bco::Routine main_loop();
+    std::tuple<std::vector<FrameMap::iterator>, int64_t> find_next_frame();
     ReceivedFrame get_next_frame(std::vector<FrameMap::iterator>& frames_to_decode);
 
 private:
     std::optional<int64_t> last_continuous_frame_;
+    std::shared_ptr<bco::Context> context_;
     FrameMap frames_;
     webrtc::video_coding::DecodedFramesHistory decoded_frames_history_;
     int64_t last_log_non_decoded_ms_;
     bool keyframe_required_ = false;
+    bool stop_ = false;
+    int64_t latest_return_time_ms_;
     bco::Channel<ReceivedFrame> decodale_frames_;
 };
 

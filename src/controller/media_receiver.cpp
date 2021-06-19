@@ -10,6 +10,7 @@ MediaReceiver::MediaReceiver(
     std::unique_ptr<VideoDecoderInterface>&& decoder,
     std::unique_ptr<RenderInterface>&& render,
     std::shared_ptr<bco::Context> network_ctx,
+    std::shared_ptr<bco::Context> jitter_ctx,
     std::shared_ptr<bco::Context> decode_ctx,
     std::shared_ptr<bco::Context> render_ctx)
     : impl_ { std::make_shared<MediaReceiverImpl>(
@@ -18,6 +19,7 @@ MediaReceiver::MediaReceiver(
         std::move(decoder),
         std::move(render),
         network_ctx,
+        jitter_ctx,
         decode_ctx,
         render_ctx) }
 {

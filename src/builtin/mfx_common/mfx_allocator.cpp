@@ -272,7 +272,7 @@ mfxStatus MfxDecoderFrameAllocator::alloc_external_frame(mfxFrameAllocRequest* r
 {
     if (external_frames_.mids != nullptr) {
         response->mids = external_frames_.mids;
-        response->NumFrameActual = external_frames_.frames.size();
+        response->NumFrameActual = static_cast<mfxU16>(external_frames_.frames.size());
         return MFX_ERR_NONE;
     }
     D3D11_TEXTURE2D_DESC desc;

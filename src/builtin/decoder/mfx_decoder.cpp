@@ -1,3 +1,8 @@
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 26812)
+#endif
+
 #include <array>
 #include <iostream>
 
@@ -130,8 +135,9 @@ Frame MfxDecoder::decode_one_frame(Frame encoded_frame)
 
 mfxStatus MfxDecoder::release_frame(ComPtr<ID3D11Texture2D> frame)
 {
-    mfxFrameSurface1* surface = nullptr; // = find_surface_by_texture2d(frame);
-    surface->Data.Locked -= 1;
+    //mfxFrameSurface1* surface = nullptr; // = find_surface_by_texture2d(frame);
+    (void)frame;
+    //surface->Data.Locked -= 1;
     return MFX_ERR_NONE;
 }
 
@@ -143,10 +149,14 @@ int32_t MfxDecoder::get_unlocked_frame()
     if (it == surfaces_.end()) {
         return std::numeric_limits<int32_t>::max();
     } else {
-        return it - surfaces_.begin();
+        return static_cast<int32_t>(it - surfaces_.begin());
     }
 }
 
 } // namespace builtin
 
 } // namespace brtc
+
+#ifdef _WIN32
+#pragma warning(pop)
+#endif

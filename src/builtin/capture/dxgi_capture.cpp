@@ -123,7 +123,6 @@ std::vector<uint8_t> DxgiCapture::gpu_to_memory(ComPtr<ID3D11Texture2D> frame)
     context_->CopyResource(tmp_frame.Get(), frame.Get());
 
     D3D11_MAPPED_SUBRESOURCE mapped;
-    unsigned int subresource = 0;
     hr = context_->Map(tmp_frame.Get(), 0, D3D11_MAP_READ, 0, &mapped);
     if (FAILED(hr)) {
         return {};
@@ -137,7 +136,7 @@ std::vector<uint8_t> DxgiCapture::gpu_to_memory(ComPtr<ID3D11Texture2D> frame)
     std::vector<uint8_t> dest;
     dest.resize(width * height * 4);
     uint8_t* dest_tmp = dest.data();
-    for (int i = 0; i < height; ++i) {
+    for (uint32_t i = 0; i < height; ++i) {
         memcpy(dest_tmp, source, width * 4);
         source += pitch;
         dest_tmp += width * 4;

@@ -21,12 +21,24 @@ function(add_subdirectory_with_folder _folder _folder_name)
 endfunction()
 
 
+
+#NOT WORK
+#https://stackoverflow.com/questions/28344564/cmake-remove-a-compile-flag-for-a-single-translation-unit
+function(remove_one_cxx_flag _target _flag)
+    get_target_property(_target_cxx_flags ${_target} COMPILE_FLAGS)
+    if(_target_cxx_flags)
+        string(REPLACE ${_flag} "" _target_cxx_flags ${_target_cxx_flags})
+        set_target_properties(${_target} PROPERTIES COMPILE_FLAGS "${_target_cxx_flags}")
+    endif()
+endfunction(remove_one_cxx_flag)
+
+
 function(add_brtc_object object_name ide_folder)
     add_library(${object_name} OBJECT ${ARGN})
     set_target_properties(${object_name} PROPERTIES FOLDER ${ide_folder})
     if (MSVC)
         target_compile_definitions(${object_name} PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN)
-        target_compile_options(${object_name} PRIVATE /W4 /GR-) #/WX
+        target_compile_options(${object_name} PRIVATE /W4 /WX) #/GR-
     else()
         target_compile_options(${object_name} PRIVATE -fcoroutines -fno-rtti)
         target_compile_options(${object_name} PRIVATE -Wall -Wextra -pedantic -Werror)

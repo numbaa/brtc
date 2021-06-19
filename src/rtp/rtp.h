@@ -180,6 +180,7 @@ struct ReceivedFrame : public Frame {
     int64_t id;
     size_t num_references;
     int64_t references[kMaxFrameReferences];
+    std::optional<int64_t> render_time;
 };
 
 class RtpPacket {

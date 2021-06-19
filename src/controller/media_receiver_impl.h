@@ -21,6 +21,7 @@ public:
         std::unique_ptr<VideoDecoderInterface>&& decoder,
         std::unique_ptr<RenderInterface>&& render,
         std::shared_ptr<bco::Context> network_ctx,
+        std::shared_ptr<bco::Context> jitter_ctx,
         std::shared_ptr<bco::Context> decode_ctx,
         std::shared_ptr<bco::Context> render_ctx);
     void start();
@@ -30,7 +31,6 @@ private:
     bco::Routine network_loop(std::shared_ptr<MediaReceiverImpl> that);
     bco::Routine decode_loop(std::shared_ptr<MediaReceiverImpl> that);
     bco::Routine render_loop(std::shared_ptr<MediaReceiverImpl> that);
-    bco::Routine jitter_loop(std::shared_ptr<MediaReceiverImpl> that);
     inline void send_to_decode_loop(Frame frame);
     inline void send_to_render_loop(Frame frame);
     inline bco::Task<Frame> receive_from_network_loop();
@@ -46,10 +46,11 @@ private:
     std::unique_ptr<VideoDecoderInterface> decoder_;
     std::unique_ptr<RenderInterface> render_;
     std::shared_ptr<bco::Context> network_ctx_;
+    std::shared_ptr<bco::Context> jitter_ctx_;
     std::shared_ptr<bco::Context> decode_ctx_;
     std::shared_ptr<bco::Context> render_ctx_;
     FrameAssembler frame_assembler_;
-    JitterBuffer frame_buffer_;
+    JitterBuffer jitter_buffer_;
     RtpFrameReferenceFinder reference_finder_;
     bco::Channel<Frame> undecoded_frames_;
     bco::Channel<Frame> decoded_frames_;

@@ -7,6 +7,11 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4244)
+#endif
+
 #include <cassert>
 #include <utility>
 #include <glog/logging.h>
@@ -182,3 +187,7 @@ void RtpSeqNumOnlyRefFinder::ClearTo(uint16_t seq_num) {
 }
 
 }  // namespace webrtc
+
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
