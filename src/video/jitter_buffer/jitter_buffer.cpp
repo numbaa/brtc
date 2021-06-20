@@ -254,6 +254,9 @@ bco::Routine JitterBuffer::main_loop()
     while (!stop_) {
         auto [frame_to_decode, wait_ms] = find_next_frame();
         co_await bco::sleep_for(std::chrono::milliseconds { wait_ms });
+        if (frame_to_decode.empty()) {
+            continue;
+        }
         auto frame = get_next_frame(frame_to_decode);
         decodale_frames_.send(frame);
     }

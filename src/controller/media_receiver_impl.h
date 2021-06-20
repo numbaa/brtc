@@ -38,6 +38,7 @@ private:
     Frame decode_one_frame(Frame frame);
     void render_one_frame(Frame frame);
     void parse_rtp_extensions(RtpPacket& packet);
+    void parse_video_header(RtpPacket& packet);
 
 private:
     std::atomic<bool> stop_ { false };

@@ -106,6 +106,25 @@ target_link_libraries(brtc_packetizer
     brtc_rtp
 )
 
+add_brtc_object(brtc_depacketizer "src/video"
+  "video/depacketizer/video_rtp_depacketizer.h"
+  "video/depacketizer/video_rtp_depacketizer.cpp"
+  "video/depacketizer/video_rtp_depacketizer_h264.h"
+  "video/depacketizer/video_rtp_depacketizer_h264.cpp"
+  "video/depacketizer/sps_parser.h"
+  "video/depacketizer/pps_parser.cpp"
+  "video/depacketizer/pps_parser.h"
+  "video/depacketizer/sps_parser.cpp"
+  "video/depacketizer/bit_buffer.h"
+  "video/depacketizer/bit_buffer.cpp"
+)
+
+target_link_libraries(brtc_depacketizer
+  PRIVATE
+    glog::glog
+    brtc_rtp
+)
+
 add_brtc_object(brtc_frame_assembler "src/video"
   "video/frame_assembler/frame_assembler.h"
   "video/frame_assembler/frame_assembler.cpp"
@@ -143,7 +162,6 @@ add_brtc_object(brtc_reference_finder "src/video"
   "video/reference_finder/rtp_vp9_ref_finder.h"
   "video/reference_finder/rtp_frame_id_only_ref_finder.cpp"
   "video/reference_finder/rtp_frame_id_only_ref_finder.h"
-  "video/reference_finder/h264_globals.h"
 )
 target_link_libraries(brtc_reference_finder
   PRIVATE
@@ -161,6 +179,7 @@ add_library(${PROJECT_NAME} STATIC
     $<TARGET_OBJECTS:brtc_sctp_transport>
     $<TARGET_OBJECTS:brtc_common>
     $<TARGET_OBJECTS:brtc_packetizer>
+    $<TARGET_OBJECTS:brtc_depacketizer>
     $<TARGET_OBJECTS:brtc_frame_assembler>
     $<TARGET_OBJECTS:brtc_jitter_buffer>
     $<TARGET_OBJECTS:brtc_reference_finder>

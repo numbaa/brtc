@@ -50,6 +50,7 @@ bco::Routine MediaReceiverImpl::network_loop(std::shared_ptr<MediaReceiverImpl> 
 {
     while (!stop_) {
         auto packet = co_await transport_->recv_rtp();
+        parse_video_header(packet);
         parse_rtp_extensions(packet);
         frame_assembler_.insert(packet);
         while (auto frame = frame_assembler_.pop_assembled_frame()) {
@@ -131,7 +132,14 @@ void MediaReceiverImpl::parse_rtp_extensions(RtpPacket& packet)
         }
         video_header.width = static_cast<uint16_t>(descriptor.Width());
         video_header.height = static_cast<uint16_t>(descriptor.Height());
+        //emmmmm....
+        video_header.codec = VideoCodecType::H264;
     }
+}
+
+void MediaReceiverImpl::parse_video_header(RtpPacket& packet)
+{
+    //
 }
 
 } // namespace brtc

@@ -20,7 +20,7 @@
 namespace webrtc {
 
 // The packetization types that we support: single, aggregated, and fragmented.
-enum H264PacketizationTypes {
+enum class H264PacketizationTypes {
   kH264SingleNalu,  // This packet contains a single NAL unit.
   kH264StapA,       // This packet contains STAP-A (single time
                     // aggregation) packets. If this packet has an
@@ -50,14 +50,28 @@ inline std::string ToString(H264PacketizationMode mode) {
   } else if (mode == H264PacketizationMode::SingleNalUnit) {
     return "SingleNalUnit";
   }
-  RTC_NOTREACHED();
+  assert(false);
   return "";
 }
 
+enum class H264NaluType : uint8_t {
+    Slice = 1,
+    Idr = 5,
+    Sei = 6,
+    Sps = 7,
+    Pps = 8,
+    Aud = 9,
+    EndOfSequence = 10,
+    EndOfStream = 11,
+    Filler = 12,
+    StapA = 24,
+    FuA = 28
+};
+
 struct NaluInfo {
-  uint8_t type;
-  int sps_id;
-  int pps_id;
+    H264NaluType type;
+    int sps_id;
+    int pps_id;
 };
 
 const size_t kMaxNalusPerPacket = 10;
@@ -68,7 +82,7 @@ struct RTPVideoHeaderH264 {
   // the original data. If this is the header for an
   // aggregated packet, it's the NAL unit type of
   // the first NAL unit in the packet.
-  uint8_t nalu_type;
+  H264NaluType nalu_type;
   // The packetization type of this buffer - single, aggregated or fragmented.
   H264PacketizationTypes packetization_type;
   NaluInfo nalus[kMaxNalusPerPacket];
@@ -76,6 +90,10 @@ struct RTPVideoHeaderH264 {
   // The packetization mode of this transport. Packetization mode
   // determines which packetization types are allowed when packetizing.
   H264PacketizationMode packetization_mode;
+
+  //uint16_t picture_id;
+  //int64_t timestamp_local;
+  //bool has_last_fragement;
 };
 
 }  // namespace webrtc

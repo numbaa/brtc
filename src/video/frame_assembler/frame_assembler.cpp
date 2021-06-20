@@ -178,7 +178,7 @@ void FrameAssembler::find_frames(uint16_t seq_num)
             // the |frame_begin| flag is set.
             size_t start_index = index;
             size_t tested_packets = 0;
-            int64_t frame_timestamp = buffer_[start_index].sequence_number();
+            int64_t frame_timestamp = buffer_[start_index].timestamp();
 
             // Identify H.264 keyframes by means of SPS, PPS, and IDR.
             bool is_h264 = buffer_[start_index].video_header().codec == VideoCodecType::H264;

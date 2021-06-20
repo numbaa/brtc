@@ -18,6 +18,7 @@
 #include <brtc/video/codec_interface.h>
 #include <brtc/video/vp9_globals.h>
 #include <brtc/video/vp8_globals.h>
+#include <brtc/video/h264_globals.h>
 #include "rtp/extension.h"
 #include "rtp/extra_rtp_info.h"
 
@@ -30,36 +31,10 @@ constexpr uint32_t kH264StartCodeLength = 4;
 constexpr uint32_t kOneByteHeaderExtensionMaxId = 14;
 constexpr uint32_t kOneByteHeaderExtensionMaxValueSize = 16;
 
-enum class H264PacketizationTypes {
-    kH264SingleNalu,
-    kH264StapA,
-    kH264FuA,
-};
-
-enum class H264PacketizationMode {
-    SingleNalUnit,
-    NonInterleaved,
-};
-
-struct NaluInfo {
-    uint8_t type;
-    int sps_id;
-    int pps_id;
-};
-
-enum class H264NaluType : uint8_t {
-    Slice = 1,
-    Idr = 5,
-    Sei = 6,
-    Sps = 7,
-    Pps = 8,
-    Aud = 9,
-    EndOfSequence = 10,
-    EndOfStream = 11,
-    Filler = 12,
-    StapA = 24,
-    FuA = 28
-};
+//using H264PacketizationTypes = webrtc::H264PacketizationTypes;
+//using H264PacketizationMode = webrtc::H264PacketizationMode;
+//using NaluInfo = webrtc::NaluInfo;
+//using H264NaluType = webrtc::H264NaluType;
 
 // RTCP mode to use. Compound mode is described by RFC 4585 and reduced-size
 // RTCP mode is described by RFC 5506.
@@ -114,16 +89,7 @@ struct VideoPlayoutDelay {
     }
 };
 
-struct RTPVideoHeaderH264 {
-    H264NaluType nalu_type;
-    H264PacketizationTypes packetization_type;
-    NaluInfo nalus[kMaxNalusPerPacket];
-    uint32_t nalus_length;
-    H264PacketizationMode packetization_mode;
-    uint16_t picture_id;
-    int64_t timestamp_local;
-    bool has_last_fragement;
-};
+using RTPVideoHeaderH264 = webrtc::RTPVideoHeaderH264;
 
 struct RTPVideoHeaderH265 {
 };
